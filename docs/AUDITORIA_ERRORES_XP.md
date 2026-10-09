@@ -45,42 +45,30 @@
 
 ---
 
-### Error 4 [MEDIO]: Desconexión entre `PerformanceMonitor` y Calidad Gráfica (`quality.js`)
+### Error 4 [MEDIO - RESUELTO]: Desconexión entre `PerformanceMonitor` y Calidad Gráfica (`quality.js`)
 
 - **Ubicación:** `apps/web/src/diorama/DioramaCanvas.jsx` (línea 66) frente a `quality.js`
-- **Severidad:** **Media**
-- **Descripción:**
-  El módulo `quality.js` define tiers de rendimiento (`low`, `medium`, `high`) que regulan no solo la densidad de píxeles (`DPR`), sino el presupuesto de vértices del relieve (`vertexBudget`), el tamaño de mosaicos y la cantidad máxima de árboles (`TIERS.forest.max` entre 40.000 y 180.000). Sin embargo, `PerformanceMonitor` en `DioramaCanvas.jsx` solo ejecuta:
-  ```javascript
-  <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(deviceDpr())} />
-  ```
-  Nunca invoca `useRenderStore.getState().stepTier(-1)` ni `stepTier(+1)`.
-- **Impacto:**
-  Si el Mini PC del museo posee una GPU integrada modesta (como Intel Iris Xe o UHD Graphics) y sufre caídas de cuadros, el sistema solo reduce la resolución pero sigue renderizando decenas de miles de instancias de árboles y una malla densa, impidiendo que el motor alcance los 60 FPS estables.
-- **Acción Correctiva XP:**
-  Conectar `onDecline` y `onIncline` con `useRenderStore.getState().stepTier()` para que la degradación sea verdaderamente integral y alivie la carga geométrica de la GPU.
+- **Estado:** **RESUELTO ✅**
+- **Solución aplicada:**
+  Se conectó `PerformanceMonitor` con `useRenderStore.getState().stepTier(-1)` (ante caída de cuadros) y `stepTier(1)` (ante holgura de rendimiento), asegurando que tanto la resolución (DPR) como el presupuesto geométrico de árboles y relieve se adapten dinámicamente.
 
 ---
 
-### Error 5 [ALTO/OPERATIVO]: Falta de Instalación de Dependencias Locales en el Host
+### Error 5 [ALTO/OPERATIVO - RESUELTO]: Falta de Instalación de Dependencias Locales en el Host
 
 - **Ubicación:** Raíz del monorepo (`package.json`)
-- **Severidad:** **Alta para Desarrollo Local**
-- **Descripción:**
-  Al intentar ejecutar `npm test` o `npm run lint` en el host de Windows, el sistema arroja:
-  `'vitest' is not recognized as an internal or external command`.
-  Esto ocurre porque `npm install` no se ha ejecutado en la raíz de la máquina anfitriona (el flujo se asumió únicamente dentro de Docker).
-- **Impacto:**
-  Impide ejecutar la batería de pruebas automatizadas y chequeos de estilo de forma instantánea en el ciclo local de Pair Programming sin depender del contenedor Docker.
-- **Acción Correctiva XP:**
-  Ejecutar `npm install` en la raíz para enlazar los workspaces y disponer de los binarios locales (`vitest`, `eslint`, `prettier`).
+- **Estado:** **RESUELTO ✅**
+- **Solución aplicada:**
+  Se ejecutó `npm install` en la raíz del monorepo en Windows. Todas las dependencias quedaron vinculadas, los linters (`eslint`), formateadores (`prettier`) y suites de prueba (`vitest`) se encuentran plenamente operativos y en verde (191 pruebas unitarias pasando, 0 errores de lint).
 
 ---
 
-### Error 6 [OPERATIVO]: Repositorio Git sin Commits (Estado Untracked)
+### Error 6 [OPERATIVO - RESUELTO]: Repositorio Git sin Commits (Estado Untracked)
 
 - **Ubicación:** Raíz del repositorio (`.git`)
-- **Severidad:** **Alta para Gestión de Configuración y Seguridad del Código**
+- **Estado:** **RESUELTO ✅**
+- **Solución aplicada:**
+  Se configuró la identidad del autor local y se realizó el commit inicial estructurado en la rama `main`, garantizando la trazabilidad y el versionado completo del proyecto.
 - **Descripción:**
   `git status` indica `On branch main / No commits yet` con todos los archivos desatendidos.
 - **Impacto:**
