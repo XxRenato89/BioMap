@@ -60,6 +60,7 @@ export default function DioramaCanvas({ eventSource }) {
         antialias: true,
         powerPreference: 'high-performance',
         toneMapping: ACESFilmicToneMapping,
+        logarithmicDepthBuffer: true,
       }}
     >
       <RendererSetup />

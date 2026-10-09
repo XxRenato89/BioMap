@@ -211,7 +211,7 @@ function Water({ geometry, material }) {
   useFrame(() => {
     material.userData.time.value = performance.now() / 1000;
   });
-  return <mesh geometry={geometry} material={material} receiveShadow renderOrder={1} />;
+  return <mesh geometry={geometry} material={material} renderOrder={1} />;
 }
 
 /**

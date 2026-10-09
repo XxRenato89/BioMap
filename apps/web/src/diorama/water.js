@@ -42,13 +42,14 @@ const FLOW = new Vector2(-0.55, -0.15);
 export function waterMaterial(shore, zone) {
   const material = new MeshPhysicalMaterial({
     color: new Color('#ffffff'),
-    roughness: 0.06,
+    roughness: 0.16,
     metalness: 0,
     transparent: true,
-    opacity: 1,
+    opacity: 0.96,
+    depthWrite: true,
     polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -2,
+    polygonOffsetFactor: -3,
+    polygonOffsetUnits: -3,
   });
   const time = { value: 0 };
   material.userData.time = time;
@@ -84,9 +85,8 @@ vec2 waveSlope(vec2 p, vec2 dir, float length, float amp, float speed) {
         '#include <color_fragment>',
         `#include <color_fragment>
 vec2 shoreUv = vWater.xz / (2.0 * waterHalf) + 0.5;
-shoreMeters = texture2D(waterShore, clamp(shoreUv, 0.0, 1.0)).r * 255.0;
-/* Fuera de la zona no hay distancia calculada: el agua se ve de anchura media. */
-if (any(lessThan(shoreUv, vec2(0.0))) || any(greaterThan(shoreUv, vec2(1.0)))) shoreMeters = 60.0;
+bool outsideZone = any(lessThan(shoreUv, vec2(0.0))) || any(greaterThan(shoreUv, vec2(1.0)));
+shoreMeters = outsideZone ? 60.0 : texture2D(waterShore, clamp(shoreUv, 0.0, 1.0)).r * 255.0;
 vec3 shallow = vec3(0.33, 0.72, 0.76);
 vec3 deep = vec3(0.06, 0.30, 0.48);
 vec3 waterColor = mix(shallow, deep, smoothstep(4.0, 110.0, shoreMeters));
@@ -95,24 +95,33 @@ float ripple = sin(meters.x * 0.33 + waterTime * 1.2) * sin(meters.y * 0.29 - wa
 float foam = 1.0 - smoothstep(0.0, 3.0 + ripple * 1.4, shoreMeters);
 waterColor = mix(waterColor, vec3(0.93, 0.97, 0.98), foam * 0.75);
 diffuseColor.rgb = waterColor;
-diffuseColor.a = mix(0.82, 0.96, smoothstep(0.0, 12.0, shoreMeters));`,
+diffuseColor.a = mix(0.88, 0.98, smoothstep(0.0, 12.0, shoreMeters));`,
       )
       .replace(
         '#include <normal_fragment_maps>',
         `#include <normal_fragment_maps>
 vec2 drift = vWater.xz * 1000.0 - waterFlow * waterTime;
-vec2 slope = waveSlope(drift, vec2(1.0, 0.25), 9.0, 0.10, 1.6)
-  + waveSlope(drift, vec2(0.7, -0.8), 5.5, 0.05, 2.1)
-  + waveSlope(drift, vec2(-0.3, 1.0), 3.2, 0.025, 2.7)
-  + waveSlope(drift, vec2(0.9, 0.6), 17.0, 0.16, 1.1);
-normal = normalize(normal + (viewMatrix * vec4(-slope.x, 0.0, -slope.y, 0.0)).xyz * 0.6);`,
+vec2 slope = waveSlope(drift, vec2(1.0, 0.25), 9.0, 0.08, 1.4)
+  + waveSlope(drift, vec2(0.7, -0.8), 5.5, 0.04, 1.8)
+  + waveSlope(drift, vec2(-0.3, 1.0), 3.2, 0.02, 2.2)
+  + waveSlope(drift, vec2(0.9, 0.6), 17.0, 0.10, 0.9);
+vec3 wavePerturbation = (viewMatrix * vec4(-slope.x, 0.0, -slope.y, 0.0)).xyz * 0.35;
+normal = normalize(normal + wavePerturbation);
+vec3 viewDir = normalize(vViewPosition);
+float nDotV = dot(normal, viewDir);
+if (nDotV < 0.15) {
+  normal = normalize(normal + viewDir * (0.15 - nDotV));
+}`,
       )
       .replace(
         '#include <lights_fragment_end>',
         `#include <lights_fragment_end>
-float facing = max(dot(normal, normalize(vViewPosition)), 0.0);
-float fresnel = pow(1.0 - facing, 4.0);
-reflectedLight.indirectDiffuse += vec3(0.62, 0.78, 0.88) * fresnel * 0.6;`,
+float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+float fresnel = pow(1.0 - facing, 3.2);
+vec3 skyColor = vec3(0.55, 0.76, 0.90);
+vec3 waterAmbient = mix(vec3(0.10, 0.28, 0.40), skyColor, fresnel);
+reflectedLight.indirectDiffuse += waterAmbient * (0.85 + 0.45 * fresnel);
+reflectedLight.directDiffuse = max(reflectedLight.directDiffuse, diffuseColor.rgb * 0.20);`,
       );
   };
   return material;

@@ -46,7 +46,7 @@ export default function DioramaView({
       <View className="diorama-view__port" visible={visible}>
         {background && <color attach="background" args={[background]} />}
         <fog attach="fog" args={[fogColor, ...fog]} />
-        <PerspectiveCamera makeDefault fov={32} near={0.003} far={200} />
+        <PerspectiveCamera makeDefault fov={32} near={0.01} far={200} />
         <Suspense fallback={null}>
           <DioramaScene shadows={shadows} forest={forest} />
           <Landmarks shadows={shadows} />

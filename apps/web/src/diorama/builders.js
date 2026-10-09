@@ -46,7 +46,7 @@ export function bakeDetail(size = 512) {
  * Cuánto queda el agua sobre su nivel (km): el fondo ya viene rebajado y las
  * orillas levantadas en el build, así que basta un poco para que no parpadee.
  */
-const WATER_LIFT = 0.0004;
+const WATER_LIFT = 0.0008;
 
 /**
  * Agua (embalses y el cauce del Biobío): polígonos de OpenStreetMap apoyados
