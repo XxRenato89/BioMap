@@ -1,0 +1,228 @@
+/*
+ * Maqueta 3D: un único canvas WebGL detrás de toda la interfaz, y las vistas
+ * (general y ventanas) como rectángulos que ese canvas dibuja.
+ */
+.viewer {
+  /* Cielo: azul arriba y bruma clara en el horizonte (el color de la bruma de la escena). */
+  background: linear-gradient(to bottom, #8fb0c4 0%, #b4cad0 40%, #cbd9d6 70%, #cbd9d6 100%);
+}
+
+.diorama-canvas {
+  position: absolute !important;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.diorama-view {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.diorama-view__port {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Visible solo para lectores de pantalla.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Pines de los puntos de interés: disco blanco con la figura de la capa,
+ * mástil hasta el suelo y el nombre del lugar al lado. Se atenúan cuando el
+ * relieve los tapa (data-occluded, lo calcula PoiMarkers en cada cuadro).
+ */
+.poi-pin {
+  --dot: 48px;
+  --stem: 16px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 var(--stem);
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate(calc(var(--dot) / -2), -100%);
+  transition: opacity 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.poi-pin::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--dot) / 2 - 1.5px);
+  bottom: 0;
+  width: 3px;
+  height: var(--stem);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.poi-pin__dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--layer-color) 55%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.poi-pin__dot .shape--sm {
+  width: 24px;
+  height: 24px;
+}
+
+.poi-pin__label {
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(17, 34, 27, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: calc(18px * var(--text-scale));
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.poi-pin[data-occluded='true'] {
+  opacity: 0.3;
+}
+
+.poi-pin[data-selected] {
+  z-index: 1;
+}
+
+.poi-pin[data-selected] .poi-pin__dot {
+  transform: scale(1.18);
+}
+
+.poi-pin[data-selected] .poi-pin__label {
+  border-color: var(--layer-color);
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.poi-pin:focus-visible {
+  outline: none;
+}
+
+.poi-pin:focus-visible .poi-pin__dot {
+  outline: 4px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.viewer[data-contrast='high'] .poi-pin__label {
+  border: 3px solid #ffffff;
+  background: #000000;
+  backdrop-filter: none;
+}
+
+.viewer[data-contrast='high'] .poi-pin__dot {
+  box-shadow: 0 0 0 4px #000000;
+}
+
+/* En pantallas chicas solo se muestra el nombre del punto seleccionado. */
+@media (max-width: 640px) {
+  .poi-pin {
+    --dot: 40px;
+  }
+
+  .poi-pin:not([data-selected]) .poi-pin__label {
+    display: none;
+  }
+}
+
+/*
+ * Etiquetas de lugares reales (OpenStreetMap): texto claro con sombra, sin
+ * caja, para no competir con los pines. Las oculta Landmarks cuando chocan
+ * entre sí o el relieve las tapa.
+ */
+.map-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: calc(15px * var(--text-scale));
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.map-label::before {
+  content: '●';
+  margin-right: 5px;
+  font-size: 0.7em;
+  vertical-align: 0.15em;
+}
+
+.map-label[data-kind='volcano']::before,
+.map-label[data-kind='peak']::before {
+  content: '▲';
+}
+
+.map-label[data-kind='reservoir'],
+.map-label[data-kind='lake'] {
+  color: #bfe6ff;
+  font-style: italic;
+}
+
+.map-label[data-kind='reservoir']::before,
+.map-label[data-kind='lake']::before {
+  content: '';
+  margin: 0;
+}
+
+.map-label[data-kind='dam']::before {
+  content: '▬';
+}
+
+.map-label[data-kind='volcano'],
+.map-label[data-kind='town'] {
+  font-size: calc(17px * var(--text-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.map-label[data-hidden='true'] {
+  opacity: 0;
+}
+
+/* Etiqueta que chocaría con otra: queda solo el disco (el nombre se lee al acercarse). */
+.poi-pin[data-compact='true']:not([data-selected]) .poi-pin__label {
+  display: none;
+}

@@ -1,0 +1,84 @@
+{
+  "header": {
+    "subtitle": "Living Map of the Biobío",
+    "hint": "Tap a point to see its sheet: photos, 360° and the story of the place."
+  },
+  "layers": {
+    "nav": "Thematic layers",
+    "title": "Layers",
+    "count_one": "{{count}} place",
+    "count_other": "{{count}} places"
+  },
+  "layerNames": {
+    "history": "History",
+    "ecology": "Ecology and Biodiversity",
+    "tourism": "Tourism"
+  },
+  "controls": {
+    "group": "Map controls",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "tilt": "Tilted 3D view",
+    "contours": "Contour lines",
+    "reset": "Reset view"
+  },
+  "levels": {
+    "group": "Zoom level",
+    "region": "Region",
+    "regionHint": "The whole basin",
+    "zone": "Area",
+    "zoneHint": "Each place",
+    "detail": "Detail",
+    "detailHint": "Names and landmarks",
+    "rest": "Returns to the start after {{seconds}} s without use",
+    "gestures": "Drag to turn the model · pinch to zoom"
+  },
+  "a11y": {
+    "textBigger": "Larger text",
+    "contrast": "Contrast",
+    "language": "Español",
+    "languageLabel": "Cambiar el idioma a español"
+  },
+  "compass": "Compass. Tap to turn the map with north up",
+  "status": {
+    "local": "100 % local · no internet",
+    "offline": "No connection to the server. Retrying…",
+    "basemap": "The base map could not be loaded. Retrying…"
+  },
+  "qr": {
+    "title": "Take it on your phone",
+    "text": "Join the <strong>{{wifi}}</strong> Wi‑Fi and scan the code.",
+    "alt": "QR code to open BioMap on your phone"
+  },
+  "card": {
+    "close": "Close the card for {{name}}",
+    "credit": "Photo: {{credit}}",
+    "noPhoto": "No photo",
+    "loading": "Loading…",
+    "error": "The card could not be loaded.",
+    "prevPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "photoOf": "Photo {{n}} of {{total}}"
+  },
+  "cluster": {
+    "label": "{{count}} places nearby. Tap to zoom in."
+  },
+  "idle": {
+    "title": "Still exploring?",
+    "text": "The map will return to its starting view for the next visitor.",
+    "seconds": "seconds",
+    "keep": "Keep exploring",
+    "resetNow": "Reset now"
+  },
+  "attract": {
+    "cta": "Tap to explore",
+    "sub": "History, nature and landscapes of the Biobío territory"
+  },
+  "attribution": "Imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0, Copernicus data) · Relief: Mapzen Terrain Tiles (SRTM) · Land cover: ESA WorldCover · Landmarks, roads and water: © OpenStreetMap",
+  "mapLabel": "3D model of the Biobío Region",
+  "sheet": {
+    "tabPhotos": "Photos",
+    "tab360": "360°",
+    "panorama": "360° photo of {{name}}"
+  }
+}

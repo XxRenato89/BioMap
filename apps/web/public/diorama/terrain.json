@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "bounds": {
+    "west": -71.855,
+    "south": -37.7672,
+    "east": -71.75374,
+    "north": -37.672
+  },
+  "columns": 2048,
+  "rows": 2434,
+  "widthKm": 8.917,
+  "depthKm": 10.598,
+  "minHeight": 261,
+  "maxHeight": 632,
+  "landcover": {
+    "columns": 2048,
+    "rows": 2434
+  },
+  "context": {
+    "bounds": {
+      "west": -72.14506340462331,
+      "south": -37.98909335249731,
+      "east": -71.4636765953767,
+      "north": -37.45010664750269
+    },
+    "columns": 1024,
+    "rows": 1024,
+    "widthKm": 60,
+    "depthKm": 60,
+    "minHeight": 172,
+    "maxHeight": 2733,
+    "texture": {
+      "columns": 4096,
+      "rows": 4096
+    },
+    "landcover": {
+      "columns": 1024,
+      "rows": 1024
+    }
+  },
+  "sources": [
+    "Terrarium (Mapzen Terrain Tiles, AWS Open Data), zoom 15 y 12",
+    "ESA WorldCover 2021 v200 (CC BY 4.0)",
+    "Sentinel-2 cloudless 2016 by EOX IT Services GmbH (CC BY 4.0), contains modified Copernicus Sentinel data 2016",
+    "© OpenStreetMap contributors (ODbL)"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@biomap/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch --env-file-if-exists=../../.env src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "node --env-file-if-exists=../../.env scripts/migrate.js",
+    "db:seed": "node --env-file-if-exists=../../.env seeds/run.js",
+    "loadtest": "node scripts/loadtest.js"
+  },
+  "dependencies": {
+    "compression": "^1.8.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "node-pg-migrate": "^8.0.4",
+    "pg": "^8.23.1",
+    "pino": "^9.14.0",
+    "pino-http": "^10.5.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "autocannon": "^8.0.0",
+    "supertest": "^7.3.1",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest';
+import { loadConfig } from '../../src/config.js';
+
+const DATABASE_URL = 'postgres://biomap:biomap@localhost:5432/biomap';
+
+describe('loadConfig', () => {
+  it('applies defaults when only DATABASE_URL is set', () => {
+    expect(loadConfig({ DATABASE_URL })).toEqual({
+      nodeEnv: 'development',
+      port: 3000,
+      databaseUrl: DATABASE_URL,
+      dbPoolMax: 10,
+      dbStatementTimeoutMs: 2000,
+      cacheTtlSeconds: 60,
+      mediaDir: './media',
+      mediaBaseUrl: '/media',
+      logLevel: 'info',
+    });
+  });
+
+  it('coerces numeric strings', () => {
+    const config = loadConfig({ DATABASE_URL, PORT: '8080', DB_POOL_MAX: '20' });
+    expect(config.port).toBe(8080);
+    expect(config.dbPoolMax).toBe(20);
+  });
+
+  it('treats empty strings as unset', () => {
+    expect(loadConfig({ DATABASE_URL, PORT: '', LOG_LEVEL: '' }).port).toBe(3000);
+  });
+
+  it('removes trailing slashes from MEDIA_BASE_URL', () => {
+    expect(loadConfig({ DATABASE_URL, MEDIA_BASE_URL: '/media//' }).mediaBaseUrl).toBe('/media');
+  });
+
+  it('rejects a missing DATABASE_URL', () => {
+    expect(() => loadConfig({})).toThrow(/DATABASE_URL/);
+  });
+
+  it('rejects a non-postgres DATABASE_URL', () => {
+    expect(() => loadConfig({ DATABASE_URL: 'mysql://x' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('rejects an invalid PORT', () => {
+    expect(() => loadConfig({ DATABASE_URL, PORT: 'abc' })).toThrow(/PORT/);
+  });
+
+  it('rejects a MEDIA_BASE_URL that does not start with a slash', () => {
+    expect(() => loadConfig({ DATABASE_URL, MEDIA_BASE_URL: 'media' })).toThrow(/MEDIA_BASE_URL/);
+  });
+});

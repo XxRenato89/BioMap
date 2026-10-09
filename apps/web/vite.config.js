@@ -1,0 +1,33 @@
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+/**
+ * En desarrollo, Vite reenvía /api y /media a la API para que todo salga
+ * del mismo origen (sin CORS). En Docker, API_PROXY_TARGET apunta al servicio `api`.
+ */
+const apiTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: { '/api': apiTarget, '/media': apiTarget },
+  },
+  build: {
+    /*
+     * El motor 3D (three.js y react-three) va en su propio archivo para que el
+     * navegador lo guarde en caché aparte del código del visor.
+     */
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: { three: ['three', '@react-three/fiber', '@react-three/drei'] },
+      },
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.{js,jsx}'],
+    setupFiles: ['src/test/setup.js'],
+  },
+});

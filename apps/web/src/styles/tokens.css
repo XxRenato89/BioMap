@@ -1,0 +1,93 @@
+/*
+ * Paleta, tipografías y tamaños del diseño. Los tamaños de texto se
+ * multiplican por --text-scale, que cambia el botón «Aa+».
+ */
+:root {
+  --forest: #13241d;
+  --ink: #10201a;
+  --muted: #4a5a4e;
+  --muted-strong: #33443a;
+  --land: #e7ece0;
+  --mint: #cfe3d6;
+  --mint-muted: #a9c7b6;
+  --eyebrow: #9fc2ad;
+  --focus: #1d4ed8;
+  --ok: #4ade80;
+  --warning: #f2c14e;
+
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
+
+  --shadow-soft: 0 6px 18px rgba(16, 32, 26, 0.16);
+  --shadow-panel: 0 10px 30px rgba(16, 32, 26, 0.22);
+  --shadow-strong: 0 8px 24px rgba(16, 32, 26, 0.25);
+
+  --text-scale: 1;
+  --fs-title: calc(48px * var(--text-scale));
+  --fs-card-title: calc(30px * var(--text-scale));
+  --fs-lead: calc(21px * var(--text-scale));
+  --fs-body: calc(19px * var(--text-scale));
+  --fs-button: calc(23px * var(--text-scale));
+  --fs-small: calc(16px * var(--text-scale));
+  --fs-eyebrow: calc(15px * var(--text-scale));
+
+  color-scheme: light;
+}
+
+/*
+ * Paneles translúcidos sobre el mapa.
+ */
+.glass-dark {
+  background: rgba(17, 34, 27, 0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+/*
+ * Alto contraste: paneles opacos, bordes gruesos y texto negro o blanco puro.
+ */
+.viewer[data-contrast='high'] {
+  --muted: #000000;
+  --muted-strong: #000000;
+  --mint: #ffffff;
+  --mint-muted: #ffffff;
+  --eyebrow: #ffffff;
+  --focus: #ffbf00;
+}
+
+.viewer[data-contrast='high'] .glass-dark {
+  background: #000000;
+  backdrop-filter: none;
+  border: 3px solid #ffffff;
+}
+
+.viewer[data-contrast='high'] .glass-light {
+  background: #ffffff;
+  backdrop-filter: none;
+  border: 3px solid #000000;
+}
+
+.viewer[data-contrast='high'] .point-sheet {
+  border-width: 6px;
+}
+
+.viewer[data-contrast='high'] .pin__shape {
+  border-color: #000000;
+}
+
+.viewer[data-contrast='high'] .chip-button[aria-pressed='true'],
+.viewer[data-contrast='high'] .chip-button--text[data-level='1'],
+.viewer[data-contrast='high'] .chip-button--text[data-level='2'] {
+  background: #000000;
+  color: #ffffff;
+}

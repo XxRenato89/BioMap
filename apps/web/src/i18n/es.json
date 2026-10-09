@@ -1,0 +1,79 @@
+{
+  "header": {
+    "subtitle": "Mapa Vivo del Bío Bío",
+    "hint": "Toca un punto para ver su ficha: fotos, 360° e historia del lugar."
+  },
+  "layers": {
+    "nav": "Capas temáticas",
+    "title": "Capas",
+    "count_one": "{{count}} punto",
+    "count_other": "{{count}} puntos"
+  },
+  "controls": {
+    "group": "Controles del mapa",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "tilt": "Vista inclinada en 3D",
+    "contours": "Curvas de nivel",
+    "reset": "Reiniciar vista"
+  },
+  "levels": {
+    "group": "Nivel de acercamiento",
+    "region": "Región",
+    "regionHint": "Toda la cuenca",
+    "zone": "Zona",
+    "zoneHint": "Cada lugar",
+    "detail": "Detalle",
+    "detailHint": "Nombres y hitos",
+    "rest": "Vuelve sola al inicio tras {{seconds}} s sin uso",
+    "gestures": "Arrastra para girar la maqueta · pellizca para acercar"
+  },
+  "a11y": {
+    "textBigger": "Texto más grande",
+    "contrast": "Contraste",
+    "language": "English",
+    "languageLabel": "Change language to English"
+  },
+  "compass": "Brújula. Toca para orientar el mapa con el norte arriba",
+  "status": {
+    "local": "100 % local · sin internet",
+    "offline": "Sin conexión con el servidor. Reintentando…",
+    "basemap": "No se pudo cargar el mapa base. Reintentando…"
+  },
+  "qr": {
+    "title": "Llévalo en tu teléfono",
+    "text": "Conéctate al Wi‑Fi <strong>{{wifi}}</strong> y escanea el código.",
+    "alt": "Código QR para abrir BioMap en el teléfono"
+  },
+  "card": {
+    "close": "Cerrar ficha de {{name}}",
+    "credit": "Fotografía: {{credit}}",
+    "noPhoto": "Sin fotografía",
+    "loading": "Cargando…",
+    "error": "No se pudo cargar la ficha.",
+    "prevPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente",
+    "photoOf": "Foto {{n}} de {{total}}"
+  },
+  "cluster": {
+    "label": "{{count}} puntos cercanos. Toca para acercar."
+  },
+  "idle": {
+    "title": "¿Sigues explorando?",
+    "text": "El mapa volverá a su vista inicial para el próximo visitante.",
+    "seconds": "segundos",
+    "keep": "Seguir explorando",
+    "resetNow": "Reiniciar ahora"
+  },
+  "attract": {
+    "cta": "Toca para explorar",
+    "sub": "Historia, naturaleza y paisajes del territorio del Biobío"
+  },
+  "attribution": "Imágenes: Sentinel-2 cloudless 2016 de EOX (CC BY 4.0, datos Copernicus) · Relieve: Mapzen Terrain Tiles (SRTM) · Cobertura: ESA WorldCover · Hitos, caminos y agua: © OpenStreetMap",
+  "mapLabel": "Maqueta 3D de la Región del Biobío",
+  "sheet": {
+    "tabPhotos": "Fotos",
+    "tab360": "360°",
+    "panorama": "Foto 360° de {{name}}"
+  }
+}

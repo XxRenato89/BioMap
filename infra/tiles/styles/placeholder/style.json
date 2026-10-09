@@ -1,0 +1,8 @@
+{
+  "version": 8,
+  "name": "BioMap placeholder",
+  "sources": {},
+  "layers": [
+    { "id": "background", "type": "background", "paint": { "background-color": "#e8efe6" } }
+  ]
+}
