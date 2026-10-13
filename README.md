@@ -1,40 +1,81 @@
 # BioMap – Mapa Vivo del Bío Bío
 
-Interactive, fully offline map of the Biobío river territory for the Centro de Visitantes
-Angostura (Colbún S.A.). Capstone project, INACAP, Ingeniería en Informática.
+Mapa interactivo 3D del territorio de Angostura, en la Región del Biobío, para el
+kiosco táctil del Centro de Visitantes Angostura (Colbún S.A.). Funciona 100 % sin
+internet. Proyecto de título, INACAP, Ingeniería en Informática.
 
-## Structure
+El visitante explora una maqueta 3D a escala real (relieve, embalse, bosques,
+caminos y la presa), toca un lugar y una mascota guía camina hasta él por los
+caminos reales para presentarle su ficha: historia, fotos y vista 360°.
 
-| Path               | Content                                                  |
-| ------------------ | -------------------------------------------------------- |
-| `apps/api`         | REST API (Node.js 24, Express 5, PostgreSQL + PostGIS)   |
-| `apps/web`         | Touch viewer: 3D diorama (React 19, Vite, Three.js, R3F) |
-| `infra/tiles`      | Local tile server configuration (EDT 1.3.3)              |
-| `docs/superpowers` | Design specs and implementation plans                    |
+## Qué hace
 
-## Requirements
+- **Maqueta 3D a escala real**: relieve SRTM, foto satelital, agua de OpenStreetMap con
+  orillas suaves, la presa Angostura (50 m), decenas de miles de árboles instanciados
+  (nativo, pino y eucalipto) y rocas en las laderas.
+- **Carreteras y senderos reales** de OpenStreetMap, con los números de ruta (Q-61,
+  Q-685…) y puentes con su estructura.
+- **Recorrido guiado**: la mascota camina por los caminos (nunca cruza el agua salvo por
+  un puente), el camino se dibuja con puntos que avanzan y las paradas se desbloquean
+  en orden. Las paradas las define el campo `tour_stop` de cada punto.
+- **Puntos de interés** con poste e insignia de tamaño fijo en pantalla; si se pisan,
+  de cerca suben su poste en escalones. Cada uno tiene un modelo 3D por tipo (central,
+  playa, camping, mirador, información, arboreto…) apoyado en terreno plano y mirando
+  al agua.
+- **Ficha del lugar** con la mascota a su lado, pestañas Historia / Fotos / 360° y el
+  crédito de cada foto.
+- **Bio-Book**: un libro que se abre en su lugar con un código QR para seguir en el
+  teléfono.
+- **Kiosco**: modo atracción, regreso automático a la vista inicial, aviso y reinicio
+  por inactividad (borra el progreso del visitante), alto contraste, texto grande e
+  inglés.
 
-- Node.js 24+
-- Docker Desktop (for PostgreSQL/PostGIS and the full stack)
+## Estructura
 
-## Getting started
+| Ruta                      | Contenido                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `apps/api`                | API REST (Node.js 24, Express 5, PostgreSQL + PostGIS)                       |
+| `apps/api/seeds`          | Datos de ejemplo: capas, puntos, recorrido y fotos                           |
+| `apps/web`                | Visor táctil (React 19, Vite, Three.js con React Three Fiber, Tailwind)      |
+| `apps/web/src/diorama`    | La maqueta: relieve, agua, bosque, caminos, modelos y cámara                 |
+| `apps/web/src/features`   | Ficha, mascota, recorrido y modo atracción                                   |
+| `apps/web/public/diorama` | Datos horneados de la maqueta (generados, ver más abajo)                     |
+| `apps/web/scripts`        | Generador de la maqueta (`build-diorama.mjs`)                                |
+| `docs`                    | Arquitectura (`arquitectura.md`) y fuentes del territorio (`referencias.md`) |
+
+## Requisitos
+
+- Node.js 24 o más.
+- Docker Desktop, para PostgreSQL/PostGIS y el stack completo (opcional en desarrollo:
+  ver modo sin base de datos).
+
+## Puesta en marcha
 
 ```bash
 npm install
 cp .env.example .env
+npm run media:fetch          # fotos de ejemplo (Wikimedia Commons, CC BY-SA) en media/
 ```
 
-### Full stack with Docker
+### Rápido, sin base de datos
+
+Con `USE_MOCKS=true` en `.env`, la API sirve los mismos datos de las semillas sin
+PostgreSQL:
 
 ```bash
-docker compose up --build                   # db + api + web
-docker compose exec api node seeds/run.js   # optional sample data (never in production)
+npm run dev -w apps/api      # http://localhost:3000/api/health
+npm run dev -w apps/web      # http://localhost:5173
 ```
 
-- Web: http://localhost:5173
-- API: http://localhost:3000/api/health
+### Stack completo con Docker
 
-### API only (database already running)
+```bash
+docker compose up --build
+docker compose exec api npm run db:migrate
+docker compose exec api npm run db:seed    # datos de ejemplo (nunca en producción)
+```
+
+### API con una base ya levantada
 
 ```bash
 npm run db:migrate
@@ -42,77 +83,71 @@ npm run db:seed
 npm run dev -w apps/api
 ```
 
-### Web viewer
+## La maqueta 3D
+
+Los datos de la maqueta están en `apps/web/public/diorama/` y no necesitan internet ni
+servidor de mapas. Se regeneran con internet solo si cambian los límites del territorio:
 
 ```bash
-npm run dev -w apps/web   # http://localhost:5173 (proxies /api to http://localhost:3000)
+npm run build:diorama -w apps/web                       # todo: relieve, cobertura, foto, caminos
+node apps/web/scripts/build-diorama.mjs --only-roads     # solo caminos, puentes e hitos de OSM
 ```
 
-Viewer settings (`apps/web/.env.local`, see `.env.example`): `VITE_MAP_BOUNDS`
-(`west,south,east,north`), `VITE_IDLE_TIMEOUT_S`, `VITE_IDLE_WARNING_S`,
-`VITE_ATTRACT_DELAY_S` (`0` disables the attract mode), `VITE_REFRESH_S`, `VITE_PUBLIC_URL` and
-`VITE_KIOSK_WIFI` (QR card).
+Para usar una ortofoto, un relieve o una cobertura de mejor resolución (por ejemplo un
+vuelo de dron de Colbún), se dejan en `apps/web/data/sources/` (ver su README) y el
+generador los prefiere a las descargas.
 
-### The 3D diorama
+Los hitos agregados a mano (miradores, campings, ríos) están en
+`apps/web/src/data/landmarks_local.json`. Los modelos 3D reales (`.glb`) se agregan en
+`apps/web/public/models/` (ver su README).
 
-The map is a stylized 3D model (a "digital diorama") of the Biobío territory drawn with Three.js
-through React Three Fiber. It needs no map server and no internet:
+Calidad: el nivel `low | medium | high` se ajusta solo según la tarjeta gráfica, o se
+fija con `VITE_QUALITY`.
 
-- **Relief:** real elevation (Terrarium/SRTM, zoom 12) baked into `apps/web/public/diorama/`
-  (`terrain.bin` + `terrain.json`). Regenerate it, with internet, only if the bounds change:
-  `node apps/web/scripts/build-diorama.mjs`.
-- **Look:** color by altitude and slope, an object-space normal map and a fine detail texture
-  baked in the browser (mipmaps + maximum anisotropic filtering), contour lines every 200 m,
-  soil strata on the sides, a pedestal, water from OpenStreetMap (`src/data/water.json`) and
-  thousands of instanced trees. Soft shadows (PCF soft) from a warm key light.
-- **Performance:** one WebGL canvas for every view (drei `View`), on-demand rendering, terrain
-  split in chunks (frustum culling) with a lighter mesh for the overview, and automatic DPR
-  reduction when the GPU falls behind.
-- **Point sheet:** tapping a point flies the camera smoothly to it and opens a side sheet with its
-  text, photos and 360° panorama. Closing the sheet frames the whole model again.
-
-## Integration tests
-
-Integration tests run against a real PostgreSQL + PostGIS database and only when
-`TEST_DATABASE_URL` is set. Vitest does not read `.env`, so pass it explicitly:
+## Tests
 
 ```bash
+npm test                                   # unitarios de la API y del visor
 TEST_DATABASE_URL=postgres://biomap:biomap@localhost:5432/biomap_test npm test
 ```
 
-The Docker `db` service creates `biomap_test` the first time it starts. The tests drop and
-recreate the whole schema, so they refuse to run unless the database name ends in `_test`.
+Los de integración corren contra PostGIS real y solo si `TEST_DATABASE_URL` está
+definido (el servicio `db` de Docker crea `biomap_test`). Borran y recrean el esquema,
+así que se niegan a correr si el nombre de la base no termina en `_test`. El CI
+(`.github/workflows/ci.yml`) corre lint, formato, migraciones, semillas y todos los tests.
 
 ## Scripts
 
-| Command                           | What it does                                                          |
-| --------------------------------- | --------------------------------------------------------------------- |
-| `npm test`                        | All tests. Integration tests run only when `TEST_DATABASE_URL` is set |
-| `npm run lint`                    | ESLint                                                                |
-| `npm run format` / `format:check` | Prettier                                                              |
-| `npm run db:migrate`              | Apply database migrations                                             |
-| `npm run db:seed`                 | Load sample data (refuses to run in production)                       |
-| `npm run loadtest -w apps/api`    | Load test against a running API: 50 connections, 30 s                 |
+| Comando                           | Qué hace                                                      |
+| --------------------------------- | ------------------------------------------------------------- |
+| `npm test`                        | Todos los tests                                               |
+| `npm run lint`                    | ESLint                                                        |
+| `npm run format` / `format:check` | Prettier                                                      |
+| `npm run db:migrate`              | Aplica las migraciones                                        |
+| `npm run db:seed`                 | Carga los datos de ejemplo (se niega en producción)           |
+| `npm run media:fetch`             | Descarga las fotos de ejemplo a `MEDIA_DIR`                   |
+| `npm run loadtest -w apps/api`    | Prueba de carga contra una API levantada: 50 conexiones, 30 s |
 
 ## API
 
-| Route                                    | Description                                      |
-| ---------------------------------------- | ------------------------------------------------ |
-| `GET /api/health`                        | `200` when the database answers, `503` otherwise |
-| `GET /api/layers`                        | Active thematic layers                           |
-| `GET /api/points?layers=history,tourism` | Points as a GeoJSON FeatureCollection            |
-| `GET /api/points/:id`                    | Full point record with images                    |
+| Ruta                                     | Descripción                                            |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `GET /api/health`                        | `200` si la base responde, `503` si no                 |
+| `GET /api/layers`                        | Capas temáticas activas                                |
+| `GET /api/points?layers=history,tourism` | Puntos como FeatureCollection GeoJSON (con `tourStop`) |
+| `GET /api/points/:id`                    | Ficha completa del punto, con sus imágenes y créditos  |
 
-Errors always use `{ "error": { "code": "...", "message": "..." } }`.
+Los errores siempre tienen la forma `{ "error": { "code": "...", "message": "..." } }`.
 
-## Offline check
+## Contenido pendiente del cliente
 
-The system must work without internet. With the stack running, unplug the network
-connection and verify that `http://localhost:5173` and `/api/health` keep answering.
-No runtime code may load assets from a CDN or any external service.
+`PENDING.md` y `docs/referencias.md` listan lo que falta: textos validados, fotos del
+mirador y el centro de visitantes, coordenadas tomadas en terreno, medidas de la presa
+y el modelo 3D de la mascota oficial (Quibar).
 
-## Conventions
+## Convenciones
 
-- Code, file names, database objects, API routes and commits are in English.
-- Code comments are in Spanish and written as block comments (`/** ... */`) above the code.
-- TDD: write the failing test first.
+- Código, nombres de archivos, objetos de la base, rutas de la API y commits en inglés.
+- Comentarios del código en español, como comentarios de bloque sobre el código.
+- Sin recursos externos en tiempo de ejecución: nada de CDN ni servicios en línea.
+- Créditos visibles para toda foto o dato con licencia que lo exija.
