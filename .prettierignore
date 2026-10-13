@@ -2,5 +2,11 @@ node_modules
 package-lock.json
 coverage
 dist
-*.mbtiles
 .superpowers
+.agents
+# Datos generados por scripts/build-diorama.mjs
+apps/web/public/diorama
+# Prototipos HTML sueltos
+biomap-demo.html
+ejemplo.html
+docs/archivo

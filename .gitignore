@@ -4,5 +4,4 @@ coverage/
 dist/
 media/*
 !media/.gitkeep
-infra/tiles/mbtiles/*.mbtiles
 .superpowers/

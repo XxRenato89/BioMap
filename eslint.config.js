@@ -29,6 +29,23 @@ export default [
       ...react.configs.flat.recommended.rules,
       ...react.configs.flat['jsx-runtime'].rules,
       'react/prop-types': 'off',
+      // Props de objetos Three.js en JSX de React Three Fiber.
+      'react/no-unknown-property': [
+        'error',
+        {
+          ignore: [
+            'args',
+            'attach',
+            'intensity',
+            'map',
+            'object',
+            'position',
+            'roughness',
+            'side',
+            'transparent',
+          ],
+        },
+      ],
     },
   },
   {
