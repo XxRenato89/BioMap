@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createProjection } from '../utils/projection.js';
-import { buildBridges, buildRoads, ROAD_CLASS } from './roads.js';
+import { createProjection, metersToY } from '../utils/projection.js';
+import {
+  bridgeReservoirCrossings,
+  buildBridges,
+  buildRoads,
+  ROAD_CLASS,
+  surfaceSampler,
+} from './roads.js';
 
 const PROJECTION = createProjection([
   [-72, -37.8],
@@ -57,5 +63,43 @@ describe('buildBridges', () => {
       PROJECTION,
     );
     expect(geometry.getAttribute('position').count).toBe(0);
+  });
+});
+
+describe('bridges over the Angostura reservoir', () => {
+  /* Embalse de prueba: una franja de agua dentro de los límites del embalse. */
+  const RESERVOIR_PROJECTION = createProjection([
+    [-71.81, -37.75],
+    [-71.78, -37.72],
+  ]);
+  const inWater = ([lng]) => lng > -71.796 && lng < -71.794;
+  /* Relieve anterior al embalse: el fondo y las orillas quedan bajo la cota de 326 m. */
+  const lowGround = () => metersToY(311);
+  const road = {
+    kind: 'secondary',
+    line: [
+      [-71.8, -37.735],
+      [-71.79, -37.735],
+    ],
+  };
+
+  it('turns a road stretch over the reservoir into a bridge, keeping the original ends', () => {
+    const parts = bridgeReservoirCrossings([road], inWater);
+    expect(parts.map((part) => Boolean(part.bridge))).toEqual([false, true, false]);
+    expect(parts[0].line[0]).toEqual(road.line[0]);
+    expect(parts.at(-1).line.at(-1)).toEqual(road.line[1]);
+  });
+
+  it('keeps the deck above the water even when the old ground is below it', () => {
+    const [, bridge] = bridgeReservoirCrossings([road], inWater);
+    const surfaceAt = surfaceSampler([bridge], lowGround, RESERVOIR_PROJECTION, inWater);
+    const { x, z } = RESERVOIR_PROJECTION.toWorld([-71.795, -37.735]);
+    expect(surfaceAt(x, z)).toBeGreaterThan(metersToY(326));
+  });
+
+  it('rests points on open water at the water level, not on the reservoir bed', () => {
+    const surfaceAt = surfaceSampler([], lowGround, RESERVOIR_PROJECTION, inWater);
+    const { x, z } = RESERVOIR_PROJECTION.toWorld([-71.795, -37.73]);
+    expect(surfaceAt(x, z)).toBeCloseTo(metersToY(326), 6);
   });
 });

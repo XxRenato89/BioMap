@@ -184,6 +184,25 @@ uniform vec2 waterHalf;
 uniform vec2 waterFlow;
 varying vec3 vWater;
 float shoreMeters;
+float waterHash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float waterNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(waterHash(i), waterHash(i + vec2(1.0, 0.0)), f.x),
+    mix(waterHash(i + vec2(0.0, 1.0)), waterHash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+/* Ruido suave en varias escalas: corrientes y remolinos. */
+float waterFbm(vec2 p) {
+  return waterNoise(p) * 0.55 + waterNoise(p * 2.1 + 3.7) * 0.3 + waterNoise(p * 4.3 - 1.9) * 0.15;
+}
+/* Posición arrastrada por la corriente y deformada por remolinos lentos (m). */
+vec2 flowing(vec2 meters, float speed) {
+  vec2 warp = vec2(waterFbm(meters / 70.0 + waterTime * 0.03), waterFbm(meters / 70.0 - 5.2 - waterTime * 0.025));
+  return meters - waterFlow * waterTime * speed + (warp - 0.5) * 18.0;
+}
 vec2 waveSlope(vec2 p, vec2 dir, float length, float amp, float speed) {
   dir = normalize(dir);
   float k = 6.2831 / length;
@@ -197,26 +216,39 @@ vec2 shoreUv = vWater.xz / (2.0 * waterHalf) + 0.5;
 bool outsideZone = any(lessThan(shoreUv, vec2(0.0))) || any(greaterThan(shoreUv, vec2(1.0)));
 shoreMeters = outsideZone ? 60.0 : texture2D(waterShore, clamp(shoreUv, 0.0, 1.0)).r * 255.0;
 /* Tonos fotorrealistas del Embalse Angostura: esmeralda oscuro en orillas, azul profundo en el centro */
-vec3 shallow = vec3(0.06, 0.24, 0.24);
-vec3 deep = vec3(0.018, 0.07, 0.105);
-vec3 waterColor = mix(shallow, deep, smoothstep(2.0, 45.0, shoreMeters));
-/* Aguas bajas junto a la orilla: el fondo de arena y grava tiñe el agua. */
-waterColor = mix(waterColor, vec3(0.2, 0.33, 0.28), (1.0 - smoothstep(0.0, 6.0, shoreMeters)) * 0.45);
+vec3 shallow = vec3(0.07, 0.25, 0.26);
+vec3 deep = vec3(0.018, 0.075, 0.11);
+vec3 waterColor = mix(shallow, deep, smoothstep(0.5, 14.0, shoreMeters));
 vec2 meters = vWater.xz * 1000.0;
-float ripple = sin(meters.x * 0.33 + waterTime * 1.2) * sin(meters.y * 0.29 - waterTime * 0.9);
-float shoreEdge = (1.0 - smoothstep(0.0, 2.0 + ripple * 0.4, shoreMeters));
-/* Sutil transición en la orilla inmediata sin espuma blanca marina artificial */
-waterColor = mix(waterColor, vec3(0.3, 0.42, 0.38), shoreEdge * 0.4);
+/* Corrientes: manchas claras y oscuras que avanzan con el agua. */
+vec2 moved = flowing(meters, 1.0);
+vec2 along = normalize(waterFlow);
+/* Estelas: ruido estirado en la dirección del flujo, visibles desde lejos. */
+float streaks = waterFbm(vec2(dot(moved, along) / 160.0, dot(moved, vec2(-along.y, along.x)) / 22.0));
+float current = waterFbm(moved / 90.0);
+waterColor *= 0.72 + current * 0.24 + streaks * 0.34;
+/* Aguas bajas: el fondo tiñe solo los primeros metros. */
+waterColor = mix(waterColor, vec3(0.2, 0.34, 0.3), (1.0 - smoothstep(0.0, 3.5, shoreMeters)) * 0.5);
+/* Orilla viva: una línea de agua que sube y baja sobre la playa, cortada por el ruido. */
+float lap = 1.2 + sin(waterTime * 0.7 + waterNoise(meters / 25.0) * 6.2831) * 0.9;
+float wash = (1.0 - smoothstep(lap - 0.6, lap + 0.4, shoreMeters)) * smoothstep(0.35, 0.75, waterNoise(flowing(meters, 0.6) / 3.0));
+waterColor = mix(waterColor, vec3(0.78, 0.84, 0.8), wash * 0.45);
 diffuseColor.rgb = waterColor;`,
       )
       .replace(
         '#include <normal_fragment_maps>',
         `#include <normal_fragment_maps>
-vec2 drift = vWater.xz * 1000.0 - waterFlow * waterTime;
+vec2 drift = flowing(vWater.xz * 1000.0, 1.0);
 vec2 slope = waveSlope(drift, vec2(1.0, 0.25), 9.0, 0.04, 1.4)
   + waveSlope(drift, vec2(0.7, -0.8), 5.5, 0.025, 1.8)
   + waveSlope(drift, vec2(-0.3, 1.0), 3.2, 0.012, 2.2)
   + waveSlope(drift, vec2(0.9, 0.6), 17.0, 0.05, 0.9);
+/* Olas grandes y lentas: mueven los brillos del sol a la escala de la maqueta. */
+slope += waveSlope(drift, vec2(0.6, 0.8), 48.0, 0.35, 0.5) + waveSlope(drift, vec2(-0.8, 0.5), 31.0, 0.22, 0.65);
+/* Rizos irregulares encima de las olas regulares. */
+vec2 rp = drift / 1.6;
+float rc = waterNoise(rp);
+slope += vec2(waterNoise(rp + vec2(0.35, 0.0)) - rc, waterNoise(rp + vec2(0.0, 0.35)) - rc) * 0.12;
 vec3 wavePerturbation = (viewMatrix * vec4(-slope.x, 0.0, -slope.y, 0.0)).xyz * 0.22;
 normal = normalize(normal + wavePerturbation);
 vec3 viewDir = normalize(vViewPosition);
@@ -232,11 +264,13 @@ float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
 float fresnel = pow(1.0 - facing, 3.4);
 /* Reflejo del cielo contenido: con la cámara inclinada, un reflejo pleno blanquea el agua. */
 vec3 skyColor = vec3(0.42, 0.6, 0.72);
-vec3 waterAmbient = mix(vec3(0.02, 0.07, 0.09), skyColor, fresnel * 0.7);
+/* El cielo reflejado se rompe en manchas que derivan con el viento. */
+float skyBreak = waterFbm(vWater.xz * 1000.0 / 140.0 + vec2(waterTime * 0.02, -waterTime * 0.015));
+vec3 waterAmbient = mix(vec3(0.02, 0.07, 0.09), skyColor, fresnel * (0.45 + skyBreak * 0.5));
 reflectedLight.indirectDiffuse += waterAmbient * (0.5 + 0.3 * fresnel);
 /* Destellos del sol en las crestas de las olas. */
 vec3 sunDir = normalize((viewMatrix * vec4(-0.75, 0.6, -0.33, 0.0)).xyz);
-float glint = pow(max(dot(reflect(-normalize(vViewPosition), normal), sunDir), 0.0), 220.0);
+float glint = pow(max(dot(reflect(-normalize(vViewPosition), normal), sunDir), 0.0), 90.0);
 reflectedLight.directSpecular += vec3(1.0, 0.94, 0.82) * glint * 1.6;
 reflectedLight.directDiffuse = max(reflectedLight.directDiffuse, diffuseColor.rgb * 0.35);`,
       );

@@ -24,7 +24,14 @@ import { buildTerrainChunks } from './lod.js';
 import { RESERVOIR, within } from '../utils/reservoir.js';
 import { buildContextTerrain, contextMaterial, createContextSampler } from './context.js';
 import { DAM_HEIGHTS, ROAD_WIDTHS } from '../utils/osm.js';
-import { buildBridges, buildRoads, roadMaterial } from './roads.js';
+import {
+  bridgeReservoirCrossings,
+  buildBridges,
+  buildRoads,
+  roadMaterial,
+  surfaceSampler,
+} from './roads.js';
+import { waterTest } from '../utils/pathfinder.js';
 import {
   createHeightSampler,
   createProjection,
@@ -394,6 +401,8 @@ export function loadDiorama({ anisotropy }) {
     }
 
     const sites = { dams: [], labels: [], roads: [], buildings: [], ...landmarks };
+    /* Calzadas sobre el embalse como puentes (el relieve es anterior al agua). */
+    sites.roads = bridgeReservoirCrossings(sites.roads, waterTest(water));
 
     /* Paisaje que rodea la zona, para que la pantalla nunca muestre vacío. */
     let context = null;
@@ -421,6 +430,8 @@ export function loadDiorama({ anisotropy }) {
       landmarks: sites,
       roadsData: sites.roads,
       waterPolygons: water,
+      /* Lo que se pisa: tablero de puente, espejo de agua o relieve (para mascota, camino y pines). */
+      surfaceAt: surfaceSampler(sites.roads, heightAt, projection, waterTest(water)),
       dams: sites.dams.map((dam) => ({
         id: dam.id,
         name: dam.name,

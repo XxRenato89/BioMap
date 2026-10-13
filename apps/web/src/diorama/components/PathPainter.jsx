@@ -143,7 +143,7 @@ void main() {
  */
 export default function PathPainter() {
   const path = useAvatarStore((state) => state.currentPath);
-  const { heightAt } = useDiorama();
+  const { surfaceAt: heightAt } = useDiorama();
   const material = useMemo(pathMaterial, []);
   const progress = useRef(0);
 

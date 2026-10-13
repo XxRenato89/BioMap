@@ -64,7 +64,7 @@ export function PoiMarkers({
   viewId,
   onSelectPoint,
 }) {
-  const { projection, heightAt, dams, waterPolygons } = useDiorama();
+  const { projection, heightAt, surfaceAt, dams, waterPolygons } = useDiorama();
   const inWater = useMemo(() => waterTest(waterPolygons ?? []), [waterPolygons]);
   const getPoiState = useUserStore((state) => state.getPoiState);
   /* Suscripciones para redibujar los candados al avanzar el recorrido. */
@@ -223,7 +223,8 @@ export function PoiMarkers({
     )
     .map(({ feature, x, z }) => {
       const { id, layerId } = feature.properties;
-      const y = heightAt(x, z);
+      /* Sobre lo que se ve: un punto en un puente queda en su tablero, no en el fondo. */
+      const y = surfaceAt(x, z);
       const kind = kindOf(feature);
       const spot = spots.get(id);
 

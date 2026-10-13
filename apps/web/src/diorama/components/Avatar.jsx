@@ -24,7 +24,8 @@ function createPath(startCoord, endCoord, pathfinder) {
 }
 
 export default function Avatar({ points, onArrivedAtPoint }) {
-  const { projection, heightAt, roadsData, waterPolygons } = useDiorama();
+  /* La mascota pisa lo que se ve: relieve, o el tablero si cruza un puente. */
+  const { projection, surfaceAt: heightAt, roadsData, waterPolygons } = useDiorama();
 
   const mode = useAvatarStore((state) => state.mode);
   const targetPoint = useAvatarStore((state) => state.targetPoint);

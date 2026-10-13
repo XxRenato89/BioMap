@@ -49,7 +49,7 @@ function routeShields(roads) {
  * @param {{ shadows?: boolean }} props
  */
 export default function Landmarks({ shadows = false }) {
-  const { dams, landmarks, projection, heightAt, materials } = useDiorama();
+  const { dams, landmarks, projection, heightAt, surfaceAt, materials } = useDiorama();
 
   const labels = useMemo(
     () =>
@@ -57,11 +57,11 @@ export default function Landmarks({ shadows = false }) {
         const { x, z } = projection.toWorld(label.coordinates);
         return {
           ...label,
-          position: new Vector3(x, heightAt(x, z) + 0.012, z),
+          position: new Vector3(x, surfaceAt(x, z) + 0.012, z),
           width: label.name.length * CHAR_WIDTH + LABEL_PADDING,
         };
       }),
-    [landmarks, projection, heightAt],
+    [landmarks, projection, surfaceAt],
   );
 
   return (

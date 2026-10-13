@@ -1,4 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute, MeshStandardMaterial } from 'three';
+import { metersToY } from '../utils/projection.js';
+import { RESERVOIR, within } from '../utils/reservoir.js';
 
 /*
  * Caminos y puentes hechos a mano, con el estilo de los mapas de Mapbox: de
@@ -40,6 +42,11 @@ const ROAD_STEP = 0.006;
  */
 const DECK_RISE = 0.0015;
 const DECK_THICKNESS = 0.0016;
+/* Puentes sobre el embalse: altura libre sobre el agua (m), fracción del largo en rampa
+ * en cada extremo y distancia (km) a la que un punto se considera sobre el tablero. */
+const BRIDGE_CLEARANCE_M = 8;
+const BRIDGE_RAMP = 0.25;
+const DECK_SNAP = 0.03;
 const SIDEWALK = 0.0012;
 const PARAPET_HEIGHT = 0.0009;
 const PARAPET_WIDTH = 0.0003;
@@ -74,12 +81,115 @@ function roadPoints({ line, bridge }, heightAt, projection) {
     ROAD_STEP,
   );
   if (!bridge) return points.map((p) => ({ ...p, y: heightAt(p.x, p.z) + ROAD_LIFT }));
-  const start = heightAt(points[0].x, points[0].z);
-  const end = heightAt(points.at(-1).x, points.at(-1).z);
-  return points.map((p, k) => ({
-    ...p,
-    y: start + ((end - start) * k) / Math.max(points.length - 1, 1) + DECK_RISE,
-  }));
+  /*
+   * Sobre el embalse, el tablero va sobre el agua: el relieve es anterior al
+   * embalse y sus extremos pueden quedar bajo la cota. Arranca a nivel del
+   * agua, sube en rampa desde cada orilla y cruza a nivel.
+   */
+  const middle = points[Math.floor(points.length / 2)];
+  const overReservoir = within(projection.toLngLat(middle.x, middle.z), RESERVOIR.surface);
+  const floor = overReservoir ? metersToY(RESERVOIR.level) : -Infinity;
+  const start = Math.max(heightAt(points[0].x, points[0].z), floor);
+  const end = Math.max(heightAt(points.at(-1).x, points.at(-1).z), floor);
+  const level = metersToY(RESERVOIR.level + BRIDGE_CLEARANCE_M);
+  const last = Math.max(points.length - 1, 1);
+  return points.map((p, k) => {
+    const t = k / last;
+    const straight = start + (end - start) * t;
+    if (!overReservoir) return { ...p, y: straight + DECK_RISE };
+    const ramp = Math.min(1, Math.min(t, 1 - t) / BRIDGE_RAMP);
+    return { ...p, y: Math.max(straight, straight + (level - straight) * ramp) + DECK_RISE };
+  });
+}
+
+/* Separación (km) al revisar qué partes de un camino cruzan el embalse, y largo mínimo de un cruce. */
+const WATER_PROBE_KM = 0.01;
+const MIN_CROSSING_KM = 0.02;
+
+/**
+ * Caminos que cruzan el embalse como puentes: el relieve es anterior al agua,
+ * así que los accesos de un puente (y cualquier calzada sobre el embalse)
+ * quedarían sumergidos. Cada tramo de más de MIN_CROSSING_KM sobre el agua
+ * pasa a ser un puente aparte; los vértices originales se conservan, así los
+ * cruces con otros caminos no cambian.
+ *
+ * @param {Array<{ kind: string, line: number[][], bridge?: boolean }>} roads
+ * @param {(lngLat: number[]) => boolean} inWater
+ */
+export function bridgeReservoirCrossings(roads, inWater) {
+  const wet = (point) => inWater(point) && within(point, RESERVOIR.surface);
+  const lengthKm = (a, b) => Math.hypot((a[0] - b[0]) * 88.2, (a[1] - b[1]) * 111.2);
+  const result = [];
+  for (const road of roads) {
+    if (road.bridge || road.line.length < 2) {
+      result.push(road);
+      continue;
+    }
+    /* Línea densa, marcando si cada punto está sobre el agua. */
+    const dense = [{ point: road.line[0], wet: wet(road.line[0]) }];
+    for (let k = 1; k < road.line.length; k += 1) {
+      const [a, b] = [road.line[k - 1], road.line[k]];
+      const parts = Math.max(1, Math.ceil(lengthKm(a, b) / WATER_PROBE_KM));
+      for (let p = 1; p <= parts; p += 1) {
+        const t = p / parts;
+        const point = p === parts ? b : [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+        dense.push({ point, wet: wet(point) });
+      }
+    }
+    /* Tramos alternos de tierra y agua; los de agua cortos se quedan como camino. */
+    const runs = [];
+    for (const item of dense) {
+      const last = runs.at(-1);
+      if (last && last.wet === item.wet) last.points.push(item.point);
+      else
+        runs.push({
+          wet: item.wet,
+          points: last ? [last.points.at(-1), item.point] : [item.point],
+        });
+    }
+    for (const run of runs) {
+      const length = run.points.slice(1).reduce((sum, p, i) => sum + lengthKm(run.points[i], p), 0);
+      const bridge = run.wet && length >= MIN_CROSSING_KM;
+      if (run.points.length >= 2)
+        result.push({ ...road, line: run.points, ...(bridge && { bridge: true }) });
+    }
+  }
+  return result;
+}
+
+/**
+ * Altura de lo que pisa un punto (x, z): el tablero de un puente si pasa por
+ * encima, el espejo de agua si es agua, o el relieve. Para apoyar pines y
+ * etiquetas sobre lo que se ve, no en el fondo del embalse.
+ *
+ * @param {Array<{ line: number[][], bridge?: boolean }>} roads
+ * @param {(x: number, z: number) => number} heightAt
+ * @param {{ toWorld: Function, toLngLat: Function }} projection
+ * @param {(lngLat: number[]) => boolean} inWater
+ * @returns {(x: number, z: number) => number}
+ */
+export function surfaceSampler(roads, heightAt, projection, inWater) {
+  const decks = roads
+    .filter((road) => road.bridge)
+    .map((road) => roadPoints(road, heightAt, projection));
+  return (x, z) => {
+    let best = null;
+    let bestDistance = DECK_SNAP;
+    for (const deck of decks) {
+      for (const p of deck) {
+        const d = Math.hypot(p.x - x, p.z - z);
+        if (d < bestDistance) {
+          bestDistance = d;
+          best = p.y;
+        }
+      }
+    }
+    if (best !== null) return best;
+    const lngLat = projection.toLngLat(x, z);
+    if (inWater(lngLat) && within(lngLat, RESERVOIR.surface))
+      return Math.max(heightAt(x, z), metersToY(RESERVOIR.level));
+    return heightAt(x, z);
+  };
 }
 
 /**
