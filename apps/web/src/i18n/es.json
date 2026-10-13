@@ -40,10 +40,29 @@
     "offline": "Sin conexión con el servidor. Reintentando…",
     "basemap": "No se pudo cargar el mapa base. Reintentando…"
   },
-  "qr": {
-    "title": "Llévalo en tu teléfono",
-    "text": "Conéctate al Wi‑Fi <strong>{{wifi}}</strong> y escanea el código.",
-    "alt": "Código QR para abrir BioMap en el teléfono"
+  "progress": "Tu recorrido",
+  "skip": "Saltar caminata",
+  "tour": {
+    "progress": "Tu recorrido",
+    "nextStop": "Seguir ruta",
+    "backToStart": "Volver al inicio"
+  },
+  "bioBook": {
+    "open": "¡Ábrelo!",
+    "openAria": "Abrir Bio-Book",
+    "close": "Cerrar libro",
+    "step1": "Abre la cámara",
+    "step2": "Apunta al código",
+    "step3": "Toca el enlace",
+    "scanMapTitle": "Llévate el mapa vivo",
+    "scanMapText": "Escanea el código para seguir explorando todo BioMap desde tu celular.",
+    "scanPointTitle": "Lleva esta ficha contigo",
+    "scanPointText": "Escanea el código y sigue explorando {{name}} en tu celular.",
+    "tagline": "Lleva el mapa en tu teléfono",
+    "stepN": "Paso {{n}}",
+    "wifi": "Conéctate al Wi‑Fi {{wifi}}",
+    "scanMe": "Escanea este código",
+    "qrAlt": "Código QR para abrir BioMap en tu teléfono"
   },
   "card": {
     "close": "Cerrar ficha de {{name}}",
@@ -67,13 +86,33 @@
   },
   "attract": {
     "cta": "Toca para explorar",
-    "sub": "Historia, naturaleza y paisajes del territorio del Biobío"
+    "sub": "Historia, naturaleza y paisajes del territorio del Biobío",
+    "eyebrow": "Centro de Visitantes Angostura",
+    "nowVisiting": "Ahora visitando"
   },
   "attribution": "Imágenes: Sentinel-2 cloudless 2016 de EOX (CC BY 4.0, datos Copernicus) · Relieve: Mapzen Terrain Tiles (SRTM) · Cobertura: ESA WorldCover · Hitos, caminos y agua: © OpenStreetMap",
   "mapLabel": "Maqueta 3D de la Región del Biobío",
   "sheet": {
-    "tabPhotos": "Fotos",
+    "tabPhotos": "Fotos ({{count}})",
     "tab360": "360°",
-    "panorama": "Foto 360° de {{name}}"
+    "panorama": "Foto 360° de {{name}}",
+    "tabs": "Contenido de la ficha",
+    "tabStory": "Historia",
+    "panoramaHint": "Arrastra la imagen de arriba para mirar alrededor.",
+    "noPhotos": "Todavía no hay fotos de este lugar.",
+    "close": "Cerrar",
+    "visited": "Visitado",
+    "step": "Parada {{n}} de {{total}}",
+    "view360": "Ver en 360°",
+    "next": "Seguir a {{name}}",
+    "guide": "Tu guía",
+    "mute": "Silenciar la voz",
+    "unmute": "Activar la voz"
+  },
+  "avatar": {
+    "arrived": "¡Llegamos a {{name}}! Aquí tienes su historia, sus fotos y lo que lo hace especial."
+  },
+  "loading": {
+    "text": "Preparando la maqueta del Biobío…"
   }
 }

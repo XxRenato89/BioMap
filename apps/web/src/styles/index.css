@@ -1,176 +1,204 @@
-/*
- * Estilos del visor táctil, según el diseño «BioMap · Diseño del visor».
- * Pensados para una pantalla de 55–65" (1920×1080) usada de pie: objetivos
- * táctiles de 64–80 px y texto grande. Todo el texto escala con --text-scale
- * (botón «Aa+»), y [data-contrast='high'] cambia a paneles opacos.
- */
-@import './tokens.css';
-@import './hud.css';
-@import './map.css';
-@import './cards.css';
-@import './overlays.css';
+@import 'tailwindcss';
 
-* {
-  box-sizing: border-box;
+@theme {
+  --color-forest: #13241d;
+  --color-forest-dark: #0f1c16;
+  --color-forest-light: #2c6b4d;
+  --color-ink: #10201a;
+  --color-muted: #4a5a4e;
+  --color-muted-strong: #33443a;
+  --color-land: #e7ece0;
+  --color-mint: #cfe3d6;
+  --color-mint-muted: #a9c7b6;
+  --color-eyebrow: #9fc2ad;
+  --color-focus: #1d4ed8;
+  --color-ok: #4ade80;
+  --color-warning: #f2c14e;
+  --color-accent: #d9631a;
+  --color-cream: #f3ecdc;
+  --color-cream-shade: #e4d8bd;
+  --color-ochre: #c8873a;
+  --color-ochre-deep: #9c6322;
+
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
+
+  --shadow-soft: 0 6px 18px rgba(16, 32, 26, 0.16);
+  --shadow-panel: 0 10px 30px rgba(16, 32, 26, 0.22);
+  --shadow-strong: 0 8px 24px rgba(16, 32, 26, 0.25);
 }
 
-html,
-body,
-#root {
-  margin: 0;
-  height: 100%;
-  overflow: hidden;
+:root {
+  --forest: #13241d;
+  --forest-dark: #0f1c16;
+  --forest-light: #2c6b4d;
+  --ink: #10201a;
+  --muted: #4a5a4e;
+  --muted-strong: #33443a;
+  --land: #e7ece0;
+  --mint: #cfe3d6;
+  --mint-muted: #a9c7b6;
+  --eyebrow: #9fc2ad;
+  --focus: #1d4ed8;
+  --ok: #4ade80;
+  --warning: #f2c14e;
+  --accent: #d9631a;
+
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
+
+  --shadow-soft: 0 6px 18px rgba(16, 32, 26, 0.16);
+  --shadow-panel: 0 10px 30px rgba(16, 32, 26, 0.22);
+  --shadow-strong: 0 8px 24px rgba(16, 32, 26, 0.25);
+
+  --text-scale: 1;
+  --fs-title: calc(48px * var(--text-scale));
+  --fs-card-title: calc(30px * var(--text-scale));
+  --fs-lead: calc(21px * var(--text-scale));
+  --fs-body: calc(19px * var(--text-scale));
+  --fs-button: calc(23px * var(--text-scale));
+  --fs-small: calc(16px * var(--text-scale));
+  --fs-eyebrow: calc(15px * var(--text-scale));
+
+  color-scheme: light;
 }
 
-body {
-  font-family: var(--font-body);
-  color: var(--ink);
-  background: #0d110f;
-  -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-button:focus-visible {
-  outline: 4px solid var(--focus);
-  outline-offset: 3px;
-}
-
-h1,
-h2 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-
-.viewer {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-/*
- * Botones genéricos.
- */
-.primary-button,
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 80px;
-  padding: 0 30px;
-  border-radius: 22px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--fs-button);
-  transition:
-    transform 0.12s ease,
-    background-color 0.15s ease;
-}
-
-.primary-button {
-  border: 0;
-  background: var(--forest);
-  color: #ffffff;
-  box-shadow: var(--shadow-strong);
-}
-
-.primary-button--light {
-  background: #ffffff;
-  color: var(--ink);
-}
-
-.secondary-button {
-  border: 3px solid var(--forest);
-  background: #ffffff;
-  color: var(--forest);
-}
-
-.secondary-button--dark {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: transparent;
-  color: #ffffff;
-}
-
-.primary-button:active,
-.secondary-button:active,
-.icon-button:active,
-.chip-button:active,
-.tilt-button:active,
-.layer-switch:active,
-.pin:active,
-.cluster:active {
-  transform: scale(0.96);
-}
-
-button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.eyebrow {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--fs-eyebrow);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--eyebrow);
-}
-
-/*
- * Figuras de capa (círculo, cuadrado, rombo), sin depender solo del color.
- */
-.shape {
-  display: inline-block;
-  flex: none;
-  background: var(--layer-color);
-  border: 3px solid #ffffff;
-}
-
-.shape--sm {
-  width: 22px;
-  height: 22px;
-  border-width: 0;
-}
-
-.shape--md {
-  width: 26px;
-  height: 26px;
-}
-
-.shape--lg {
-  width: 32px;
-  height: 32px;
-  margin: 0 5px;
-}
-
-.shape--circle {
-  border-radius: 50%;
-}
-
-.shape--square {
-  border-radius: 7px;
-}
-
-.shape--diamond {
-  border-radius: 5px;
-  transform: rotate(45deg) scale(0.88);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+/* En la capa base, para que las utilidades de Tailwind (p. ej. text-cream en un botón) puedan sobrescribirlas. */
+@layer base {
+  * {
+    box-sizing: border-box;
   }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: #0d110f;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  button:focus-visible {
+    outline: 4px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-family: var(--font-display);
+  }
+}
+
+/*
+ * Paneles tipo letrero de parque (mismo lenguaje que la ficha y el Bio-Book):
+ * verde bosque macizo con una ranura interior clara, o crema con canto.
+ * Sin vidrio: se lee igual sobre agua, bosque o pasto.
+ */
+.glass-dark {
+  background: #1c3a2a;
+  border: 1px solid #0f241a;
+  color: #f3ecdc;
+  box-shadow:
+    inset 0 0 0 4px #1c3a2a,
+    inset 0 0 0 5.5px rgba(243, 236, 220, 0.2),
+    0 3px 0 #0f241a,
+    0 12px 28px rgba(10, 20, 14, 0.32);
+}
+
+.glass-light {
+  background: var(--color-cream);
+  border: 1px solid #d9cba8;
+  color: var(--ink);
+  box-shadow:
+    0 3px 0 var(--color-cream-shade),
+    0 10px 24px rgba(10, 20, 14, 0.25);
+}
+
+/* Modo atracción: la maqueta se luce sola, sin pines ni etiquetas encima. */
+[data-attract] .poi-pin,
+[data-attract] .map-label {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Animaciones del Bio-Book y del modo reposo */
+@keyframes loading {
+  from {
+    left: -33%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  86%,
+  100% {
+    transform: rotate(0);
+  }
+  90% {
+    transform: rotate(-4deg);
+  }
+  94% {
+    transform: rotate(4deg);
+  }
+  98% {
+    transform: rotate(-2deg);
+  }
+}
+
+@keyframes invite {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+  }
+  60% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 36px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Alto Contraste Accesible */
+[data-contrast='high'] {
+  --muted: #000000;
+  --muted-strong: #000000;
+  --mint: #ffffff;
+  --mint-muted: #ffffff;
+  --eyebrow: #ffffff;
+  --focus: #ffbf00;
+}
+
+[data-contrast='high'] .glass-dark {
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  border: 3px solid #ffffff !important;
+}
+
+[data-contrast='high'] .glass-light {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border: 3px solid #000000 !important;
 }

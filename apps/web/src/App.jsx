@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AccessibilityBar from './components/AccessibilityBar.jsx';
+import BioBook from './components/BioBook.jsx';
 import Compass from './components/Compass.jsx';
+import ConfettiCanvas from './components/ConfettiCanvas.jsx';
 import HeaderCard from './components/HeaderCard.jsx';
 import InactivityWarning from './components/InactivityWarning.jsx';
 import LayerPanel from './components/LayerPanel.jsx';
 import MapControls from './components/MapControls.jsx';
-import QrCard from './components/QrCard.jsx';
+import SkipWalkButton from './components/SkipWalkButton.jsx';
 import StatusPill from './components/StatusPill.jsx';
 import ZoomLevels from './components/ZoomLevels.jsx';
 import { config } from './config.js';
 import AttractOverlay from './features/attract/AttractOverlay.jsx';
 import { useAttractMode } from './features/attract/useAttractMode.js';
 import PointSheets from './features/point/PointSheets.jsx';
-import { isInside } from './diorama/cameraMath.js';
-import DioramaCanvas from './diorama/DioramaCanvas.jsx';
-import DioramaView from './diorama/DioramaView.jsx';
-import { PoiMarkers } from './diorama/PoiMarkers.jsx';
-import Avatar from './diorama/Avatar.jsx';
+import { useTour } from './features/tour/useTour.js';
+import { isInside } from './diorama/utils/cameraMath.js';
+import DioramaCanvas from './diorama/components/DioramaCanvas.jsx';
+import DioramaView from './diorama/components/DioramaView.jsx';
+import { PoiMarkers } from './diorama/components/PoiMarkers.jsx';
+import Avatar from './diorama/components/Avatar.jsx';
 import AvatarNarrator from './features/avatar/AvatarNarrator.jsx';
 import { useLayersQuery, usePointsQuery } from './hooks/useApi.js';
 import { useInactivity } from './hooks/useInactivity.js';
@@ -25,6 +28,7 @@ import { useRestMode } from './hooks/useRestMode.js';
 import { useVisibleLayers } from './hooks/useLayers.js';
 import { TEXT_SCALES, useViewerStore } from './store/viewerStore.js';
 import { useAvatarStore } from './store/avatarStore.js';
+import { useUserStore } from './store/userStore.js';
 import { publishMainView } from './store/viewsStore.js';
 
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'keydown'];
@@ -41,16 +45,9 @@ function countByLayer(features) {
 }
 
 /**
- * Cámara al abrir un punto: de cerca y algo inclinada, para ver el relieve
- * que lo rodea, manteniendo el rumbo con que se miraba.
- */
-const POINT_RANGE = 1_000;
-const POINT_PITCH = -32;
-
-/**
  * Visor táctil de BioMap: una maqueta 3D del territorio sobre relieve real.
- * Al tocar un punto, la cámara vuela hasta él y se abre su ficha. También
- * tiene modo atracción y reinicio por inactividad.
+ * Al tocar un punto, la mascota camina hasta él y se abre su ficha (ver
+ * useTour). También tiene modo atracción, reposo y reinicio por inactividad.
  *
  * @param {{ mapConfig?: ReturnType<import('./config.js').buildConfig> }} props
  */
@@ -78,32 +75,6 @@ export default function App({ mapConfig = config }) {
   const viewerRef = useRef(null);
   const [attractStop, setAttractStop] = useState(null);
 
-  /*
-   * Vista de inicio: la maqueta completa con zoom lejos para apreciar
-   * toda la cuenca y al avatar recorriendo los puntos.
-   */
-  const homeView = useMemo(
-    () => ({
-      ...mapConfig.initialView,
-      range: 16_000,
-      pitch: -34,
-    }),
-    [mapConfig.initialView],
-  );
-
-  const effectiveConfig = useMemo(
-    () => ({
-      ...mapConfig,
-      maxRange: 18_000,
-      zoomLevels: {
-        region: 13_000,
-        zone: 4_500,
-        detail: 1_200,
-      },
-    }),
-    [mapConfig],
-  );
-
   useEffect(() => {
     i18n.changeLanguage(lang);
     document.documentElement.lang = lang;
@@ -115,6 +86,7 @@ export default function App({ mapConfig = config }) {
   const resetAll = useCallback(() => {
     mainRef.current?.resetView();
     useViewerStore.getState().resetAll();
+    useUserStore.getState().resetProgress();
   }, []);
 
   const { phase, secondsLeft, markActive, markClean } = useInactivity({
@@ -182,43 +154,12 @@ export default function App({ mapConfig = config }) {
     };
   }, [attract, attractStops]);
 
+  const { selectPoint, arrive, closePoint } = useTour({ points, camera: mainRef });
+
   const exitAttract = () => {
     useViewerStore.getState().setAttract(false);
     mainRef.current?.resetView();
     markActive();
-  };
-
-  /*
-   * Abre la ficha de un punto: el avatar corre hacia él para dar su explicación,
-   * y la cámara se orienta hacia el lugar.
-   */
-  const selectPoint = useCallback(
-    (pointId) => {
-      const feature = points.features.find((item) => item.properties.id === pointId);
-      if (!feature) return;
-
-      useViewerStore.getState().openPoint(pointId);
-      useAvatarStore.getState().setTargetPoint(feature);
-
-      const heading = mainRef.current?.view().heading ?? mapConfig.initialView.heading;
-      mainRef.current?.flyTo({
-        center: feature.geometry.coordinates,
-        range: POINT_RANGE,
-        heading,
-        pitch: POINT_PITCH,
-      });
-    },
-    [points, mapConfig.initialView.heading],
-  );
-
-  /*
-   * Cierra una ficha; al cerrar la última, la vista vuelve al encuadre general
-   * y el avatar reanuda su patrulla autónoma.
-   */
-  const closePoint = (pointId) => {
-    actions.closePoint(pointId);
-    useAvatarStore.getState().stopSpeaking();
-    if (useViewerStore.getState().selectedPointIds.length === 0) mainRef.current?.resetView();
   };
 
   const handleReset = () => {
@@ -251,24 +192,26 @@ export default function App({ mapConfig = config }) {
   return (
     <main
       ref={viewerRef}
-      className="viewer"
+      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#93b4cc] via-[#c3d2d3] to-[#dcd8c8] select-none"
       data-contrast={contrast ? 'high' : undefined}
       data-text-scale={textScale}
+      data-sheet-open={openSheets.length > 0 ? 'true' : undefined}
+      data-attract={attract || undefined}
       style={{ '--text-scale': TEXT_SCALES[textScale] }}
     >
       <DioramaCanvas eventSource={viewerRef} />
       <DioramaView
         ref={mainRef}
         id="main"
-        config={effectiveConfig}
-        homeView={homeView}
+        config={mapConfig}
+        homeView={mapConfig.initialView}
         shadows
         fog={[16, 38]}
         label={t('mapLabel')}
         onView={publishMainView}
         onTiltChange={actions.setPitched}
       >
-        <Avatar points={points} />
+        <Avatar points={points} onArrivedAtPoint={arrive} />
         <PoiMarkers
           points={points}
           layers={layers}
@@ -279,9 +222,12 @@ export default function App({ mapConfig = config }) {
         />
       </DioramaView>
 
-      <div className="hud">
-        <div className="hud__left">
-          <div className="hud__stack" data-obstacle>
+      <div
+        className={`absolute inset-0 pointer-events-none z-10 [&>*]:pointer-events-auto transition-opacity duration-700 ${attract ? 'opacity-0' : ''}`}
+        aria-hidden={attract || undefined}
+      >
+        <div className="absolute top-6 left-6 flex flex-col gap-3.5 max-w-[380px]">
+          <div className="flex flex-col gap-3" data-obstacle>
             <HeaderCard />
             <LayerPanel
               layers={layers}
@@ -291,19 +237,22 @@ export default function App({ mapConfig = config }) {
             />
           </div>
           <div data-obstacle>
-            <QrCard
+            <BioBook
               url={mapConfig.publicUrl || window.location.origin}
               wifi={mapConfig.kioskWifi}
+              selectedPoint={
+                openSheets.length > 0 ? openSheets[openSheets.length - 1].feature : null
+              }
             />
           </div>
         </div>
 
-        <div className="hud__top">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
           <StatusPill messages={messages} />
         </div>
 
-        <div className="hud__right">
-          <div className="hud__stack hud__stack--end" data-obstacle>
+        <div className="absolute top-6 right-6 flex flex-col items-end gap-3.5">
+          <div className="flex flex-col items-end gap-3" data-obstacle>
             <AccessibilityBar
               textScale={textScale}
               contrast={contrast}
@@ -326,19 +275,34 @@ export default function App({ mapConfig = config }) {
           </div>
         </div>
 
-        <div className="hud__bottom" data-obstacle>
-          <ZoomLevels
-            levels={effectiveConfig.zoomLevels}
-            onPick={(range) => mainRef.current?.zoomToRange(range)}
-            restSeconds={Math.round(mapConfig.restDelayMs / 1000)}
-          />
-        </div>
+        {/* Con una ficha abierta, ese espacio es de la mascota que la presenta. */}
+        {openSheets.length === 0 && (
+          <div
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2"
+            data-obstacle
+          >
+            <ZoomLevels
+              levels={mapConfig.zoomLevels}
+              onPick={(range) => mainRef.current?.zoomToRange(range)}
+              restSeconds={Math.round(mapConfig.restDelayMs / 1000)}
+            />
+          </div>
+        )}
       </div>
 
-      <PointSheets open={openSheets} onClose={closePoint} />
+      <PointSheets
+        open={openSheets}
+        onClose={closePoint}
+        onSelectPoint={selectPoint}
+        allPoints={points.features}
+      />
       <AvatarNarrator />
+      <SkipWalkButton />
+      <ConfettiCanvas />
 
-      <p className="attribution">{t('attribution')}</p>
+      <p className="absolute bottom-2 left-6 text-xs text-white/50 pointer-events-none">
+        {t('attribution')}
+      </p>
 
       {attract && <AttractOverlay stopName={attractStop} onExplore={exitAttract} />}
       {phase === 'warning' && (

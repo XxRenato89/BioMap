@@ -4,14 +4,14 @@ import { buildConfig } from './config.js';
 describe('buildConfig', () => {
   it('uses the documented defaults', () => {
     expect(buildConfig({})).toMatchObject({
-      initialView: { center: [-71.8044, -37.7196], range: 13_000, heading: 0, pitch: -40 },
+      initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -48 },
       maxBounds: [
         [-71.855, -37.7672],
         [-71.75374, -37.672],
       ],
-      minRange: 120,
-      maxRange: 18_000,
-      zoomLevels: { region: 13_000, zone: 4_500, detail: 1_200 },
+      minRange: 150,
+      maxRange: 12_000,
+      zoomLevels: { region: 8_500, zone: 5_200, detail: 1_400 },
       restDelayMs: 45_000,
       idleTimeoutMs: 120_000,
       idleWarningMs: 10_000,

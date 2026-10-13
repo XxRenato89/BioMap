@@ -2,6 +2,7 @@ import { Volume2, VolumeX, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { useAvatarStore } from '../../store/avatarStore.js';
+import { useViewerStore } from '../../store/viewerStore.js';
 
 /**
  * Módulo de voz y diálogo del Avatar ("BioGuía").
@@ -59,65 +60,67 @@ export default function AvatarNarrator() {
     };
   }, [isSpeaking, activeSpeech, muted]);
 
-  if (!isSpeaking || !activeSpeech) return null;
+  const selectedPointIds = useViewerStore((state) => state.selectedPointIds);
+
+  if (!isSpeaking || !activeSpeech || selectedPointIds.length > 0) return null;
 
   return (
     <AnimatePresence>
       <motion.aside
-        className="avatar-narrator-dialog"
+        className="fixed bottom-28 left-6 z-40 w-[min(440px,calc(100vw-48px))] rounded-[24px] bg-[#11221b]/90 backdrop-blur-xl border border-white/20 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] text-white pointer-events-auto flex flex-col gap-3.5"
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 30, scale: 0.95 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
-        <div className="avatar-narrator-dialog__badge">
-          <div className="avatar-narrator-dialog__avatar-icon">
-            <span className="avatar-emoji">🧭</span>
-            <span className="avatar-pulse" />
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-white/15 border border-white/20 text-xl shadow-inner flex-none">
+            <span className="z-10">🧭</span>
+            <span className="absolute inset-0 rounded-2xl bg-emerald-400/30 animate-ping pointer-events-none" />
           </div>
-          <div className="avatar-narrator-dialog__title-block">
-            <div className="avatar-narrator-dialog__tag">
-              <Sparkles size={14} className="sparkle-icon" />
+          <div className="flex-1 min-w-0">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-mint uppercase tracking-wider">
+              <Sparkles size={13} className="text-emerald-400" />
               <span>BioGuía Angostura</span>
             </div>
-            <h3 className="avatar-narrator-dialog__title">
+            <h3 className="m-0 text-base font-extrabold text-white truncate">
               {targetPoint?.properties?.name || 'Explicación del lugar'}
             </h3>
           </div>
-          <div className="avatar-narrator-dialog__controls">
+          <div className="flex items-center gap-1.5 flex-none">
             <button
               type="button"
-              className="narrator-btn"
+              className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors cursor-pointer"
               onClick={toggleMute}
               title={muted ? 'Activar voz' : 'Silenciar voz'}
               aria-label={muted ? 'Activar voz' : 'Silenciar voz'}
             >
-              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
             <button
               type="button"
-              className="narrator-btn narrator-btn--close"
+              className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/10 hover:bg-red-500/80 text-white/90 hover:text-white transition-colors cursor-pointer"
               onClick={stopSpeaking}
               title="Cerrar y continuar patrulla"
               aria-label="Cerrar narración"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        <div className="avatar-narrator-dialog__body">
-          <p className="avatar-narrator-dialog__speech">{activeSpeech}</p>
+        <div className="text-sm leading-relaxed text-[#e8f1eb] max-h-36 overflow-y-auto pr-1">
+          <p className="m-0">{activeSpeech}</p>
         </div>
 
         {/* Ondas de audio animadas cuando está hablando */}
         {!muted && (
-          <div className="avatar-narrator-dialog__waves" aria-hidden="true">
-            <span className="wave-bar wave-bar-1" />
-            <span className="wave-bar wave-bar-2" />
-            <span className="wave-bar wave-bar-3" />
-            <span className="wave-bar wave-bar-4" />
-            <span className="wave-bar wave-bar-5" />
+          <div className="flex items-center gap-1 h-3 pt-0.5" aria-hidden="true">
+            <span className="w-1 rounded-full bg-emerald-400 animate-[pulse_0.7s_ease-in-out_infinite] h-2" />
+            <span className="w-1 rounded-full bg-emerald-400 animate-[pulse_0.5s_ease-in-out_infinite] h-3.5" />
+            <span className="w-1 rounded-full bg-emerald-400 animate-[pulse_0.9s_ease-in-out_infinite] h-2" />
+            <span className="w-1 rounded-full bg-emerald-400 animate-[pulse_0.6s_ease-in-out_infinite] h-4" />
+            <span className="w-1 rounded-full bg-emerald-400 animate-[pulse_0.8s_ease-in-out_infinite] h-2.5" />
           </div>
         )}
       </motion.aside>

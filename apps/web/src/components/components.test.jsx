@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AttractOverlay from '../features/attract/AttractOverlay.jsx';
 import PointSheet from '../features/point/PointSheet.jsx';
@@ -7,14 +7,18 @@ import { useViewsStore } from '../store/viewsStore.js';
 import { axeViolations } from '../test/axe.js';
 import { clearTestQueryClients, makeWrapper } from '../test/providers.jsx';
 import AccessibilityBar from './AccessibilityBar.jsx';
+import BioBook from './BioBook.jsx';
 import Compass from './Compass.jsx';
 import HeaderCard from './HeaderCard.jsx';
 import InactivityWarning from './InactivityWarning.jsx';
 import LayerPanel from './LayerPanel.jsx';
 import MapControls from './MapControls.jsx';
-import QrCard from './QrCard.jsx';
 import StatusPill from './StatusPill.jsx';
 import ZoomLevels from './ZoomLevels.jsx';
+
+/* La mascota 3D necesita WebGL, que jsdom no tiene. */
+vi.mock('../features/avatar/SheetMascot.jsx', () => ({ Mascot: () => null }));
+vi.mock('@react-three/fiber', async (original) => ({ ...(await original()), Canvas: () => null }));
 
 afterEach(() => {
   clearTestQueryClients();
@@ -143,12 +147,17 @@ describe('StatusPill', () => {
   });
 });
 
-describe('QrCard', () => {
-  it('generates the QR code locally and names the Wi-Fi network', async () => {
-    render(<QrCard url="http://biomap.local" wifi="BioMap-Angostura" />);
-    const code = screen.getByRole('img', { name: /Código QR/ });
+describe('BioBook', () => {
+  it('opens in place with a local QR code and the Wi-Fi network, and closes', async () => {
+    const { container } = render(<BioBook url="http://biomap.local" wifi="BioMap-Angostura" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir Bio-Book' }));
+    const book = screen.getByRole('dialog', { name: 'Llévate el mapa vivo' });
+    const code = within(book).getByRole('img', { name: /Código QR/ });
     await waitFor(() => expect(code.querySelector('svg')).not.toBeNull());
-    expect(screen.getByText('BioMap-Angostura').tagName).toBe('STRONG');
+    expect(within(book).getByText(/BioMap-Angostura/)).toBeTruthy();
+    expect(await axeViolations(container)).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar libro' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
 
@@ -198,10 +207,12 @@ describe('PointSheet', () => {
     expect(screen.getByRole('dialog', { name: 'Embalse Angostura' })).toBeTruthy();
     expect(screen.getByText('Turismo')).toBeTruthy();
     await screen.findByText('Lago artificial sobre el Biobío.');
-    expect(screen.getByRole('button', { name: '360°' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Fotos \(0\)/ }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('tab', { name: 'Historia' }).getAttribute('aria-selected')).toBe(
       'true',
     );
+    expect(screen.getByRole('tab', { name: 'Fotos (0)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: '360°' }));
+    expect(screen.getByRole('tab', { name: '360°' }).getAttribute('aria-selected')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar ficha de Embalse Angostura' }));
     expect(onClose).toHaveBeenCalled();
     expect(await axeViolations(container)).toEqual([]);

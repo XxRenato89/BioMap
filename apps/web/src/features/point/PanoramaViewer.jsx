@@ -25,5 +25,12 @@ export default function PanoramaViewer({ url, label }) {
     return () => viewer.destroy();
   }, [url]);
 
-  return <div ref={containerRef} className="panorama" role="img" aria-label={label} />;
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-full relative overflow-hidden"
+      role="img"
+      aria-label={label}
+    />
+  );
 }

@@ -24,7 +24,7 @@ export function initialViewerState() {
     contrast: false,
     lang: 'es',
     attract: false,
-    contours: true,
+    contours: false,
   };
 }
 
@@ -87,7 +87,7 @@ export const useViewerStore = create((set) => ({
    * «Reiniciar vista»: todas las capas, curvas de nivel y sin ficha abierta. Respeta los
    * ajustes de lectura e idioma.
    */
-  resetExploration: () => set({ hiddenLayerIds: new Set(), selectedPointIds: [], contours: true }),
+  resetExploration: () => set({ hiddenLayerIds: new Set(), selectedPointIds: [], contours: false }),
 
   /*
    * Reinicio por inactividad: deja el visor como al inicio para el próximo visitante.

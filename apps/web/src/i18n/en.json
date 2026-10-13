@@ -45,10 +45,29 @@
     "offline": "No connection to the server. Retrying…",
     "basemap": "The base map could not be loaded. Retrying…"
   },
-  "qr": {
-    "title": "Take it on your phone",
-    "text": "Join the <strong>{{wifi}}</strong> Wi‑Fi and scan the code.",
-    "alt": "QR code to open BioMap on your phone"
+  "progress": "Your tour",
+  "skip": "Skip walking",
+  "tour": {
+    "progress": "Your tour",
+    "nextStop": "Next stop",
+    "backToStart": "Back to start"
+  },
+  "bioBook": {
+    "open": "Open me!",
+    "openAria": "Open Bio-Book",
+    "close": "Close book",
+    "step1": "Open your camera",
+    "step2": "Point at the code",
+    "step3": "Tap the link",
+    "scanMapTitle": "Take the map with you",
+    "scanMapText": "Scan the code and keep exploring BioMap on your phone.",
+    "scanPointTitle": "Take this card with you",
+    "scanPointText": "Scan the code to keep exploring {{name}} on your phone.",
+    "tagline": "Take the map on your phone",
+    "stepN": "Step {{n}}",
+    "wifi": "Join the {{wifi}} Wi‑Fi",
+    "scanMe": "Scan this code",
+    "qrAlt": "QR code to open BioMap on your phone"
   },
   "card": {
     "close": "Close the card for {{name}}",
@@ -72,13 +91,33 @@
   },
   "attract": {
     "cta": "Tap to explore",
-    "sub": "History, nature and landscapes of the Biobío territory"
+    "sub": "History, nature and landscapes of the Biobío territory",
+    "eyebrow": "Angostura Visitor Centre",
+    "nowVisiting": "Now visiting"
   },
   "attribution": "Imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0, Copernicus data) · Relief: Mapzen Terrain Tiles (SRTM) · Land cover: ESA WorldCover · Landmarks, roads and water: © OpenStreetMap",
   "mapLabel": "3D model of the Biobío Region",
   "sheet": {
-    "tabPhotos": "Photos",
+    "tabPhotos": "Photos ({{count}})",
     "tab360": "360°",
-    "panorama": "360° photo of {{name}}"
+    "panorama": "360° photo of {{name}}",
+    "tabs": "Place details",
+    "tabStory": "Story",
+    "panoramaHint": "Drag the image above to look around.",
+    "noPhotos": "There are no photos of this place yet.",
+    "close": "Close",
+    "visited": "Visited",
+    "step": "Stop {{n}} of {{total}}",
+    "view360": "View in 360°",
+    "next": "Next: {{name}}",
+    "guide": "Your guide",
+    "mute": "Mute the voice",
+    "unmute": "Turn the voice on"
+  },
+  "avatar": {
+    "arrived": "We made it to {{name}}! Here is its story, its photos and what makes it special."
+  },
+  "loading": {
+    "text": "Preparing the Biobío model…"
   }
 }

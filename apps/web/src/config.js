@@ -38,18 +38,18 @@ function toBounds(value) {
 export function buildConfig(env) {
   return {
     /*
-     * Vista inicial: la zona de Angostura completa, con el norte arriba, como
-     * al acercarse a la vitrina. `range` es la distancia de la cámara al
+     * Vista inicial: el embalse Angostura con el norte arriba, a una distancia
+     * que deja ver agua, relieve, bosque y riberas. `range` es la distancia de la cámara al
      * centro (m) y `pitch` su inclinación (grados).
      */
-    initialView: { center: [-71.8044, -37.7196], range: 13_000, heading: 0, pitch: -40 },
+    initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -48 },
     maxBounds: toBounds(env.VITE_MAP_BOUNDS) ?? DEFAULT_BOUNDS,
-    minRange: 120,
-    maxRange: 18_000,
+    minRange: 150,
+    maxRange: 12_000,
     /*
      * Niveles «Región · Zona · Detalle» como distancia de la cámara (m).
      */
-    zoomLevels: { region: 13_000, zone: 4_500, detail: 1_200 },
+    zoomLevels: { region: 8_500, zone: 5_200, detail: 1_400 },
     /*
      * Modo de reposo: la cámara vuelve sola a la vista de inicio tras este
      * tiempo sin uso. El reinicio completo (idioma, capas) llega después, con aviso.
