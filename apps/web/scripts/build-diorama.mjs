@@ -31,7 +31,15 @@
  * Todo se escribe primero en public/diorama.tmp/ y solo al final reemplaza la
  * carpeta anterior: si algo falla, la maqueta que había sigue intacta.
  */
-import { cpSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -41,11 +49,17 @@ import {
   gridNormal,
   hillshade,
   satelliteLight,
-} from '../src/diorama/bake.js';
+} from '../src/diorama/terrain/bake.js';
 import waterPolygons from '../src/data/water.json' with { type: 'json' };
-import { clipPolygonToBounds } from '../src/diorama/geo.js';
-import { densifyRing, inlayWater, shoreDistance, shoreLevels } from '../src/diorama/inlay.js';
-import { overpassQuery, parseOverpass } from '../src/diorama/osm.js';
+import landmarksLocal from '../src/data/landmarks_local.json' with { type: 'json' };
+import { clipPolygonToBounds } from '../src/diorama/utils/geo.js';
+import {
+  densifyRing,
+  inlayWater,
+  shoreDistance,
+  shoreLevels,
+} from '../src/diorama/terrain/inlay.js';
+import { overpassQuery, parseOverpass } from '../src/diorama/utils/osm.js';
 import { fetchWithRetry } from './diorama/fetch.mjs';
 import { buildLandcover } from './diorama/landcover.mjs';
 import { buildSatelliteTexture } from './diorama/satellite.mjs';
@@ -122,17 +136,20 @@ async function fetchArea(name, bounds, options) {
     columns: options.columns,
     rows,
     zoom: options.terrainZoom,
+    name,
   });
   step(`${name}: cobertura ${options.landcoverColumns}×${landcoverRows} (ESA WorldCover)`);
   const landcover = await buildLandcover(bounds, {
     columns: options.landcoverColumns,
     rows: landcoverRows,
+    name,
   });
   step(`${name}: foto ${options.textureColumns}×${textureRows} (Sentinel-2 cloudless 2016)`);
   const satellite = await buildSatelliteTexture(bounds, {
     columns: options.textureColumns,
     rows: textureRows,
     zoom: options.imageryZoom,
+    name,
   });
 
   return {
@@ -280,18 +297,71 @@ async function queryOverpass(query) {
 rmSync(TMP_DIR, { recursive: true, force: true });
 mkdirSync(TMP_DIR, { recursive: true });
 
-step('hitos, caminos y edificios (OpenStreetMap)');
+/* Preservar modelo 3D de la mascota en el directorio de salida */
+const mascotBackup = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../src/data/mascot.glb',
+);
+if (existsSync(mascotBackup)) {
+  cpSync(mascotBackup, path.join(TMP_DIR, 'mascot.glb'));
+} else if (existsSync(path.join(OUT_DIR, 'mascot.glb'))) {
+  cpSync(path.join(OUT_DIR, 'mascot.glb'), path.join(TMP_DIR, 'mascot.glb'));
+}
+
+step('hitos, caminos y edificios (OpenStreetMap + datos locales de Angostura)');
 const boundsPair = [
   [BOUNDS.west, BOUNDS.south],
   [BOUNDS.east, BOUNDS.north],
 ];
-const landmarks = parseOverpass(await queryOverpass(overpassQuery(boundsPair)), boundsPair);
+let landmarks;
+try {
+  landmarks = parseOverpass(await queryOverpass(overpassQuery(boundsPair)), boundsPair);
+} catch (err) {
+  console.warn(
+    `  aviso: Overpass no respondió (${err.message}). Usando hitos locales de respaldo.`,
+  );
+  const cachedLandmarks = path.join(OUT_DIR, 'landmarks.json');
+  if (existsSync(cachedLandmarks)) {
+    landmarks = JSON.parse(readFileSync(cachedLandmarks, 'utf8'));
+  } else {
+    landmarks = { dams: [], labels: [], roads: [], buildings: [] };
+  }
+}
+
+/* Fusión con infraestructura y edificios locales de alta resolución */
+if (landmarksLocal) {
+  if (landmarksLocal.dams) {
+    for (const dam of landmarksLocal.dams) {
+      if (!landmarks.dams.some((d) => d.name === dam.name)) landmarks.dams.push(dam);
+    }
+  }
+  if (landmarksLocal.labels) {
+    for (const label of landmarksLocal.labels) {
+      if (!landmarks.labels.some((l) => l.name === label.name)) landmarks.labels.push(label);
+    }
+  }
+  if (landmarksLocal.buildings) {
+    landmarks.buildings.push(...landmarksLocal.buildings);
+  }
+  if (landmarksLocal.roads) {
+    landmarks.roads.push(...landmarksLocal.roads);
+  }
+}
+
 if (landmarks.dams.length === 0) console.warn('  aviso: ninguna presa cae dentro de los límites');
 writeFileSync(path.join(TMP_DIR, 'landmarks.json'), `${JSON.stringify(landmarks)}\n`);
 step(
   `  ${landmarks.dams.length} presas, ${landmarks.labels.length} etiquetas, ` +
     `${landmarks.roads.length} caminos, ${landmarks.buildings.length} edificios`,
 );
+
+/* --only-roads: solo hitos y caminos de OSM, sin volver a descargar relieve, cobertura ni fotos. */
+if (process.argv.includes('--only-roads')) {
+  cpSync(path.join(TMP_DIR, 'landmarks.json'), path.join(OUT_DIR, 'landmarks.json'));
+  rmSync(TMP_DIR, { recursive: true, force: true });
+  step('listo: solo landmarks.json actualizado');
+  process.exit(0);
+}
 
 const centerLat = (BOUNDS.north + BOUNDS.south) / 2;
 const centerLng = (BOUNDS.east + BOUNDS.west) / 2;
@@ -353,7 +423,10 @@ const water = waterPolygons
     const withLevels = rings.map((ring) => ring.map(([lng, lat]) => [lng, lat, levels[k++]]));
     return { outer: withLevels[0], holes: withLevels.slice(1) };
   });
-const zoneInlay = inlayWater(gridOf(zoneArea), zoneArea.terrain.heights, water, { bankCells: 4 });
+const zoneInlay = inlayWater(gridOf(zoneArea), zoneArea.terrain.heights, water, {
+  bankCells: 8,
+  bank: 0.5,
+});
 const contextInlay = inlayWater(gridOf(contextArea), contextArea.terrain.heights, water, {
   bankCells: 1,
 });

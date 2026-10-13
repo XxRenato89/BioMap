@@ -1,0 +1,31 @@
+{
+  "nativeZones": [
+    {
+      "name": "Parque Angostura y Corredor Ribereño Biobío",
+      "bounds": {
+        "west": -71.83,
+        "south": -37.72,
+        "east": -71.79,
+        "north": -37.695
+      }
+    },
+    {
+      "name": "Cañón y Ribera Río Huequecura / Balneario",
+      "bounds": {
+        "west": -71.8,
+        "south": -37.755,
+        "east": -71.77,
+        "north": -37.73
+      }
+    },
+    {
+      "name": "Ribera Sur Quilaco y Área de Conservación Presa",
+      "bounds": {
+        "west": -71.825,
+        "south": -37.73,
+        "east": -71.81,
+        "north": -37.71
+      }
+    }
+  ]
+}
