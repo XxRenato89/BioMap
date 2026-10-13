@@ -5,7 +5,9 @@ import { createPool } from './db/pool.js';
 import { createMemoryCache } from './http/memory-cache.js';
 import { createGracefulShutdown } from './http/shutdown.js';
 import { createLayersRepository } from './layers/layers.repository.js';
+import { createLayersMockRepository } from './layers/layers.mock.js';
 import { createPointsRepository } from './points/points.repository.js';
+import { createPointsMockRepository } from './points/points.mock.js';
 
 /**
  * Punto de entrada del proceso: lee la configuración, crea las dependencias
@@ -21,18 +23,28 @@ try {
 }
 
 const logger = pino({ level: config.logLevel });
-const pool = createPool({
-  databaseUrl: config.databaseUrl,
-  max: config.dbPoolMax,
-  statementTimeoutMs: config.dbStatementTimeoutMs,
-});
-pool.on('error', (error) => logger.error({ err: error }, 'Unexpected idle database client error'));
+
+// Conditional database pool creation
+const pool = config.useMocks
+  ? null
+  : createPool({
+      databaseUrl: config.databaseUrl,
+      max: config.dbPoolMax,
+      statementTimeoutMs: config.dbStatementTimeoutMs,
+    });
+
+if (pool) {
+  pool.on('error', (error) =>
+    logger.error({ err: error }, 'Unexpected idle database client error'),
+  );
+}
 
 const app = createApp({
-  db: pool,
+  // Sin base de datos en modo mock: el health check responde "up".
+  db: pool ?? { query: async () => {} },
   repositories: {
-    layers: createLayersRepository(pool),
-    points: createPointsRepository(pool),
+    layers: config.useMocks ? createLayersMockRepository() : createLayersRepository(pool),
+    points: config.useMocks ? createPointsMockRepository() : createPointsRepository(pool),
   },
   cache: createMemoryCache({ ttlMs: config.cacheTtlSeconds * 1000 }),
   logger,
@@ -42,7 +54,7 @@ const app = createApp({
 });
 
 const server = app.listen(config.port, () => {
-  logger.info({ port: config.port }, 'BioMap API listening');
+  logger.info({ port: config.port, mocks: config.useMocks }, 'BioMap API listening');
 });
 
 const shutdown = createGracefulShutdown({ server, pool, logger });

@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "db:migrate": "node --env-file-if-exists=../../.env scripts/migrate.js",
     "db:seed": "node --env-file-if-exists=../../.env seeds/run.js",
-    "loadtest": "node scripts/loadtest.js"
+    "loadtest": "node scripts/loadtest.js",
+    "media:fetch": "node --env-file-if-exists=../../.env scripts/fetch-media.js"
   },
   "dependencies": {
     "compression": "^1.8.2",

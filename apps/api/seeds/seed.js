@@ -38,14 +38,30 @@ export async function seed(pool) {
     let pointsInserted = 0;
     for (const point of SAMPLE_POINTS) {
       const { rowCount } = await client.query(
-        `INSERT INTO points_of_interest (layer_id, name, description, location)
-         SELECT l.id, $2::text, $3::text, ST_SetSRID(ST_MakePoint($4::float8, $5::float8), 4326)
+        `INSERT INTO points_of_interest (layer_id, name, description, location, tour_stop)
+         SELECT l.id, $2::text, $3::text, ST_SetSRID(ST_MakePoint($4::float8, $5::float8), 4326),
+                $6::smallint
            FROM layers l
           WHERE l.slug = $1::text
             AND NOT EXISTS (SELECT 1 FROM points_of_interest p WHERE p.name = $2::text)`,
-        [point.layerSlug, point.name, point.description, point.lng, point.lat],
+        [
+          point.layerSlug,
+          point.name,
+          point.description,
+          point.lng,
+          point.lat,
+          point.tourStop ?? null,
+        ],
       );
       pointsInserted += rowCount;
+    }
+    /* Paradas del recorrido también en bases ya cargadas (los puntos existentes no se reinsertan). */
+    for (const point of SAMPLE_POINTS.filter((p) => p.tourStop)) {
+      await client.query(
+        `UPDATE points_of_interest SET tour_stop = $2::smallint
+          WHERE name = $1::text AND tour_stop IS DISTINCT FROM $2::smallint`,
+        [point.name, point.tourStop],
+      );
     }
 
     let imagesInserted = 0;

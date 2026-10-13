@@ -119,4 +119,20 @@ describeWithDb('database schema', () => {
       /images_main_is_photo_check/,
     );
   });
+
+  it('allows each tour stop once among live points', async () => {
+    const layerId = await insertLayer(pool, { slug: 'tourism' });
+    const first = await insertPoint(pool, { layerId, name: 'Uno' });
+    const second = await insertPoint(pool, { layerId, name: 'Dos' });
+    await pool.query('UPDATE points_of_interest SET tour_stop = 1 WHERE id = $1', [first]);
+    await expect(
+      pool.query('UPDATE points_of_interest SET tour_stop = 1 WHERE id = $1', [second]),
+    ).rejects.toThrow(/points_of_interest_tour_stop_idx/);
+    await expect(
+      pool.query('UPDATE points_of_interest SET tour_stop = 0 WHERE id = $1', [second]),
+    ).rejects.toThrow(/points_of_interest_tour_stop_check/);
+    /* Un punto eliminado libera su parada. */
+    await pool.query('UPDATE points_of_interest SET deleted_at = now() WHERE id = $1', [first]);
+    await pool.query('UPDATE points_of_interest SET tour_stop = 1 WHERE id = $1', [second]);
+  });
 });

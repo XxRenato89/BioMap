@@ -43,7 +43,7 @@ describeWithDb('points repository', () => {
           type: 'Feature',
           id,
           geometry: { type: 'Point', coordinates: [-72.0206, -37.6656] },
-          properties: { id, name: 'Santa Bárbara', layerId, layerSlug: 'history' },
+          properties: { id, name: 'Santa Bárbara', layerId, layerSlug: 'history', tourStop: null },
         },
       ]);
     });

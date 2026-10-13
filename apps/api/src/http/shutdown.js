@@ -32,7 +32,7 @@ export function createGracefulShutdown({
     server.close(async (error) => {
       let code = error ? 1 : 0;
       try {
-        await pool.end();
+        await pool?.end();
       } catch (poolError) {
         logger.error({ err: poolError }, 'Error closing the database pool');
         code = 1;

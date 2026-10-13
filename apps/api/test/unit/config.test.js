@@ -36,6 +36,13 @@ describe('loadConfig', () => {
     expect(() => loadConfig({})).toThrow(/DATABASE_URL/);
   });
 
+  it('does not require DATABASE_URL in mock mode', () => {
+    expect(loadConfig({ USE_MOCKS: 'true' })).toMatchObject({
+      useMocks: true,
+      databaseUrl: undefined,
+    });
+  });
+
   it('rejects a non-postgres DATABASE_URL', () => {
     expect(() => loadConfig({ DATABASE_URL: 'mysql://x' })).toThrow(/DATABASE_URL/);
   });

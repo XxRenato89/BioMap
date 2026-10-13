@@ -4,7 +4,7 @@
  * Excluye los puntos eliminados y los de capas inactivas.
  */
 const LIST_SQL = `
-  SELECT p.id, p.name, p.layer_id, l.slug AS layer_slug,
+  SELECT p.id, p.name, p.layer_id, l.slug AS layer_slug, p.tour_stop,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat
     FROM points_of_interest p
     JOIN layers l ON l.id = p.layer_id
@@ -18,7 +18,7 @@ const LIST_SQL = `
  * json_agg en la misma consulta para evitar una consulta extra por imagen.
  */
 const DETAIL_SQL = `
-  SELECT p.id, p.name, p.description, p.layer_id, l.slug AS layer_slug,
+  SELECT p.id, p.name, p.description, p.layer_id, l.slug AS layer_slug, p.tour_stop,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat,
          COALESCE(
            (SELECT json_agg(
@@ -39,10 +39,10 @@ const DETAIL_SQL = `
      AND l.is_active`;
 
 /**
- * Convierte una fila en un Feature GeoJSON. El `id` también va en la raíz
- * del Feature para que MapLibre pueda usar feature-state.
+ * Convierte una fila en un Feature GeoJSON. `tourStop` es la parada del
+ * recorrido guiado (null si el punto no está en él).
  */
-function toFeature(row, extraProperties = {}) {
+export function toFeature(row, extraProperties = {}) {
   return {
     type: 'Feature',
     id: row.id,
@@ -52,6 +52,7 @@ function toFeature(row, extraProperties = {}) {
       name: row.name,
       layerId: row.layer_id,
       layerSlug: row.layer_slug,
+      tourStop: row.tour_stop ?? null,
       ...extraProperties,
     },
   };
