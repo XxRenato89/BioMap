@@ -10,6 +10,12 @@ caminos reales para presentarle su ficha: historia, fotos y vista 360°.
 
 ## Qué hace
 
+- **Bajo el embalse**: con un botón, el embalse se vacía y deja ver el cañón del Biobío
+  como era antes de la inundación de 2014 (relieve SRTM del año 2000), con la cota de hoy
+  marcada en las laderas. Hasta ~45 m de profundidad.
+- **Luz según la hora**: amanecer, mediodía, tarde dorada y atardecer siguen el reloj del
+  kiosco (`?hora=19` en la URL para presentarlo). Aves sobre el embalse.
+
 - **Maqueta 3D a escala real**: relieve SRTM, foto satelital, agua de OpenStreetMap con
   orillas suaves, la presa Angostura (50 m), decenas de miles de árboles instanciados
   (nativo, pino y eucalipto) y rocas en las laderas.
@@ -104,6 +110,12 @@ Los hitos agregados a mano (miradores, campings, ríos) están en
 Calidad: el nivel `low | medium | high` se ajusta solo según la tarjeta gráfica, o se
 fija con `VITE_QUALITY`.
 
+## Kiosco
+
+En el mini PC, la API sirve también el visor compilado (`WEB_DIR`), y
+`infra/kiosk/start-kiosk.ps1` lo abre a pantalla completa y lo reabre si se cierra. Ver
+`infra/kiosk/README.md`.
+
 ## Tests
 
 ```bash
@@ -121,6 +133,7 @@ así que se niegan a correr si el nombre de la base no termina en `_test`. El CI
 | Comando                           | Qué hace                                                      |
 | --------------------------------- | ------------------------------------------------------------- |
 | `npm test`                        | Todos los tests                                               |
+| `npm run test:e2e`                | Flujos completos en un navegador (Playwright; API de prueba)  |
 | `npm run lint`                    | ESLint                                                        |
 | `npm run format` / `format:check` | Prettier                                                      |
 | `npm run db:migrate`              | Aplica las migraciones                                        |

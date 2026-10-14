@@ -46,6 +46,20 @@ se suben a la GPU una vez; los cercanos usan un modelo detallado y el shader cru
 dos en un anillo, sin saltos. El nivel de calidad (`utils/quality.js`) se ajusta solo
 según los cuadros por segundo, o se fija con `VITE_QUALITY`.
 
+## Bajo el embalse
+
+El relieve SRTM es del año 2000, anterior al embalse: bajo el agua de la maqueta está el
+cañón original. Al activarlo, `reservoirDrain` (`utils/reservoir.js`) va de 0 a 1 y los
+shaders del agua y del terreno lo leen: el espejo del embalse baja de 326 m a 295 m (queda
+un hilo de agua en lo más hondo), el fondo se tiñe de sedimento y una franja marca la cota
+de hoy. Las cifras (≈ 45 m de profundidad, 641 ha) salen del propio relieve y de Colbún.
+
+## Luz del día
+
+`utils/daylight.js` interpola sol, cielo y relleno entre momentos clave (7, 12, 16, 19 y
+21 h). El cielo de fondo, la bruma, las luces, el reflejo y los brillos del agua siguen la
+hora del kiosco; fuera del horario se queda en una tarde suave.
+
 ## El recorrido
 
 1. El visitante toca un pin (`PoiMarkers`), o el botón "Seguir a…" de la ficha.
