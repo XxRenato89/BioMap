@@ -1,7 +1,7 @@
 import { Html } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useRef } from 'react';
-import { Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import { declutter, visibleKinds } from '../utils/labels.js';
 import { isOccluded } from '../utils/occlusion.js';
 
@@ -21,9 +21,26 @@ export function LandmarkLabels({ labels = [], heightAt, projection }) {
   const controls = useThree((state) => state.controls);
   const size = useThree((state) => state.size);
   const elements = useRef(new Map());
+  const lastView = useRef({
+    position: new Vector3(Infinity, 0, 0),
+    quaternion: new Quaternion(0, 0, 0, 0),
+    still: 0,
+  });
+  const lastUpdate = useRef(0);
 
   useFrame(({ camera }) => {
     if (!controls) return;
+    /* Oclusión, lectura del DOM y declutter son caros: solo con la cámara quieta, ~7 veces por segundo. */
+    const now = performance.now();
+    const view = lastView.current;
+    if (!camera.position.equals(view.position) || !camera.quaternion.equals(view.quaternion)) {
+      view.position.copy(camera.position);
+      view.quaternion.copy(camera.quaternion);
+      view.still = now;
+      return;
+    }
+    if (now - lastUpdate.current < 150 || now - view.still < 200) return;
+    lastUpdate.current = now;
     const kinds = visibleKinds(controls.distance * 1000);
     const candidates = [];
     for (const label of labels) {

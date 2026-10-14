@@ -266,7 +266,8 @@ export default function BioBook({ url, wifi, selectedPoint = null }) {
             >
               <Canvas
                 camera={{ position: [0, 0.3, 3.9], fov: 38 }}
-                dpr={[1, 2]}
+                dpr={[1, 1.5]}
+                frameloop="demand"
                 gl={{ alpha: true }}
               >
                 <ambientLight intensity={1.1} />

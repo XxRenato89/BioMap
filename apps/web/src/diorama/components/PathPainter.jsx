@@ -146,6 +146,7 @@ export default function PathPainter() {
   const { surfaceAt: heightAt } = useDiorama();
   const material = useMemo(pathMaterial, []);
   const progress = useRef(0);
+  const lastAt = useRef({ x: NaN, z: NaN });
 
   const route = useMemo(() => {
     if (!path || path.length < 2) return null;
@@ -176,7 +177,11 @@ export default function PathPainter() {
     progress.current = best;
     material.uniforms.uDone.value = points[best].along;
     material.uniforms.uTime.value = clock.elapsedTime;
-    invalidate();
+    /* A fps completos solo mientras la mascota camina; quieta, basta el reloj del agua. */
+    if (at.x !== lastAt.current.x || at.z !== lastAt.current.z) {
+      lastAt.current = { x: at.x, z: at.z };
+      invalidate();
+    }
   });
 
   if (!route) return null;

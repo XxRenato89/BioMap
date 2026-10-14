@@ -1,5 +1,5 @@
 import { ContactShadows, useAnimations, useGLTF } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useRef } from 'react';
@@ -12,6 +12,7 @@ const MASCOT_GLB_PATH = '/diorama/mascot.glb';
 /* Duración del gesto hacia la ficha al cambiar de foto o pestaña (s). */
 const GESTURE_S = 1.2;
 const MASCOT_HEIGHT = 2.3;
+const MASCOT_FPS = 30;
 
 /**
  * La mascota en primer plano: saluda al llegar y, con cada cambio en la
@@ -50,6 +51,15 @@ export function Mascot({ gestureKey, facing = 0.35 }) {
   useEffect(() => {
     gestureAt.current = performance.now() / 1000;
   }, [gestureKey]);
+
+  /* El lienzo va en frameloop="demand": a 30 fps basta y deja la GPU al mapa. */
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!document.hidden) invalidate();
+    }, 1000 / MASCOT_FPS);
+    return () => clearInterval(timer);
+  }, [invalidate]);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -113,11 +123,24 @@ export default function SheetMascot({ gestureKey }) {
         </div>
       )}
       <div className="w-[340px] h-[420px]" aria-hidden="true">
-        <Canvas camera={{ position: [0, 0.3, 3.9], fov: 38 }} dpr={[1, 2]} gl={{ alpha: true }}>
+        <Canvas
+          camera={{ position: [0, 0.3, 3.9], fov: 38 }}
+          dpr={[1, 1.5]}
+          frameloop="demand"
+          gl={{ alpha: true }}
+        >
           <ambientLight intensity={1.1} />
           <directionalLight position={[3, 5, 4]} intensity={1.6} />
           <Mascot gestureKey={gestureKey} />
-          <ContactShadows position={[0, -1.15, 0]} opacity={0.45} scale={4} blur={2} far={2} />
+          {/* La sombra no cambia con el vaivén: se calcula una vez, no en cada cuadro. */}
+          <ContactShadows
+            frames={1}
+            position={[0, -1.15, 0]}
+            opacity={0.45}
+            scale={4}
+            blur={2}
+            far={2}
+          />
         </Canvas>
       </div>
     </motion.div>
