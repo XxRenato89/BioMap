@@ -31,10 +31,10 @@ function facingWater(x, z, inWater, projection) {
 /*
  * Medidas del pin en pantalla (px) para que las etiquetas no se tapen.
  */
-const DOT = 56;
+const DOT = 60;
 /* La insignia queda justo sobre su ancla (la punta del poste). */
 const STEM = 0;
-const LABEL_GAP = 10;
+const LABEL_GAP = 0;
 /* Lo que sube una insignia por escalón (px) cuando pisa a otra. */
 const LIFT_PX = 48;
 /* Solo se escalonan las insignias con la cámara a menos de esto (km). */
@@ -69,7 +69,7 @@ export function PoiMarkers({
   const getPoiState = useUserStore((state) => state.getPoiState);
   /* Suscripciones para redibujar los candados al avanzar el recorrido. */
   useUserStore((state) => state.visitedPoints);
-  useUserStore((state) => state.tour);
+  const tour = useUserStore((state) => state.tour);
   const size = useThree((state) => state.size);
   const layerById = useMemo(() => new Map(layers.map((layer) => [layer.id, layer])), [layers]);
   const selected = new Set(selectedIds);
@@ -160,10 +160,10 @@ export function PoiMarkers({
 
           const labelWidth = entry.name.length * CHAR_WIDTH + LABEL_PADDING;
           /* Mandan el elegido y las paradas del recorrido; después, el orden de llegada. */
-          const tour = useUserStore.getState().tour.includes(Number(id)) ? 1_000 : 0;
+          const tourRank = tour.includes(Number(id)) ? 1_000 : 0;
           items.push({
             id,
-            rank: entry.selected ? 1_000_000 : tour - order,
+            rank: entry.selected ? 1_000_000 : tourRank - order,
             rect: {
               x: x - DOT / 2,
               y: y - STEM - DOT,
@@ -257,6 +257,7 @@ export function PoiMarkers({
             selected={selected.has(id)}
             onSelect={onSelect}
             state={getPoiState(id)}
+            stop={tour.indexOf(Number(id)) + 1}
           />
         </group>
       );

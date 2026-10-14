@@ -43,8 +43,20 @@ export function LandmarkLabels({ labels = [], heightAt, projection }) {
     lastUpdate.current = now;
     const kinds = visibleKinds(controls.distance * 1000);
     const candidates = [];
+    /* Los pines de los puntos de interés mandan: una etiqueta que los pise, o que repita su nombre, se oculta. */
+    const pinNames = new Set();
+    document.querySelectorAll('.poi-pin').forEach((pin, index) => {
+      pinNames.add(pin.dataset.name);
+      const rect = pin.getBoundingClientRect();
+      if (rect.width > 0)
+        candidates.push({
+          id: `poi-${index}`,
+          rank: 1e9,
+          rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+        });
+    });
     for (const label of labels) {
-      if (!kinds.has(label.kind)) continue;
+      if (!kinds.has(label.kind) || pinNames.has(label.name)) continue;
       projected.copy(label.position).project(camera);
       if (projected.z > 1 || Math.abs(projected.x) > 1.1 || Math.abs(projected.y) > 1.1) continue;
       if (isOccluded(camera.position, label.position, heightAt, projection, 0.003)) continue;
@@ -61,16 +73,6 @@ export function LandmarkLabels({ labels = [], heightAt, projection }) {
         },
       });
     }
-    /* Los pines de los puntos de interés mandan: una etiqueta que los pise se oculta. */
-    document.querySelectorAll('.poi-pin').forEach((pin, index) => {
-      const rect = pin.getBoundingClientRect();
-      if (rect.width > 0)
-        candidates.push({
-          id: `poi-${index}`,
-          rank: 1e9,
-          rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-        });
-    });
     const shown = declutter(candidates);
     for (const [id, element] of elements.current) {
       const hidden = String(!shown.has(id));
