@@ -337,7 +337,9 @@ if (landmarksLocal) {
   }
   if (landmarksLocal.labels) {
     for (const label of landmarksLocal.labels) {
-      if (!landmarks.labels.some((l) => l.name === label.name)) landmarks.labels.push(label);
+      /* Un hito local reemplaza al de OSM con el mismo nombre (corrige su posición). */
+      landmarks.labels = landmarks.labels.filter((l) => l.name !== label.name);
+      landmarks.labels.push(label);
     }
   }
   if (landmarksLocal.buildings) {

@@ -12,6 +12,9 @@ const JOIN_KM = 0.015;
 /* Hasta dónde se busca el camino más cercano a un punto. */
 const MAX_SNAP_KM = 0.6;
 const SNAP_CANDIDATES = 12;
+/* Para un destino en el agua, hasta dónde se busca el camino de la orilla. */
+const MAX_SHORE_KM = 1.5;
+const SHORE_SPREAD_KM = 0.1;
 
 /**
  * Distancia aproximada (km) entre dos [lng, lat] cercanos.
@@ -183,16 +186,22 @@ export class Pathfinder {
    * Tramos de camino más cercanos a un punto, a los que se puede llegar a pie
    * sin cruzar agua.
    */
-  snapCandidates(coord) {
+  snapCandidates(coord, { overWater = false } = {}) {
     return this.edges
       .map(([u, v]) => {
         const { t, point } = projectOnSegment(coord, this.nodes[u], this.nodes[v]);
         return { u, v, t, point, distance: distanceKm(coord, point) };
       })
-      .filter((c) => c.distance <= MAX_SNAP_KM)
+      .filter((c) => c.distance <= (overWater ? MAX_SHORE_KM : MAX_SNAP_KM))
       .sort((a, b) => a.distance - b.distance)
+      .filter((c, k, all) =>
+        /* Hacia el agua: puntos repartidos por la orilla (no todos en el mismo camino). */
+        overWater
+          ? all.slice(0, k).every((other) => distanceKm(other.point, c.point) >= SHORE_SPREAD_KM)
+          : k < SNAP_CANDIDATES,
+      )
       .slice(0, SNAP_CANDIDATES)
-      .filter((c) => this.walkable(coord, c.point));
+      .filter((c) => overWater || this.walkable(coord, c.point));
   }
 
   /**
@@ -205,7 +214,12 @@ export class Pathfinder {
    */
   findPath(startCoord, endCoord) {
     const starts = this.snapCandidates(startCoord);
-    const ends = this.snapCandidates(endCoord);
+    /*
+     * Un destino en el agua (el embalse) no se pisa: la ruta llega al camino
+     * de la orilla más cercano y termina ahí.
+     */
+    const onWater = this.inWater(endCoord);
+    const ends = this.snapCandidates(endCoord, { overWater: onWater });
     let best = null;
     for (const start of starts) {
       for (const end of ends) {
@@ -220,7 +234,8 @@ export class Pathfinder {
     }
     if (!best) return null;
     const middle = best.nodes.map((id) => this.nodes[id]);
-    return [startCoord, best.start.point, ...middle, best.end.point, endCoord];
+    const path = [startCoord, best.start.point, ...middle, best.end.point];
+    return onWater ? path : [...path, endCoord];
   }
 
   /**

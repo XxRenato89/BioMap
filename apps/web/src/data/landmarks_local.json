@@ -84,6 +84,13 @@
       "name": "Puente Quilaco (Ruta Q-61)",
       "coordinates": [-71.7959, -37.7372],
       "rank": 76
+    },
+    {
+      "id": "local-embalse-angostura",
+      "kind": "reservoir",
+      "name": "Embalse Angostura",
+      "coordinates": [-71.806, -37.7265],
+      "rank": 80
     }
   ],
   "buildings": [],

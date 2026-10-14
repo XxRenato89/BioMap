@@ -85,8 +85,9 @@ export const SAMPLE_POINTS = [
     description: draft(
       'Embalse de 641 hectáreas y unos 100 millones de m³ formado por la presa Angostura en el río Biobío. Su nivel varía apenas un metro.',
     ),
-    lng: -71.774414,
-    lat: -37.737646,
+    /* En el cuerpo del embalse: el centro que da OSM cae en tierra, a 1 km del agua. */
+    lng: -71.806,
+    lat: -37.7265,
   },
   {
     layerSlug: 'tourism',

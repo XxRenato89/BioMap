@@ -121,3 +121,13 @@ describe('Pathfinder', () => {
     expect(inWater([-71.81, -37.695])).toBe(false);
   });
 });
+
+describe('Pathfinder with a destination on the water', () => {
+  it('stops on the shore road nearest to it instead of walking into the water', () => {
+    const pf = new Pathfinder([WEST], { water: RIVER });
+    const path = pf.findPath([-71.81, -37.7], [-71.8, -37.705]);
+    expect(path).not.toBeNull();
+    const last = path.at(-1);
+    expect(last[0]).toBeLessThan(-71.8005);
+  });
+});

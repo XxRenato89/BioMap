@@ -55,12 +55,20 @@ export async function seed(pool) {
       );
       pointsInserted += rowCount;
     }
-    /* Paradas del recorrido también en bases ya cargadas (los puntos existentes no se reinsertan). */
-    for (const point of SAMPLE_POINTS.filter((p) => p.tourStop)) {
+    /*
+     * Parada del recorrido y ubicación corregida también en bases ya cargadas
+     * (los puntos existentes no se reinsertan). Solo datos de ejemplo: el seed
+     * se niega a correr en producción.
+     */
+    for (const point of SAMPLE_POINTS) {
       await client.query(
-        `UPDATE points_of_interest SET tour_stop = $2::smallint
-          WHERE name = $1::text AND tour_stop IS DISTINCT FROM $2::smallint`,
-        [point.name, point.tourStop],
+        `UPDATE points_of_interest
+            SET tour_stop = $2::smallint,
+                location = ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326)
+          WHERE name = $1::text
+            AND (tour_stop IS DISTINCT FROM $2::smallint
+                 OR NOT ST_Equals(location, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326)))`,
+        [point.name, point.tourStop ?? null, point.lng, point.lat],
       );
     }
 
