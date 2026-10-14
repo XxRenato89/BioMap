@@ -84,6 +84,9 @@
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    /* Sin rebote ni navegación al deslizar desde el borde. */
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
   }
 
   button {

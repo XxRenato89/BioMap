@@ -18,6 +18,8 @@ const envSchema = z
     DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(100).default(2000),
     CACHE_TTL_SECONDS: z.coerce.number().int().min(0).default(60),
     MEDIA_DIR: z.string().default('./media'),
+    /* Build del visor (apps/web/dist): en el kiosco la API lo sirve en la raíz. */
+    WEB_DIR: z.string().optional(),
     MEDIA_BASE_URL: z
       .string()
       .regex(/^\//, 'must start with "/"')
@@ -44,7 +46,7 @@ const envSchema = z
  *
  * @param {Record<string, string | undefined>} [env]
  * @returns {{ nodeEnv: string, port: number, databaseUrl: string, dbPoolMax: number,
- *   dbStatementTimeoutMs: number, cacheTtlSeconds: number, mediaDir: string,
+ *   dbStatementTimeoutMs: number, cacheTtlSeconds: number, mediaDir: string, webDir?: string,
  *   mediaBaseUrl: string, logLevel: string, useMocks?: boolean }}
  */
 export function loadConfig(env = process.env) {
@@ -65,6 +67,7 @@ export function loadConfig(env = process.env) {
     dbStatementTimeoutMs: c.DB_STATEMENT_TIMEOUT_MS,
     cacheTtlSeconds: c.CACHE_TTL_SECONDS,
     mediaDir: c.MEDIA_DIR,
+    webDir: c.WEB_DIR,
     mediaBaseUrl: c.MEDIA_BASE_URL,
     logLevel: c.LOG_LEVEL,
   };

@@ -49,6 +49,7 @@ const app = createApp({
   cache: createMemoryCache({ ttlMs: config.cacheTtlSeconds * 1000 }),
   logger,
   mediaDir: config.mediaDir,
+  webDir: config.webDir,
   mediaBaseUrl: config.mediaBaseUrl,
   exposeStack: config.nodeEnv === 'development',
 });

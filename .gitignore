@@ -5,3 +5,6 @@ dist/
 media/*
 !media/.gitkeep
 .superpowers/
+kiosk.log
+test-results
+playwright-report

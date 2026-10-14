@@ -27,6 +27,7 @@ function noCache(_req, res, next) {
  * @param {import('pino').Logger} [deps.logger]
  * @param {string} [deps.mediaDir]
  * @param {string} [deps.mediaBaseUrl]
+ * @param {string} [deps.webDir] Build del visor que se sirve en la raíz (kiosco).
  * @param {boolean} [deps.exposeStack]
  */
 export function createApp({
@@ -36,11 +37,19 @@ export function createApp({
   logger,
   mediaDir,
   mediaBaseUrl = '/media',
+  webDir,
   exposeStack = false,
 }) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        /* El visor usa imágenes blob: (visor 360°) y data: (código QR). */
+        directives: { 'img-src': ["'self'", 'data:', 'blob:'] },
+      },
+    }),
+  );
   app.use(compression());
   if (logger) app.use(pinoHttp({ logger }));
   app.use(express.json({ limit: '100kb' }));
@@ -66,6 +75,15 @@ export function createApp({
    */
   if (mediaDir) {
     app.use(mediaBaseUrl, express.static(mediaDir, { immutable: true, maxAge: '365d' }));
+  }
+
+  /*
+   * El visor ya compilado (kiosco): archivos estáticos y, para cualquier otra
+   * ruta que no sea de la API, su index.html.
+   */
+  if (webDir) {
+    app.use(express.static(webDir, { index: 'index.html', maxAge: '1h' }));
+    app.get(/^\/(?!api\/|media\/).*/, (_req, res) => res.sendFile('index.html', { root: webDir }));
   }
 
   app.use(notFoundHandler);

@@ -58,4 +58,17 @@ describe('app shell', () => {
     expect(res.status).toBe(200);
     expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
   });
+
+  it('serves the built viewer at the root, with index.html for app routes, not for the API', async () => {
+    const webDir = mkdtempSync(join(tmpdir(), 'biomap-web-'));
+    writeFileSync(join(webDir, 'index.html'), '<!doctype html><title>BioMap</title>');
+    writeFileSync(join(webDir, 'app.js'), 'console.log(1)');
+    const app = buildTestApp({ webDir });
+    expect((await request(app).get('/')).text).toContain('BioMap');
+    expect((await request(app).get('/app.js')).text).toContain('console.log');
+    expect((await request(app).get('/?point=3')).text).toContain('BioMap');
+    const missing = await request(app).get('/api/nope');
+    expect(missing.status).toBe(404);
+    expect(missing.body.error.code).toBeDefined();
+  });
 });

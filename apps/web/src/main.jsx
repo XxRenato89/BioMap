@@ -16,6 +16,11 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, refetchOnReconnect: true } },
 });
 
+/*
+ * Kiosco táctil: mantener el dedo presionado no abre el menú del navegador.
+ */
+window.addEventListener('contextmenu', (event) => event.preventDefault());
+
 /**
  * Monta el visor en el elemento #root de index.html. Fuentes, íconos y el
  * relieve de la maqueta van dentro del build: el visor no pide nada a internet.
