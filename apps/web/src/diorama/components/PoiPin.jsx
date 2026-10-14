@@ -102,7 +102,8 @@ export function PoiPin({
     <group ref={group} position={position}>
       <mesh geometry={STEM} material={STEM_MATERIAL} />
       {/* En la punta del poste (el grupo se escala con la distancia). */}
-      <Html position={[0, 1, 0]} zIndexRange={[selected ? 30 : 20, 10]}>
+      {/* Bajo los paneles de la interfaz (z-10): un pin nunca tapa la cabecera ni el Bio-Book. */}
+      <Html position={[0, 1, 0]} zIndexRange={selected ? [9, 8] : [7, 3]}>
         <button
           ref={register}
           type="button"

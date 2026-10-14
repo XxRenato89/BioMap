@@ -64,7 +64,7 @@ export function LandmarkLabels({ labels = [], heightAt, projection }) {
   return (
     <group name="labels-layer">
       {labels.map((label) => (
-        <Html key={label.id} position={label.position} zIndexRange={[5, 0]}>
+        <Html key={label.id} position={label.position} zIndexRange={[2, 0]}>
           <span
             ref={(element) => {
               if (element) elements.current.set(label.id, element);
