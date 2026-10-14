@@ -55,6 +55,7 @@ function Loading() {
  * @param {boolean} [props.shadows]
  * @param {string | null} [props.background] Color de fondo; null deja ver el fondo de la página.
  * @param {[number, number]} props.fog Distancias de inicio y fin de la bruma.
+ * @param {string} [props.fogColor] Color de la bruma (el del horizonte del cielo).
  * @param {boolean} [props.visible]
  * @param {string} props.label Nombre accesible.
  */
@@ -68,6 +69,7 @@ export default function DioramaView({
   forest = true,
   background = null,
   fog,
+  fogColor: horizon = '#dcd8c8',
   visible = true,
   label,
   onView,
@@ -78,7 +80,7 @@ export default function DioramaView({
   const [ready, setReady] = useState(false);
   const markReady = useCallback(() => setReady(true), []);
   /* Bruma del color del cielo cerca del horizonte: el paisaje se funde con él. */
-  const fogColor = background ?? '#dcd8c8';
+  const fogColor = background ?? horizon;
   return (
     <div
       ref={setElement}

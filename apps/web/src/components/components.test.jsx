@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AttractOverlay from '../features/attract/AttractOverlay.jsx';
 import PointSheet from '../features/point/PointSheet.jsx';
+import ReservoirToggle from '../features/reservoir/ReservoirToggle.jsx';
 import i18n from '../i18n/index.js';
 import { useViewsStore } from '../store/viewsStore.js';
 import { axeViolations } from '../test/axe.js';
@@ -231,5 +232,20 @@ describe('HeaderCard and AttractOverlay', () => {
     expect(screen.getByRole('heading', { name: 'BioMap' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Toca para explorar/ }));
     expect(onExplore).toHaveBeenCalled();
+  });
+});
+
+describe('ReservoirToggle', () => {
+  it('drains the reservoir and explains the submerged valley, accessibly', async () => {
+    const onToggle = vi.fn();
+    const { container, rerender } = render(<ReservoirToggle drained={false} onToggle={onToggle} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Bajo el embalse' }));
+    expect(onToggle).toHaveBeenCalled();
+    rerender(<ReservoirToggle drained onToggle={onToggle} />);
+    expect(screen.getByRole('heading', { name: 'El valle que cubre el embalse' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Volver a llenar' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(await axeViolations(container)).toEqual([]);
   });
 });

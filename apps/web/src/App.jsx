@@ -15,6 +15,7 @@ import { config } from './config.js';
 import AttractOverlay from './features/attract/AttractOverlay.jsx';
 import { useAttractMode } from './features/attract/useAttractMode.js';
 import PointSheets from './features/point/PointSheets.jsx';
+import ReservoirToggle from './features/reservoir/ReservoirToggle.jsx';
 import { useTour } from './features/tour/useTour.js';
 import { isInside } from './diorama/utils/cameraMath.js';
 import DioramaCanvas from './diorama/components/DioramaCanvas.jsx';
@@ -23,6 +24,7 @@ import { PoiMarkers } from './diorama/components/PoiMarkers.jsx';
 import Avatar from './diorama/components/Avatar.jsx';
 import AvatarNarrator from './features/avatar/AvatarNarrator.jsx';
 import { useLayersQuery, usePointsQuery } from './hooks/useApi.js';
+import { useDaylight } from './hooks/useDaylight.js';
 import { useInactivity } from './hooks/useInactivity.js';
 import { useRestMode } from './hooks/useRestMode.js';
 import { useVisibleLayers } from './hooks/useLayers.js';
@@ -69,8 +71,10 @@ export default function App({ mapConfig = config }) {
   const lang = useViewerStore((state) => state.lang);
   const attract = useViewerStore((state) => state.attract);
   const contours = useViewerStore((state) => state.contours);
+  const drained = useViewerStore((state) => state.drained);
   const actions = useViewerStore.getState();
 
+  const sky = useDaylight().sky.map((color) => `#${color.getHexString()}`);
   const mainRef = useRef(null);
   const viewerRef = useRef(null);
   const [attractStop, setAttractStop] = useState(null);
@@ -192,12 +196,16 @@ export default function App({ mapConfig = config }) {
   return (
     <main
       ref={viewerRef}
-      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#93b4cc] via-[#c3d2d3] to-[#dcd8c8] select-none"
+      className="relative w-full h-full overflow-hidden select-none transition-[background] duration-[3000ms]"
       data-contrast={contrast ? 'high' : undefined}
       data-text-scale={textScale}
       data-sheet-open={openSheets.length > 0 ? 'true' : undefined}
       data-attract={attract || undefined}
-      style={{ '--text-scale': TEXT_SCALES[textScale] }}
+      style={{
+        '--text-scale': TEXT_SCALES[textScale],
+        /* Cielo del momento del día; su horizonte es también el color de la bruma. */
+        background: `linear-gradient(180deg, ${sky[0]}, ${sky[1]} 45%, ${sky[2]})`,
+      }}
     >
       <DioramaCanvas eventSource={viewerRef} />
       <DioramaView
@@ -207,6 +215,7 @@ export default function App({ mapConfig = config }) {
         homeView={mapConfig.initialView}
         shadows
         fog={[16, 38]}
+        fogColor={sky[2]}
         label={t('mapLabel')}
         onView={publishMainView}
         onTiltChange={actions.setPitched}
@@ -274,6 +283,19 @@ export default function App({ mapConfig = config }) {
             />
           </div>
         </div>
+
+        {/* «Bajo el embalse»: el diferenciador de BioMap (ver ReservoirToggle). */}
+        {openSheets.length === 0 && (
+          <div className="absolute bottom-16 right-6" data-obstacle>
+            <ReservoirToggle
+              drained={drained}
+              onToggle={() => {
+                if (!drained) mainRef.current?.resetView();
+                actions.toggleDrained();
+              }}
+            />
+          </div>
+        )}
 
         {/* Con una ficha abierta, ese espacio es de la mascota que la presenta. */}
         {openSheets.length === 0 && (

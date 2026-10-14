@@ -119,5 +119,15 @@
   },
   "loading": {
     "text": "Preparing the Biobío model…"
+  },
+  "reservoir": {
+    "drain": "Under the reservoir",
+    "fill": "Fill it again",
+    "eyebrow": "Before the power plant (2014)",
+    "title": "The valley under the reservoir",
+    "text": "This is how the Biobío canyon looked before the Angostura dam flooded it. The light band on the slopes marks today's water level.",
+    "depth": "Maximum depth",
+    "area": "Reservoir area",
+    "source": "Terrain: NASA SRTM mission, year 2000."
   }
 }

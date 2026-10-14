@@ -12,6 +12,8 @@
 export const RESERVOIR = {
   level: 326,
   bedDepth: 5,
+  /* Vaciado: queda solo un hilo de agua en lo más hondo del cañón, como el río de antes (m). */
+  drainedLevel: 295,
   surface: { west: -71.808, east: -71.745, south: -37.778, north: -37.695 },
   bed: { west: -71.815, east: -71.745, south: -37.778, north: -37.695 },
 };
@@ -22,3 +24,9 @@ export const RESERVOIR = {
 export function within([lng, lat], { west, east, south, north }) {
   return lng >= west && lng <= east && lat >= south && lat <= north;
 }
+
+/**
+ * Cuánto se vació el embalse (0 lleno, 1 vacío), compartido por los shaders
+ * del agua y del terreno. Lo anima la escena según `drained` del visor.
+ */
+export const reservoirDrain = { value: 0 };

@@ -149,7 +149,7 @@ export default function BioBook({ url, wifi, selectedPoint = null }) {
   ];
 
   return (
-    <div className="relative w-[300px]">
+    <div className="relative w-[300px] z-100">
       {/* Cerrado: ocupa su lugar en la columna; abierto, se despliega hacia arriba y a la derecha sin moverla. */}
       <button
         type="button"

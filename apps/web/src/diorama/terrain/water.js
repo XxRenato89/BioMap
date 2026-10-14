@@ -7,8 +7,11 @@ import {
   RedFormat,
   UnsignedByteType,
   Vector2,
+  Vector3,
 } from 'three';
-import { VERTICAL_EXAGGERATION } from '../utils/projection.js';
+import { WATER_LIFT } from '../builders/water.js';
+import { metersToY, VERTICAL_EXAGGERATION } from '../utils/projection.js';
+import { RESERVOIR, reservoirDrain } from '../utils/reservoir.js';
 
 /**
  * Distancia a la orilla de cada celda de agua de la zona (m, del build) como
@@ -162,14 +165,30 @@ export function waterMaterial(shore, zone) {
   });
   const time = { value: 0 };
   material.userData.time = time;
+  /* Cielo y sol del momento del día (ver daylight.js), para reflejos y brillos. */
+  material.userData.sky = { value: new Color(0.42, 0.6, 0.72) };
+  material.userData.sun = { value: new Vector3(-0.75, 0.6, -0.33).normalize() };
   const half = new Vector2(zone.width / 2, zone.depth / 2);
   material.onBeforeCompile = (shader) => {
     shader.uniforms.waterTime = time;
     shader.uniforms.waterShore = { value: shore };
     shader.uniforms.waterHalf = { value: half };
     shader.uniforms.waterFlow = { value: FLOW };
+    shader.uniforms.waterSky = material.userData.sky;
+    shader.uniforms.waterSun = material.userData.sun;
+    shader.uniforms.reservoirDrain = reservoirDrain;
+    shader.uniforms.reservoirY = { value: metersToY(RESERVOIR.level) + WATER_LIFT };
+    shader.uniforms.drainedY = { value: metersToY(RESERVOIR.drainedLevel) + WATER_LIFT };
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vWater;')
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vWater;\nuniform float reservoirDrain;\nuniform float reservoirY;\nuniform float drainedY;',
+      )
+      .replace(
+        '#include <begin_vertex>',
+        /* El espejo del embalse (a su cota) baja al vaciarlo; el resto del agua no se mueve. */
+        '#include <begin_vertex>\nif (abs(transformed.y - reservoirY) < 0.0003) transformed.y = mix(reservoirY, drainedY, reservoirDrain);',
+      )
       .replace(
         '#include <worldpos_vertex>',
         '#include <worldpos_vertex>\nvWater = (modelMatrix * vec4(transformed, 1.0)).xyz;',
@@ -182,6 +201,9 @@ uniform float waterTime;
 uniform sampler2D waterShore;
 uniform vec2 waterHalf;
 uniform vec2 waterFlow;
+uniform vec3 waterSky;
+uniform vec3 waterSun;
+uniform float reservoirDrain;
 varying vec3 vWater;
 float shoreMeters;
 float waterHash(vec2 p) {
@@ -215,6 +237,8 @@ vec2 waveSlope(vec2 p, vec2 dir, float length, float amp, float speed) {
 vec2 shoreUv = vWater.xz / (2.0 * waterHalf) + 0.5;
 bool outsideZone = any(lessThan(shoreUv, vec2(0.0))) || any(greaterThan(shoreUv, vec2(1.0)));
 shoreMeters = outsideZone ? 60.0 : texture2D(waterShore, clamp(shoreUv, 0.0, 1.0)).r * 255.0;
+/* Con el embalse vaciado, las orillas de hoy quedan lejos del agua que resta. */
+shoreMeters = mix(shoreMeters, 60.0, reservoirDrain);
 /* Tonos fotorrealistas del Embalse Angostura: esmeralda oscuro en orillas, azul profundo en el centro */
 vec3 shallow = vec3(0.07, 0.25, 0.26);
 vec3 deep = vec3(0.018, 0.075, 0.11);
@@ -263,15 +287,15 @@ if (nDotV < 0.2) {
 float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
 float fresnel = pow(1.0 - facing, 3.4);
 /* Reflejo del cielo contenido: con la cámara inclinada, un reflejo pleno blanquea el agua. */
-vec3 skyColor = vec3(0.42, 0.6, 0.72);
+vec3 skyColor = waterSky;
 /* El cielo reflejado se rompe en manchas que derivan con el viento. */
 float skyBreak = waterFbm(vWater.xz * 1000.0 / 140.0 + vec2(waterTime * 0.02, -waterTime * 0.015));
 vec3 waterAmbient = mix(vec3(0.02, 0.07, 0.09), skyColor, fresnel * (0.45 + skyBreak * 0.5));
 reflectedLight.indirectDiffuse += waterAmbient * (0.5 + 0.3 * fresnel);
 /* Destellos del sol en las crestas de las olas. */
-vec3 sunDir = normalize((viewMatrix * vec4(-0.75, 0.6, -0.33, 0.0)).xyz);
+vec3 sunDir = normalize((viewMatrix * vec4(waterSun, 0.0)).xyz);
 float glint = pow(max(dot(reflect(-normalize(vViewPosition), normal), sunDir), 0.0), 90.0);
-reflectedLight.directSpecular += vec3(1.0, 0.94, 0.82) * glint * 1.6;
+reflectedLight.directSpecular += mix(vec3(1.0, 0.94, 0.82), waterSky * 1.6, 0.2) * glint * 1.6;
 reflectedLight.directDiffuse = max(reflectedLight.directDiffuse, diffuseColor.rgb * 0.35);`,
       );
   };

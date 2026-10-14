@@ -114,5 +114,15 @@
   },
   "loading": {
     "text": "Preparando la maqueta del Biobío…"
+  },
+  "reservoir": {
+    "drain": "Bajo el embalse",
+    "fill": "Volver a llenar",
+    "eyebrow": "Antes de la central (2014)",
+    "title": "El valle que cubre el embalse",
+    "text": "Así era el cañón del Biobío antes de que la presa Angostura lo inundara. La franja clara en las laderas marca hasta dónde llega el agua hoy.",
+    "depth": "Profundidad máxima",
+    "area": "Superficie del embalse",
+    "source": "Relieve: misión SRTM de la NASA, año 2000."
   }
 }

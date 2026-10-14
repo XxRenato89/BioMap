@@ -25,6 +25,8 @@ export function initialViewerState() {
     lang: 'es',
     attract: false,
     contours: false,
+    /* «Bajo el embalse»: el agua se retira y deja ver el valle de antes de 2014. */
+    drained: false,
   };
 }
 
@@ -82,12 +84,14 @@ export const useViewerStore = create((set) => ({
   setAttract: (attract) => set({ attract }),
 
   toggleContours: () => set(({ contours }) => ({ contours: !contours })),
+  toggleDrained: () => set(({ drained }) => ({ drained: !drained })),
 
   /*
    * «Reiniciar vista»: todas las capas, curvas de nivel y sin ficha abierta. Respeta los
    * ajustes de lectura e idioma.
    */
-  resetExploration: () => set({ hiddenLayerIds: new Set(), selectedPointIds: [], contours: false }),
+  resetExploration: () =>
+    set({ hiddenLayerIds: new Set(), selectedPointIds: [], contours: false, drained: false }),
 
   /*
    * Reinicio por inactividad: deja el visor como al inicio para el próximo visitante.

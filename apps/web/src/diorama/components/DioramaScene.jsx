@@ -5,7 +5,13 @@ import { useViewerStore } from '../../store/viewerStore.js';
 import { TIERS, useRenderStore } from '../utils/quality.js';
 import { loadDiorama } from '../terrain/resources.js';
 import { ROCK_MODEL, TREE_KINDS, TREE_MODELS } from '../terrain/trees.js';
+import Birds from './Birds.jsx';
 import PathPainter from './PathPainter.jsx';
+import { useDaylight } from '../../hooks/useDaylight.js';
+import { reservoirDrain } from '../utils/reservoir.js';
+
+/* Distancia del sol (km): la cámara de sombras abarca de 60 a 180 km desde él. */
+const SUN_DISTANCE = 120;
 
 /**
  * Recursos de la maqueta (se cargan una vez y se comparten entre vistas).
@@ -261,8 +267,13 @@ function Water({ geometry, material }) {
     }, 1000 / WATER_FPS);
     return () => clearInterval(timer);
   }, [invalidate]);
-  useFrame(() => {
+  /* «Bajo el embalse»: el agua baja o sube en unos segundos, sin saltos. */
+  const drained = useViewerStore((state) => state.drained);
+  useFrame((_, delta) => {
     material.userData.time.value = performance.now() / 1000;
+    const goal = drained ? 1 : 0;
+    reservoirDrain.value += (goal - reservoirDrain.value) * Math.min(1, delta * 0.6);
+    if (Math.abs(goal - reservoirDrain.value) < 0.001) reservoirDrain.value = goal;
   });
   return <mesh geometry={geometry} material={material} renderOrder={1} />;
 }
@@ -274,15 +285,25 @@ function Water({ geometry, material }) {
  *
  * @param {{ shadows: boolean, size: { width: number, depth: number } }} props
  */
-function ShowcaseLights({ shadows, size }) {
+function ShowcaseLights({ shadows, size, water }) {
   const half = Math.max(size.width, size.depth) * 0.62;
+  /* El sol y el cielo siguen la hora del kiosco (ver daylight.js). */
+  const light = useDaylight();
+  const gl = useThree((state) => state.gl);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    water?.userData.sky?.value.copy(light.sky[1]);
+    water?.userData.sun?.value.set(...light.sun);
+    gl.shadowMap.needsUpdate = true;
+    invalidate();
+  }, [light, water, gl, invalidate]);
   return (
     <>
-      <hemisphereLight args={['#dfeaf5', '#5a4d3c', 1.1]} />
+      <hemisphereLight args={[light.hemiSky, light.hemiGround, light.hemiIntensity]} />
       <directionalLight
-        position={[-90, 70, -40]}
-        intensity={2.8}
-        color="#fff3e0"
+        position={light.sun.map((value) => value * SUN_DISTANCE)}
+        intensity={light.sunIntensity}
+        color={light.sunColor}
         castShadow={shadows}
         shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.0002}
@@ -321,7 +342,7 @@ export default function DioramaScene({ shadows = false, forest = false }) {
   }, [contours, materials, invalidate]);
   return (
     <group>
-      <ShowcaseLights shadows={shadows} size={projection} />
+      <ShowcaseLights shadows={shadows} size={projection} water={materials.water} />
       <Terrain terrain={diorama.terrain} material={materials.terrain} castShadow={shadows} />
       {diorama.context && (
         <mesh
@@ -351,6 +372,7 @@ export default function DioramaScene({ shadows = false, forest = false }) {
         receiveShadow
       />
       <PathPainter />
+      {forest && <Birds />}
     </group>
   );
 }

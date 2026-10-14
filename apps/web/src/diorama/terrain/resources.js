@@ -10,6 +10,7 @@ import {
   SRGBColorSpace,
   TextureLoader,
   Vector3,
+  Vector4,
 } from 'three';
 import {
   bakeDetail,
@@ -21,7 +22,7 @@ import {
   plantRocks,
 } from '../builders/index.js';
 import { buildTerrainChunks } from './lod.js';
-import { RESERVOIR, within } from '../utils/reservoir.js';
+import { RESERVOIR, reservoirDrain, within } from '../utils/reservoir.js';
 import { buildContextTerrain, contextMaterial, createContextSampler } from './context.js';
 import { DAM_HEIGHTS, ROAD_WIDTHS } from '../utils/osm.js';
 import {
@@ -96,14 +97,31 @@ export function contourSteps(minHeight, maxHeight) {
 }
 
 /**
+ * Límites del embalse en la maqueta (x y z mínimos y máximos), para el shader del terreno.
+ */
+function reservoirBox(projection) {
+  const { west, east, south, north } = RESERVOIR.bed;
+  const a = projection.toWorld([west, north]);
+  const b = projection.toWorld([east, south]);
+  return new Vector4(
+    Math.min(a.x, b.x),
+    Math.min(a.z, b.z),
+    Math.max(a.x, b.x),
+    Math.max(a.z, b.z),
+  );
+}
+
+/**
  * Material del terreno: color (foto satelital fundida con la paleta de
  * maqueta) y normales horneados del relieve real, grano fino repetido para
  * el detalle de cerca y curvas de nivel (fina y gruesa, ver `contourSteps`).
  * Las curvas se encienden o apagan con `material.userData.contours.value` (1 o 0).
+ * Con el embalse vaciado (`reservoirDrain`), su fondo se ve como sedimento.
  *
  * @param {{ fine: number, major: number }} steps
+ * @param {import('three').Vector4} box Ver `reservoirBox`.
  */
-function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps) {
+function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps, box) {
   const material = new MeshStandardMaterial({
     map: colorMap,
     normalMap,
@@ -119,6 +137,10 @@ function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps) {
     shader.uniforms.shoreMap = { value: shoreMap };
     shader.uniforms.detailRepeat = { value: DETAIL_REPEAT };
     shader.uniforms.exaggeration = { value: VERTICAL_EXAGGERATION };
+    shader.uniforms.reservoirDrain = reservoirDrain;
+    shader.uniforms.reservoirBox = { value: box };
+    shader.uniforms.reservoirLevel = { value: RESERVOIR.level };
+    shader.uniforms.drainedLevel = { value: RESERVOIR.drainedLevel };
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -137,6 +159,10 @@ uniform sampler2D shoreMap;
 uniform float detailRepeat;
 uniform float exaggeration;
 uniform float contours;
+uniform float reservoirDrain;
+uniform vec4 reservoirBox;
+uniform float reservoirLevel;
+uniform float drainedLevel;
 varying float vHeight;
 varying vec3 vGround;
 float groundHash(vec2 p) {
@@ -171,7 +197,22 @@ float majorLine = 1.0 - clamp(abs(fract(major - 0.5) - 0.5) / (fwidth(major) * 1
 float fineFade = clamp(1.0 - fwidth(fine) * 4.0, 0.0, 1.0);
 vec3 ink = vec3(0.545, 0.435, 0.278) * 0.5;
 diffuseColor.rgb = mix(diffuseColor.rgb, ink,
-  contours * (fineLine * 0.12 * fineFade + majorLine * 0.26));`,
+  contours * (fineLine * 0.12 * fineFade + majorLine * 0.26));
+/*
+ * «Bajo el embalse»: al vaciarlo, el fondo (relieve del año 2000, antes de la
+ * inundación) se ve como sedimento, más oscuro y húmedo hacia lo hondo, y una
+ * franja clara marca en las laderas la cota del agua de hoy.
+ */
+bool inReservoir = vGround.x > reservoirBox.x && vGround.x < reservoirBox.z
+  && vGround.z > reservoirBox.y && vGround.z < reservoirBox.w;
+if (reservoirDrain > 0.0 && inReservoir) {
+  float depth = clamp((reservoirLevel - meters) / (reservoirLevel - drainedLevel), 0.0, 1.0);
+  vec3 silt = mix(vec3(0.58, 0.52, 0.42), vec3(0.3, 0.27, 0.22), depth);
+  silt *= 0.9 + 0.2 * groundNoise(vGround.xz * 1000.0 / 14.0);
+  diffuseColor.rgb = mix(diffuseColor.rgb, silt, wet * reservoirDrain);
+  float ring = 1.0 - smoothstep(0.4, 2.2, abs(meters - reservoirLevel));
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.9, 0.8), ring * reservoirDrain * 0.85);
+}`,
       )
       .replace(
         '#include <normal_fragment_maps>',
@@ -452,6 +493,7 @@ export function loadDiorama({ anisotropy }) {
           detailMap,
           shoreMap,
           contourSteps(meta.minHeight, meta.maxHeight),
+          reservoirBox(projection),
         ),
         dam: new MeshStandardMaterial({ vertexColors: true, roughness: 0.75 }),
         water: waterMaterial(shoreMap, projection),
