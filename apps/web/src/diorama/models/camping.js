@@ -2,33 +2,47 @@ import { Group, TorusGeometry } from 'three';
 import { box, cone, cyl, mat, part, prism, stone, wood } from './materials.js';
 
 /**
- * Camping: carpas de dos aguas con su puerta y vientos, una mesa de picnic y
- * una fogata con troncos, sobre un claro de pasto.
+ * Camping como los de la maqueta del Centro de Visitantes: filas de carpas
+ * naranjas con vientos, quinchos de madera oscura, una cancha de fútbol, una
+ * mesa de picnic y una fogata, sobre un claro de pasto.
  *
  * @returns {Group}
  */
 export function buildCamping() {
   const g = new Group();
   g.add(cyl(4.2, 4.4, 0.16, 20, mat('pad2', 0x9da56d), 0, 0.08, 0));
-  [
-    [-2.1, 0.9, 0.5, 0xe0813a],
-    [1.6, 1.8, -0.4, 0x3a82b8],
-    [-0.6, -2.3, 1.3, 0x5fae6a],
-    [2.4, -1.4, 2.2, 0xe5c14a],
-  ].forEach(([x, z, turn, color]) => {
-    const tent = new Group();
-    tent.add(prism(1.5, 2, mat(`tent${color}`, color)));
-    /* Puerta oscura en la cara del frente, y vientos tensados hasta las estacas. */
-    tent.add(prism(0.7, 0.04, mat('tentDoor', 0x2d2a26), 0, 0, 1.0));
-    [-1, 1].forEach((side) => {
-      const rope = cyl(0.015, 0.015, 1.3, 4, mat('rope', 0xf0ece0), side * 1.05, 0.5, 0);
-      rope.rotation.z = side * 1.0;
-      tent.add(rope);
+  /* Dos filas de carpas naranjas a lo largo del camino interior. */
+  [-2.6, -1.3, 0, 1.3]
+    .flatMap((x) => [
+      [x, -2.4, 0, 0xe0702e],
+      [x + 0.4, 2.6, Math.PI, 0xe0702e],
+    ])
+    .forEach(([x, z, turn, color]) => {
+      const tent = new Group();
+      tent.add(prism(1.5, 2, mat(`tent${color}`, color)));
+      /* Puerta oscura en la cara del frente, y vientos tensados hasta las estacas. */
+      tent.add(prism(0.7, 0.04, mat('tentDoor', 0x2d2a26), 0, 0, 1.0));
+      [-1, 1].forEach((side) => {
+        const rope = cyl(0.015, 0.015, 1.3, 4, mat('rope', 0xf0ece0), side * 1.05, 0.5, 0);
+        rope.rotation.z = side * 1.0;
+        tent.add(rope);
+      });
+      tent.position.set(x, 0.16, z);
+      tent.rotation.y = turn;
+      g.add(tent);
     });
-    tent.position.set(x, 0.16, z);
-    tent.rotation.y = turn;
-    g.add(tent);
+  /* Quinchos (techo de madera sobre pilares) y la cancha de fútbol. */
+  [
+    [2.4, -2.0],
+    [2.6, 0.2],
+  ].forEach(([x, z]) => {
+    [-0.55, 0.55].forEach((dx) =>
+      [-0.4, 0.4].forEach((dz) => g.add(cyl(0.05, 0.05, 0.9, 4, wood(), x + dx, 0.6, z + dz))),
+    );
+    g.add(box(1.4, 0.12, 1.1, mat('quincho', 0x3d2b1f), x, 1.1, z));
   });
+  g.add(box(1.6, 0.03, 1.1, mat('pitch', 0x6fbf6a), -1.0, 0.18, 0.4));
+  g.add(box(0.04, 0.035, 1.1, mat('pitchLine', 0xf4f4ee), -1.0, 0.19, 0.4));
   /* Mesa de picnic con bancas. */
   const table = new Group();
   table.add(box(1.6, 0.08, 0.7, wood(), 0, 0.75, 0));

@@ -80,7 +80,7 @@ export const KEYWORDS = [
   [/puente colgante/i, 'bridge'],
   [/ruka|pehuenche|mapuche/i, 'ruka'],
   [/araucaria|pehu[eé]n/i, 'araucaria'],
-  [/arboreto/i, 'arboretum'],
+  [/arboret(o|um)/i, 'arboretum'],
   [/lenga/i, 'lenga'],
   [/humedal|laguna|aves/i, 'wetland'],
   [/informaci/i, 'info'],

@@ -23,6 +23,11 @@ export const SAMPLE_LAYERS = [
 const draft = (what) =>
   `${what} Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.`;
 
+/*
+ * Lugares del mapa oficial y de la maqueta física del Centro de Visitantes
+ * (fotos de octubre de 2026, ver docs/referencias.md), con coordenadas de
+ * OpenStreetMap salvo donde se indica.
+ */
 export const SAMPLE_POINTS = [
   {
     layerSlug: 'history',
@@ -36,22 +41,31 @@ export const SAMPLE_POINTS = [
   },
   {
     layerSlug: 'history',
-    name: 'Puente Ruta Q-61 sobre el Biobío',
-    description: draft('Puente de la Ruta Q-61 aguas abajo de la presa.'),
-    lng: -71.821886,
-    lat: -37.709653,
+    name: 'Puente Piulo Oriente',
+    description: draft(
+      'Puente de la Ruta Q-61 sobre el Biobío, aguas abajo de la presa, en el sector El Piulo.',
+    ),
+    lng: -71.82189,
+    lat: -37.70965,
   },
   {
     layerSlug: 'history',
-    name: 'Puente Ruta Q-61 sobre el embalse',
-    description: draft('Puente de la Ruta Q-61 que cruza el embalse Angostura.'),
+    name: 'Puente El Piulo',
+    description: draft('El antiguo puente de la ruta, junto al nuevo; hoy solo peatonal.'),
+    lng: -71.82348,
+    lat: -37.70908,
+  },
+  {
+    layerSlug: 'history',
+    name: 'Puente Quilaco',
+    description: draft('Puente de la Ruta Q-61 que cruza el embalse hacia Quilaco.'),
     lng: -71.795905,
     lat: -37.737284,
   },
   {
     layerSlug: 'history',
-    name: 'Lo Nieve',
-    description: draft('Localidad rural en la ribera norte del embalse.'),
+    name: 'Sector Lo Nieve',
+    description: draft('Localidad rural junto al río Huequecura, al norte del embalse.'),
     lng: -71.766676,
     lat: -37.701958,
   },
@@ -67,15 +81,17 @@ export const SAMPLE_POINTS = [
   },
   {
     layerSlug: 'ecology',
-    name: 'Arboreto',
-    description: draft('Arboreto en la ribera sur del embalse.'),
+    name: 'Arboretum',
+    description: draft(
+      'Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse.',
+    ),
     lng: -71.796316,
     lat: -37.742917,
   },
   {
     layerSlug: 'ecology',
-    name: 'Cerro Calvario',
-    description: draft('Cerro sobre la ribera del embalse, cerca de Los Notros.'),
+    name: 'Cerro el Calvario',
+    description: draft('Cerro con bosque nativo entre el embalse y el brazo del río Huequecura.'),
     lng: -71.804508,
     lat: -37.716848,
   },
@@ -91,11 +107,28 @@ export const SAMPLE_POINTS = [
   },
   {
     layerSlug: 'tourism',
-    name: 'Mirador Huequecura',
-    description: draft('Mirador sobre la presa y el embalse.'),
+    name: 'Sendero y Mirador Huequecura',
+    description: draft('Sendero que sube a un mirador sobre la presa y el embalse.'),
     lng: -71.813986,
     lat: -37.712067,
     tourStop: 3,
+  },
+  {
+    layerSlug: 'tourism',
+    name: 'Mirador Central Angostura',
+    description: draft('Vista a la represa, junto al Biobío al pie de la presa.'),
+    lng: -71.81483,
+    lat: -37.71175,
+  },
+  {
+    layerSlug: 'tourism',
+    name: 'Centro de Visitantes Angostura',
+    description: draft(
+      'Punto de partida de la visita: exposición sobre la central, el territorio y su gente, con esta maqueta.',
+    ),
+    /* El edificio de información de OSM en la ribera sur, donde lo ubica el mapa oficial (por validar). */
+    lng: -71.81222,
+    lat: -37.72794,
   },
   {
     layerSlug: 'tourism',
@@ -106,8 +139,23 @@ export const SAMPLE_POINTS = [
   },
   {
     layerSlug: 'tourism',
+    name: 'Playa Santa Bárbara',
+    description: draft('Playa en la ribera norte del brazo del río Huequecura.'),
+    /* No está en OSM: en la orilla del brazo, donde la muestra el mapa oficial (por validar). */
+    lng: -71.803,
+    lat: -37.7086,
+  },
+  {
+    layerSlug: 'tourism',
+    name: 'Puente Colgante Huequecura',
+    description: draft('Puente peatonal colgante sobre el río Huequecura, donde entra al embalse.'),
+    lng: -71.78058,
+    lat: -37.70792,
+  },
+  {
+    layerSlug: 'tourism',
     name: 'Playa Quilaco',
-    description: draft('Playa en la ribera sur del embalse.'),
+    description: draft('Playa pública en la ribera sur del embalse, junto al Arboretum.'),
     lng: -71.793541,
     lat: -37.741749,
     tourStop: 4,
@@ -115,21 +163,21 @@ export const SAMPLE_POINTS = [
   {
     layerSlug: 'tourism',
     name: 'Camping Los Notros',
-    description: draft('Zona de camping a orillas del embalse.'),
+    description: draft('Camping a orillas del embalse, en el sector Los Notros.'),
     lng: -71.798078,
     lat: -37.726323,
   },
   {
     layerSlug: 'tourism',
-    name: 'Camping Trompelhueno',
-    description: draft('Zona de camping en la ribera sur del embalse.'),
+    name: 'Camping Trompelhueno de Quilaco',
+    description: draft('Camping y playa en la ribera sur del embalse, con quinchos de paja.'),
     lng: -71.791274,
     lat: -37.743429,
   },
   {
     layerSlug: 'tourism',
     name: 'Camping La Patagua de Lo Nieve',
-    description: draft('Zona de camping en la ribera norte, en Lo Nieve.'),
+    description: draft('Camping junto al río Huequecura, en Lo Nieve.'),
     lng: -71.767656,
     lat: -37.703407,
   },
@@ -171,7 +219,7 @@ export const SAMPLE_IMAGES = [
     sortOrder: 3,
   },
   {
-    pointName: 'Puente Ruta Q-61 sobre el embalse',
+    pointName: 'Puente Quilaco',
     filePath: 'biobio-desde-puente-quilaco.jpg',
     altText: 'El río Biobío visto desde el puente Quilaco',
     credit: 'Sebastianperezlizana, CC BY-SA 3.0, Wikimedia Commons',
@@ -180,7 +228,7 @@ export const SAMPLE_IMAGES = [
     sortOrder: 1,
   },
   {
-    pointName: 'Arboreto',
+    pointName: 'Arboretum',
     filePath: 'arboreto-quilaco.jpg',
     altText: 'Visita al Arboreto de Quilaco',
     credit: 'Bastet&Anubis, CC BY-SA 4.0, Wikimedia Commons',
@@ -189,7 +237,7 @@ export const SAMPLE_IMAGES = [
     sortOrder: 1,
   },
   {
-    pointName: 'Camping Trompelhueno',
+    pointName: 'Camping Trompelhueno de Quilaco',
     filePath: 'camping-trompelhueno.jpg',
     altText: 'Playa del Camping Trompelhueno, con quinchos de paja junto al embalse',
     credit: 'Bastet&Anubis, CC BY-SA 4.0, Wikimedia Commons',

@@ -2,62 +2,6 @@
   "dams": [],
   "labels": [
     {
-      "id": "local-mirador-la-vina",
-      "kind": "lookout",
-      "name": "Mirador La Viña",
-      "coordinates": [-71.7966, -37.7044],
-      "rank": 65
-    },
-    {
-      "id": "local-mirador-angostura",
-      "kind": "lookout",
-      "name": "Mirador de la Presa",
-      "coordinates": [-71.8162, -37.7129],
-      "rank": 65
-    },
-    {
-      "id": "local-centro-visitantes",
-      "kind": "visitors",
-      "name": "Centro de Visitantes Parque Angostura",
-      "coordinates": [-71.7993, -37.7019],
-      "rank": 70
-    },
-    {
-      "id": "local-camping-quilaco",
-      "kind": "camping",
-      "name": "Camping Quilaco",
-      "coordinates": [-71.8095, -37.7084],
-      "rank": 60
-    },
-    {
-      "id": "local-camping-la-cortina",
-      "kind": "camping",
-      "name": "Camping La Cortina",
-      "coordinates": [-71.8196, -37.7101],
-      "rank": 60
-    },
-    {
-      "id": "local-camping-los-notros",
-      "kind": "camping",
-      "name": "Camping Los Notros (Huequecura)",
-      "coordinates": [-71.7836, -37.7425],
-      "rank": 60
-    },
-    {
-      "id": "local-playa-andres",
-      "kind": "lake",
-      "name": "Balneario Playa Andrés",
-      "coordinates": [-71.7842, -37.7419],
-      "rank": 58
-    },
-    {
-      "id": "river-canicura",
-      "kind": "river",
-      "name": "Río Cañicura",
-      "coordinates": [-71.7915, -37.7118],
-      "rank": 85
-    },
-    {
       "id": "river-biobio-inlet",
       "kind": "river",
       "name": "Río Biobío",
@@ -65,32 +9,39 @@
       "rank": 85
     },
     {
-      "id": "river-biobio-outlet",
-      "kind": "river",
-      "name": "Río Biobío (Aguas abajo)",
-      "coordinates": [-71.821, -37.7095],
+      "id": "local-embalse-angostura",
+      "kind": "reservoir",
+      "name": "Embalse Angostura",
+      "coordinates": [-71.806, -37.7265],
       "rank": 80
     },
     {
       "id": "river-huequecura",
       "kind": "river",
       "name": "Río Huequecura",
-      "coordinates": [-71.782, -37.7435],
-      "rank": 80
+      "coordinates": [-71.79327, -37.70843],
+      "rank": 45
     },
     {
-      "id": "bridge-q61",
-      "kind": "bridge",
-      "name": "Puente Quilaco (Ruta Q-61)",
-      "coordinates": [-71.7959, -37.7372],
-      "rank": 76
+      "id": "river-biobio-outlet",
+      "kind": "river",
+      "name": "Río Biobío",
+      "coordinates": [-71.821, -37.7095],
+      "rank": 45
     },
     {
-      "id": "local-embalse-angostura",
-      "kind": "reservoir",
-      "name": "Embalse Angostura",
-      "coordinates": [-71.806, -37.7265],
-      "rank": 80
+      "id": "sector-los-notros",
+      "kind": "village",
+      "name": "Sector Los Notros",
+      "coordinates": [-71.79234, -37.73515],
+      "rank": 40
+    },
+    {
+      "id": "sector-el-piulo",
+      "kind": "village",
+      "name": "Sector El Piulo",
+      "coordinates": [-71.8235, -37.7115],
+      "rank": 40
     }
   ],
   "buildings": [],

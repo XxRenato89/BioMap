@@ -44,6 +44,27 @@ https://commons.wikimedia.org/wiki/File:Tropelhueno.jpg,
 https://commons.wikimedia.org/wiki/File:Arboretum_Quilaco.jpg,
 https://commons.wikimedia.org/wiki/File:Rio_bio_bio_desde_puente_quilaco.jpg
 
+## Mapa oficial y maqueta física del Centro de Visitantes
+
+Fotos del equipo (octubre de 2026, carpeta `fotos/`, fuera del repositorio) del mapa
+mural y la maqueta física del Centro de Visitantes. De ahí salen los nombres oficiales
+de los puntos y cómo son los lugares:
+
+- Puntos: Central Angostura y Mirador Central Angostura (vista a la represa), Sendero y
+  Mirador Huequecura, Centro de Visitantes Angostura, Puente Piulo Oriente y Puente El
+  Piulo, Puente Quilaco, Playa Santa Bárbara, Puente Colgante Huequecura, Camping La
+  Patagua de Lo Nieve, Camping Los Notros, Playa Quilaco, Camping Trompelhueno de
+  Quilaco, Arboretum, Cerro el Calvario, Sector Lo Nieve.
+- Sectores: Los Notros, El Piulo, Loncopangue, Rucalhue, San Ramón, Zona Huequecura,
+  Zona Biobío. Loncopangue queda fuera de la maqueta; Rucalhue y San Ramón no tienen
+  ubicación en OSM (por validar).
+- El brazo norte del embalse es el río Huequecura (no el Cañicura, que llega más arriba).
+- Campings: filas de carpas naranjas, quinchos de madera oscura y cancha de fútbol.
+
+Coordenadas: OpenStreetMap, salvo el Centro de Visitantes (el edificio de información de
+OSM en la ribera sur, donde lo ubica el mapa) y la Playa Santa Bárbara (en la orilla del
+brazo Huequecura según el mapa); ambos por validar.
+
 ## Lo que falta (pedir al cliente)
 
 - Medidas y fotos actuales de la presa terminada (coronamiento, vertedero, compuertas).
