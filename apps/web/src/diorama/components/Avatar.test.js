@@ -29,7 +29,7 @@ describe('pickPause', () => {
       expect(['Look', 'Clapping']).toContain(pickPause(actions, () => r).anim);
   });
 
-  it('sin animaciones, se queda mirando el paisaje', () => {
-    expect(pickPause({}, () => 0.9)).toBe(PAUSES[0]);
+  it('sin animaciones de pausa, no hay pausa', () => {
+    expect(pickPause({ Walking: {} }, () => 0.9)).toBeNull();
   });
 });

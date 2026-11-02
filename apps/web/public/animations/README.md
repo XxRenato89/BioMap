@@ -6,12 +6,8 @@ Aquí se suben todas las animaciones del personaje 3D con su respectivo nombre p
 
 | Archivo | Acción | Descripción |
 |---|---|---|
-| `idle.fbx` | **idle** | Animación de reposo (Victory Idle). |
-| `walk.fbx` | **walk** | Ciclo de caminata. |
-| `run.fbx` | **run** | Ciclo de carrera. |
-| `dance.fbx` | **dance** | Baile o festejo al llegar a un destino (Dancing Twerk). |
-| `wave.fbx` | **wave** | Saludo inicial o presentación de fichas. |
-| `clapping.fbx` | **clapping** | Aplausos. |
+| `walk.glb` | **walk** | Ciclo de caminata. Quieto, Quibar usa su primer cuadro. |
+| `run.glb` | **run** | Ciclo de carrera. |
 
 ## Modelo 3D Base (Fuera de esta carpeta)
 

@@ -49,11 +49,11 @@ export const PAUSES = [
 ];
 const CLAPPING = PAUSES[2];
 
-/** Una pausa al azar entre las que tienen su animación cargada. */
+/** Una pausa al azar entre las que tienen su animación cargada, o null si no hay ninguna. */
 export function pickPause(actions, random = Math.random) {
   const ready = PAUSES.filter(({ anim }) => actions?.[anim]);
-  const pool = ready.length > 0 ? ready : [PAUSES[0]];
-  return pool[Math.floor(random() * pool.length) % pool.length];
+  if (ready.length === 0) return null;
+  return ready[Math.floor(random() * ready.length) % ready.length];
 }
 
 /* Quibar se gira a mirar la fauna que tenga a menos de esto (km) en una pausa. */
@@ -143,7 +143,7 @@ export default memo(function Avatar({
     mixer?.stopAllAction();
     const idleAction = actions?.idle || actions?.Idle;
     if (idleAction) {
-      idleAction.reset().fadeIn(0.2).play();
+      idleAction.reset().setEffectiveTimeScale(0).fadeIn(0.2).play();
       currentAnimRef.current = 'Idle';
     }
   }, [actions, mixer]);
@@ -420,20 +420,24 @@ export default memo(function Avatar({
             Math.hypot(spot.x - currentPos.current.x, spot.z - currentPos.current.z) < WATCH_KM,
         );
         const picked = pickPause(actions);
-        const pause = animal
-          ? {
-              ...(actions?.Wave && Math.random() < 0.5 ? PAUSES[1] : PAUSES[0]),
-              face: 'target',
-              target: animal,
-            }
-          : picked;
-        idleWaitUntil.current = now + pause.ms;
-        lookRef.current = {
-          ...pause,
-          start: now,
-          end: now + pause.ms,
-          heading: currentHeading.current,
-        };
+        const pause =
+          animal && actions?.Look
+            ? {
+                ...(actions?.Wave && Math.random() < 0.5 ? PAUSES[1] : PAUSES[0]),
+                face: 'target',
+                target: animal,
+              }
+            : picked;
+        /* Sin clips de pausa, sigue paseando sin detenerse. */
+        if (pause) {
+          idleWaitUntil.current = now + pause.ms;
+          lookRef.current = {
+            ...pause,
+            start: now,
+            end: now + pause.ms,
+            heading: currentHeading.current,
+          };
+        }
         patrolIndex.current = nextWanderIndex(
           poiWorldPositions,
           patrolIndex.current,
@@ -483,6 +487,9 @@ export default memo(function Avatar({
           nextAction.setEffectiveTimeScale(runCadence);
         } else if (currentAnim === 'Walking') {
           nextAction.setEffectiveTimeScale(walkCadence);
+        } else if (currentAnim === 'Idle') {
+          /* El reposo es la caminata congelada en su primer cuadro: Quibar queda de pie. */
+          nextAction.setEffectiveTimeScale(0);
         } else {
           nextAction.setEffectiveTimeScale(1.0);
         }
@@ -509,7 +516,7 @@ export default memo(function Avatar({
           userStore.discoverSecret(poi.id);
           startSpeaking(`¡Oh, he encontrado algo misterioso! Es: ${poi.name}`);
           /* No frena el paseo: se detiene a mirar y sigue. */
-          if (mode === 'patrol') {
+          if (mode === 'patrol' && actions?.Clapping) {
             setMode('patrol');
             idleWaitUntil.current = now + 3500;
             lookRef.current = {

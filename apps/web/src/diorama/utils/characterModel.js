@@ -6,7 +6,7 @@ export const QUIBAR_MODEL_PATH = '/models/quibar.glb?v=tpose_baseline';
 export const ANIMATIONS_DIR = '/animations';
 export const ANIMATIONS_MANIFEST = '/animations/manifest.json';
 
-export const STANDARD_ANIM_NAMES = ['idle', 'walk', 'run', 'dance', 'wave', 'paddle', 'sit'];
+export const STANDARD_ANIM_NAMES = ['walk', 'run'];
 
 /**
  * Mapeo de alias para estandarizar nombres de animaciones.
