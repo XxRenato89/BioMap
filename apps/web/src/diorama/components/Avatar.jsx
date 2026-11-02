@@ -37,13 +37,16 @@ function createPath(startCoord, endCoord, pathfinder) {
 
 /*
  * Qué hace Quibar en cada pausa del paseo: animación, cuánto dura (ms) y
- * hacia dónde mira ('look' recorre el paisaje, 'camera' mira al visitante).
+ * hacia dónde mira ('look' recorre el paisaje, 'camera' mira al visitante,
+ * 'keep' sigue igual). `still`: sin saltito al llegar (se sienta).
  */
 export const PAUSES = [
-  { anim: 'Idle', ms: 3200, face: 'look' },
+  { anim: 'Look', ms: 4500, face: 'keep' },
   { anim: 'Wave', ms: 2600, face: 'camera' },
   { anim: 'Clapping', ms: 2600, face: 'camera' },
+  { anim: 'Sit', ms: 7000, face: 'keep', still: true },
 ];
+const CLAPPING = PAUSES[2];
 
 /** Una pausa al azar entre las que tienen su animación cargada. */
 export function pickPause(actions, random = Math.random) {
@@ -422,7 +425,7 @@ export default memo(function Avatar({
     const look = lookRef.current;
     if (look && mode === 'patrol' && now < look.end) {
       const t = (now - look.start) / 1000;
-      if (t < 0.4) hop = Math.sin((t / 0.4) * Math.PI) * avatarWorldSize * 0.35;
+      if (t < 0.4 && !look.still) hop = Math.sin((t / 0.4) * Math.PI) * avatarWorldSize * 0.35;
       if (look.face === 'camera') {
         currentHeading.current = Math.atan2(
           state.camera.position.x - currentPos.current.x,
@@ -483,7 +486,7 @@ export default memo(function Avatar({
             setMode('patrol');
             idleWaitUntil.current = now + 3500;
             lookRef.current = {
-              ...PAUSES[2],
+              ...CLAPPING,
               start: now,
               end: now + 3500,
               heading: currentHeading.current,

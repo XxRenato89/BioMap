@@ -24,9 +24,9 @@ describe('nextWanderIndex', () => {
 
 describe('pickPause', () => {
   it('solo elige pausas con su animación cargada', () => {
-    const actions = { Idle: {}, Clapping: {} };
+    const actions = { Look: {}, Clapping: {} };
     for (const r of [0, 0.49, 0.5, 0.99])
-      expect(['Idle', 'Clapping']).toContain(pickPause(actions, () => r).anim);
+      expect(['Look', 'Clapping']).toContain(pickPause(actions, () => r).anim);
   });
 
   it('sin animaciones, se queda mirando el paisaje', () => {

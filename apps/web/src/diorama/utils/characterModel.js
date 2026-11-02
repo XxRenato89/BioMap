@@ -18,6 +18,7 @@ export const ANIM_ALIASES = {
   run: ['run', 'Run', 'running', 'Running', 'AN_Quibar_RunCycle'],
   dance: ['dance', 'Dance', 'twerk', 'Dancing Twerk', 'Breakdance', 'Uprock'],
   wave: ['wave', 'Wave', 'saludo'],
+  look: ['look', 'Look', 'Looking Around', 'mirar'],
   clapping: ['clapping', 'Clapping', 'aplauso', 'aplausos', 'Clap'],
   paddle: ['paddle', 'Paddle', 'paddling', 'Paddling', 'row', 'Row', 'rowing', 'Rowing', 'remar', 'remo'],
   sit: ['sit', 'Sit', 'sitting', 'Sitting', 'Sitting Idle', 'sentado'],
@@ -114,7 +115,7 @@ export function normalizeAnimationClips(clips = []) {
 // Preload standard model
 useGLTF.preload(QUIBAR_MODEL_PATH);
 
-export const ANIMATION_VERSION = 'v_wander_pauses_v3';
+export const ANIMATION_VERSION = 'v_wander_pauses_v4';
 
 /**
  * Hook para cargar el modelo 3D con animaciones estandarizadas.
