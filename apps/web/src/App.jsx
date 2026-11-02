@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AccessibilityBar from './components/AccessibilityBar.jsx';
-import BioBook from './components/BioBook.jsx';
 import Compass from './components/Compass.jsx';
 import ConfettiCanvas from './components/ConfettiCanvas.jsx';
-import HeaderCard from './components/HeaderCard.jsx';
+import Dock from './components/Dock.jsx';
+import EpochPanel from './components/EpochPanel.jsx';
 import InactivityWarning from './components/InactivityWarning.jsx';
-import LayerPanel from './components/LayerPanel.jsx';
-import MapControls from './components/MapControls.jsx';
+import MobilePanel from './components/MobilePanel.jsx';
+import SearchBar from './components/SearchBar.jsx';
+import SettingsPanel from './components/SettingsPanel.jsx';
 import SkipWalkButton from './components/SkipWalkButton.jsx';
 import StatusPill from './components/StatusPill.jsx';
-import ZoomLevels from './components/ZoomLevels.jsx';
+import TimeOfDayWidget from './components/TimeOfDayWidget.jsx';
 import { config } from './config.js';
 import AttractOverlay from './features/attract/AttractOverlay.jsx';
 import { useAttractMode } from './features/attract/useAttractMode.js';
 import PointSheets from './features/point/PointSheets.jsx';
-import ReservoirToggle from './features/reservoir/ReservoirToggle.jsx';
 import { useTour } from './features/tour/useTour.js';
 import { isInside } from './diorama/utils/cameraMath.js';
 import DioramaCanvas from './diorama/components/DioramaCanvas.jsx';
@@ -30,21 +29,11 @@ import { useRestMode } from './hooks/useRestMode.js';
 import { useVisibleLayers } from './hooks/useLayers.js';
 import { TEXT_SCALES, useViewerStore } from './store/viewerStore.js';
 import { useAvatarStore } from './store/avatarStore.js';
-import { useUserStore } from './store/userStore.js';
+import { AVAILABLE_TOURS, useUserStore } from './store/userStore.js';
 import { publishMainView } from './store/viewsStore.js';
+import TourModal from './features/tour/TourModal.jsx';
 
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'keydown'];
-
-/**
- * Cuenta cuántos puntos tiene cada capa.
- */
-function countByLayer(features) {
-  const counts = new Map();
-  features.forEach(({ properties: { layerId } }) =>
-    counts.set(layerId, (counts.get(layerId) ?? 0) + 1),
-  );
-  return counts;
-}
 
 /**
  * Visor táctil de BioMap: una maqueta 3D del territorio sobre relieve real.
@@ -62,7 +51,6 @@ export default function App({ mapConfig = config }) {
   const { layers, failing: layersFailing } = useLayersQuery(timing);
   const { points, failing: pointsFailing } = usePointsQuery(timing);
   const visibleLayerIds = useVisibleLayers(layers);
-  const counts = useMemo(() => countByLayer(points.features), [points]);
 
   const selectedPointIds = useViewerStore((state) => state.selectedPointIds);
   const pitched = useViewerStore((state) => state.pitched);
@@ -78,6 +66,10 @@ export default function App({ mapConfig = config }) {
   const mainRef = useRef(null);
   const viewerRef = useRef(null);
   const [attractStop, setAttractStop] = useState(null);
+  /* Panel abierto sobre la barra inferior: 'mobile', 'epoch', 'settings' o ninguno. */
+  const [panel, setPanel] = useState(null);
+  const togglePanel = useCallback((name) => setPanel((open) => (open === name ? null : name)), []);
+  const closePanel = useCallback(() => setPanel(null), []);
 
   useEffect(() => {
     i18n.changeLanguage(lang);
@@ -89,6 +81,7 @@ export default function App({ mapConfig = config }) {
    */
   const resetAll = useCallback(() => {
     mainRef.current?.resetView();
+    setPanel(null);
     useViewerStore.getState().resetAll();
     useUserStore.getState().resetProgress();
   }, []);
@@ -116,6 +109,7 @@ export default function App({ mapConfig = config }) {
    */
   const rest = useCallback(() => {
     useViewerStore.getState().closeAllPoints();
+    setPanel(null);
     mainRef.current?.resetView();
   }, []);
   useRestMode({ delayMs: mapConfig.restDelayMs, onRest: rest, enabled: !attract });
@@ -160,6 +154,18 @@ export default function App({ mapConfig = config }) {
 
   const { selectPoint, arrive, closePoint } = useTour({ points, camera: mainRef });
 
+  /* La ficha de un lugar también abre BioMap Mobile, con el código de ese lugar. */
+  useEffect(() => {
+    const open = () => setPanel('mobile');
+    window.addEventListener('biomap:open-mobile', open);
+    return () => window.removeEventListener('biomap:open-mobile', open);
+  }, []);
+  /* Al elegir un lugar, el panel abierto se cierra para dejar ver el mapa. */
+  const pickPoint = (id) => {
+    setPanel(null);
+    selectPoint(id);
+  };
+
   const exitAttract = () => {
     useViewerStore.getState().setAttract(false);
     mainRef.current?.resetView();
@@ -167,6 +173,7 @@ export default function App({ mapConfig = config }) {
   };
 
   const handleReset = () => {
+    setPanel(null);
     mainRef.current?.resetView();
     useAvatarStore.getState().stopSpeaking();
     actions.resetExploration();
@@ -235,81 +242,75 @@ export default function App({ mapConfig = config }) {
         className={`absolute inset-0 pointer-events-none z-10 [&>*]:pointer-events-auto transition-opacity duration-700 ${attract ? 'opacity-0' : ''}`}
         aria-hidden={attract || undefined}
       >
-        <div className="absolute top-6 left-6 flex flex-col gap-3.5 max-w-[380px]">
-          <div className="flex flex-col gap-3" data-obstacle>
-            <HeaderCard />
-            <LayerPanel
-              layers={layers}
-              visibleLayerIds={visibleLayerIds}
-              counts={counts}
-              onToggle={actions.toggleLayer}
-            />
+        <div className="absolute top-7 left-10">
+          <SearchBar points={onMap} onPick={pickPoint} />
+        </div>
+
+        {messages.length > 0 && (
+          <div className="absolute top-7 left-1/2 -translate-x-1/2 flex items-center gap-3">
+            <StatusPill messages={messages} />
           </div>
-          <div data-obstacle>
-            <BioBook
-              url={mapConfig.publicUrl || window.location.origin}
-              wifi={mapConfig.kioskWifi}
-              selectedPoint={
-                openSheets.length > 0 ? openSheets[openSheets.length - 1].feature : null
+        )}
+
+        <div className="absolute top-7 right-10 flex items-center gap-3">
+          <TimeOfDayWidget />
+          <Compass onResetNorth={() => mainRef.current?.resetNorth()} />
+        </div>
+
+        {panel === 'mobile' && (
+          <MobilePanel
+            url={mapConfig.publicUrl || window.location.origin}
+            wifi={mapConfig.kioskWifi}
+            selectedPoint={openSheets.length > 0 ? openSheets[openSheets.length - 1].feature : null}
+            onClose={closePanel}
+          />
+        )}
+        {panel === 'epoch' && (
+          <EpochPanel
+            drained={drained}
+            onChange={(next) => {
+              if (next === drained) return;
+              if (next) mainRef.current?.resetView();
+              actions.toggleDrained();
+            }}
+            onClose={closePanel}
+          />
+        )}
+        {panel === 'tour' && (
+          <TourModal
+            onClose={closePanel}
+            onSelectTour={(tourId) => {
+              const activeTour = AVAILABLE_TOURS.find((t) => t.id === tourId);
+              if (activeTour?.stops?.[0]) {
+                selectPoint(activeTour.stops[0]);
               }
-            />
-          </div>
-        </div>
-
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
-          <StatusPill messages={messages} />
-        </div>
-
-        <div className="absolute top-6 right-6 flex flex-col items-end gap-3.5">
-          <div className="flex flex-col items-end gap-3" data-obstacle>
-            <AccessibilityBar
-              textScale={textScale}
-              contrast={contrast}
-              onTextScale={actions.cycleTextScale}
-              onContrast={actions.toggleContrast}
-              onLanguage={() => actions.setLang(lang === 'es' ? 'en' : 'es')}
-            />
-            <Compass onResetNorth={() => mainRef.current?.resetNorth()} />
-          </div>
-          <div data-obstacle>
-            <MapControls
-              onZoomIn={() => mainRef.current?.zoomBy(0.55)}
-              onZoomOut={() => mainRef.current?.zoomBy(1.8)}
-              pitched={pitched}
-              onTogglePitch={togglePitch}
-              contours={contours}
-              onToggleContours={actions.toggleContours}
-              onReset={handleReset}
-            />
-          </div>
-        </div>
-
-        {/* «Bajo el embalse»: el diferenciador de BioMap (ver ReservoirToggle). */}
-        {openSheets.length === 0 && (
-          <div className="absolute bottom-16 right-6" data-obstacle>
-            <ReservoirToggle
-              drained={drained}
-              onToggle={() => {
-                if (!drained) mainRef.current?.resetView();
-                actions.toggleDrained();
-              }}
-            />
-          </div>
+            }}
+          />
+        )}
+        {panel === 'settings' && (
+          <SettingsPanel
+            lang={lang}
+            textScale={textScale}
+            contrast={contrast}
+            pitched={pitched}
+            contours={contours}
+            onLang={actions.setLang}
+            onTextScale={actions.setTextScale}
+            onContrast={(on) => on !== contrast && actions.toggleContrast()}
+            onPitch={togglePitch}
+            onContours={actions.toggleContours}
+            onClose={closePanel}
+          />
         )}
 
-        {/* Con una ficha abierta, ese espacio es de la mascota que la presenta. */}
-        {openSheets.length === 0 && (
-          <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2"
-            data-obstacle
-          >
-            <ZoomLevels
-              levels={mapConfig.zoomLevels}
-              onPick={(range) => mainRef.current?.zoomToRange(range)}
-              restSeconds={Math.round(mapConfig.restDelayMs / 1000)}
-            />
-          </div>
-        )}
+        <Dock
+          panel={panel}
+          epochLabel={drained ? t('epoch.year2000') : t('epoch.today')}
+          onHome={handleReset}
+          onPanel={togglePanel}
+          onZoomIn={() => mainRef.current?.zoomBy(0.55)}
+          onZoomOut={() => mainRef.current?.zoomBy(1.8)}
+        />
       </div>
 
       <PointSheets
@@ -321,10 +322,6 @@ export default function App({ mapConfig = config }) {
       <AvatarNarrator />
       <SkipWalkButton />
       <ConfettiCanvas />
-
-      <p className="absolute bottom-2 left-6 text-xs text-white/50 pointer-events-none">
-        {t('attribution')}
-      </p>
 
       {attract && <AttractOverlay stopName={attractStop} onExplore={exitAttract} />}
       {phase === 'warning' && (
@@ -338,3 +335,4 @@ export default function App({ mapConfig = config }) {
     </main>
   );
 }
+

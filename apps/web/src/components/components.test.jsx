@@ -2,20 +2,19 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AttractOverlay from '../features/attract/AttractOverlay.jsx';
 import PointSheet from '../features/point/PointSheet.jsx';
-import ReservoirToggle from '../features/reservoir/ReservoirToggle.jsx';
 import i18n from '../i18n/index.js';
+import { useUserStore } from '../store/userStore.js';
 import { useViewsStore } from '../store/viewsStore.js';
 import { axeViolations } from '../test/axe.js';
 import { clearTestQueryClients, makeWrapper } from '../test/providers.jsx';
-import AccessibilityBar from './AccessibilityBar.jsx';
-import BioBook from './BioBook.jsx';
 import Compass from './Compass.jsx';
-import HeaderCard from './HeaderCard.jsx';
+import Dock from './Dock.jsx';
+import EpochPanel from './EpochPanel.jsx';
 import InactivityWarning from './InactivityWarning.jsx';
-import LayerPanel from './LayerPanel.jsx';
-import MapControls from './MapControls.jsx';
+import MobilePanel from './MobilePanel.jsx';
+import SearchBar from './SearchBar.jsx';
+import SettingsPanel from './SettingsPanel.jsx';
 import StatusPill from './StatusPill.jsx';
-import ZoomLevels from './ZoomLevels.jsx';
 
 /* La mascota 3D necesita WebGL, que jsdom no tiene. */
 vi.mock('../features/avatar/SheetMascot.jsx', () => ({ Mascot: () => null }));
@@ -23,42 +22,129 @@ vi.mock('@react-three/fiber', async (original) => ({ ...(await original()), Canv
 
 afterEach(() => {
   clearTestQueryClients();
+  useUserStore.setState({ tour: [], visitedPoints: [] });
   return i18n.changeLanguage('es');
 });
 
-const HISTORY = { id: 1, slug: 'history', name: 'Historia', color: '#b4440e' };
 const TOURISM = { id: 3, slug: 'tourism', name: 'Turismo', color: '#1d4ed8' };
-const LEVELS = { region: 95_000, zone: 30_000, detail: 7_000 };
 const VIEW = { center: [-71.83, -37.68], range: 30_000, heading: 0, pitch: -30 };
 
-describe('LayerPanel', () => {
-  const renderPanel = (onToggle = vi.fn()) =>
-    render(
-      <LayerPanel
-        layers={[HISTORY, TOURISM]}
-        visibleLayerIds={new Set([3])}
-        counts={new Map([[3, 2]])}
-        onToggle={onToggle}
-      />,
-    );
+describe('Dock', () => {
+  const renderDock = (props = {}) => {
+    const handlers = {
+      onHome: vi.fn(),
+      onPanel: vi.fn(),
+      onZoomIn: vi.fn(),
+      onZoomOut: vi.fn(),
+    };
+    const view = render(<Dock panel={null} epochLabel="Hoy" {...handlers} {...props} />);
+    return { ...view, ...handlers };
+  };
 
-  it('reflects which layers are visible, shows counts and toggles on tap', () => {
-    const onToggle = vi.fn();
-    renderPanel(onToggle);
-    const history = screen.getByRole('switch', { name: /Historia/ });
-    const tourism = screen.getByRole('switch', { name: /Turismo/ });
-    expect(history.getAttribute('aria-checked')).toBe('false');
-    expect(tourism.getAttribute('aria-checked')).toBe('true');
-    expect(history.textContent).toContain('0 puntos');
-    expect(tourism.textContent).toContain('2 puntos');
-    fireEvent.click(history);
-    expect(onToggle).toHaveBeenCalledWith(1);
+  it('calls each control and shows the tour progress', () => {
+    useUserStore.setState({ tour: [1, 2, 3, 4], visitedPoints: [1] });
+    const { onHome, onPanel, onZoomIn, onZoomOut } = renderDock();
+    fireEvent.click(screen.getByRole('button', { name: /Inicio/ }));
+    fireEvent.click(screen.getByRole('button', { name: /BioMap Mobile/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Época/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Acercar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Alejar' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ajustes/ }));
+    expect(onHome).toHaveBeenCalledTimes(1);
+    expect(onPanel.mock.calls.map(([name]) => name)).toEqual(['mobile', 'epoch', 'settings']);
+    expect(onZoomIn).toHaveBeenCalledTimes(1);
+    expect(onZoomOut).toHaveBeenCalledTimes(1);
+    const progress = screen.getByRole('progressbar', { name: 'Tu recorrido' });
+    expect(progress.getAttribute('aria-valuenow')).toBe('1');
+    expect(progress.textContent).toContain('1/4');
   });
 
-  it('translates known layer names to English', async () => {
-    await i18n.changeLanguage('en');
-    renderPanel();
-    expect(screen.getByRole('switch', { name: /History/ }).textContent).toContain('0 places');
+  it('marks the open panel and has no accessibility violations', async () => {
+    const { container } = renderDock({ panel: 'settings' });
+    expect(screen.getByRole('button', { name: /Ajustes/ }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /Época/ }).getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('hides the progress when the data defines no tour', () => {
+    renderDock();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
+});
+
+describe('SearchBar', () => {
+  const POINTS = [
+    { properties: { id: 1, name: 'Playa Quilaco' } },
+    { properties: { id: 2, name: 'Camping Los Notros' } },
+    { properties: { id: 3, name: 'Parque Angostura' } },
+  ];
+
+  it('filters places ignoring accents and capitals, and picks one', () => {
+    const onPick = vi.fn();
+    render(<SearchBar points={POINTS} onPick={onPick} />);
+    const input = screen.getByRole('textbox', { name: 'Buscar un lugar' });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'PLAYA' } });
+    expect(screen.queryByRole('button', { name: /Camping/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Playa Quilaco/ }));
+    expect(onPick).toHaveBeenCalledWith(1);
+    expect(input.value).toBe('');
+  });
+
+  it('says so when nothing matches', () => {
+    render(<SearchBar points={POINTS} onPick={vi.fn()} />);
+    const input = screen.getByRole('textbox', { name: 'Buscar un lugar' });
+    fireEvent.change(input, { target: { value: 'zzz' } });
+    expect(screen.getByText('Sin resultados')).toBeTruthy();
+  });
+});
+
+describe('SettingsPanel', () => {
+  const renderPanel = (props = {}) => {
+    const handlers = {
+      onLang: vi.fn(),
+      onTextScale: vi.fn(),
+      onContrast: vi.fn(),
+      onPitch: vi.fn(),
+      onContours: vi.fn(),
+      onClose: vi.fn(),
+    };
+    const view = render(
+      <SettingsPanel
+        lang="es"
+        textScale={0}
+        contrast={false}
+        pitched
+        contours={false}
+        {...handlers}
+        {...props}
+      />,
+    );
+    return { ...view, ...handlers };
+  };
+
+  it('offers language, text size, contrast and view, and shows the credits', () => {
+    const { onLang, onTextScale, onContrast, onPitch, onContours, onClose } = renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'English' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tamaño de texto 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Plana' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Curvas de nivel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(onLang).toHaveBeenCalledWith('en');
+    expect(onTextScale).toHaveBeenCalledWith(2);
+    expect(onContrast).toHaveBeenCalledWith(true);
+    expect(onPitch).toHaveBeenCalledTimes(1);
+    expect(onContours).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/Sentinel-2 cloudless 2016 de EOX \(CC BY 4.0/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Español' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
   });
 
   it('has no accessibility violations', async () => {
@@ -67,44 +153,44 @@ describe('LayerPanel', () => {
   });
 });
 
-describe('MapControls', () => {
-  it('calls each control callback and reflects the 3D state', () => {
-    const props = {
-      onZoomIn: vi.fn(),
-      onZoomOut: vi.fn(),
-      onTogglePitch: vi.fn(),
-      onToggleContours: vi.fn(),
-      onReset: vi.fn(),
-    };
-    render(<MapControls pitched contours={false} {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Curvas de nivel' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Acercar' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Alejar' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Vista inclinada en 3D' }));
-    fireEvent.click(screen.getByRole('button', { name: /Reiniciar vista/ }));
-    expect(props.onZoomIn).toHaveBeenCalledTimes(1);
-    expect(props.onZoomOut).toHaveBeenCalledTimes(1);
-    expect(props.onTogglePitch).toHaveBeenCalledTimes(1);
-    expect(props.onReset).toHaveBeenCalledTimes(1);
-    expect(props.onToggleContours).toHaveBeenCalledTimes(1);
-    expect(
-      screen.getByRole('button', { name: 'Curvas de nivel' }).getAttribute('aria-pressed'),
-    ).toBe('false');
-    expect(
-      screen.getByRole('button', { name: 'Vista inclinada en 3D' }).getAttribute('aria-pressed'),
-    ).toBe('true');
+describe('EpochPanel', () => {
+  it('switches between the year 2000 and today, and explains the reconstruction', async () => {
+    const onChange = vi.fn();
+    const { container, rerender } = render(
+      <EpochPanel drained={false} onChange={onChange} onClose={vi.fn()} />,
+    );
+    expect(screen.queryByText(/Reconstrucción ilustrativa/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /2000/ }));
+    expect(onChange).toHaveBeenCalledWith(true);
+    rerender(<EpochPanel drained onChange={onChange} onClose={vi.fn()} />);
+    expect(screen.getByText(/Reconstrucción ilustrativa/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /2000/ }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: /Hoy/ }));
+    expect(onChange).toHaveBeenCalledWith(false);
+    expect(await axeViolations(container)).toEqual([]);
   });
 });
 
-describe('ZoomLevels', () => {
-  it('marks the active level and jumps to a level on tap', () => {
-    useViewsStore.setState({ main: VIEW });
-    const onPick = vi.fn();
-    render(<ZoomLevels levels={LEVELS} onPick={onPick} restSeconds={45} />);
-    expect(screen.getByText(/tras 45 s sin uso/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Zona/ }).getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: /Detalle/ }));
-    expect(onPick).toHaveBeenCalledWith(7_000);
+describe('MobilePanel', () => {
+  it('shows a local QR code and the Wi-Fi network, and closes', async () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <MobilePanel url="http://biomap.local" wifi="BioMap-Angostura" onClose={onClose} />,
+    );
+    const panel = screen.getByRole('dialog', { name: 'Llévate el mapa en tu celular' });
+    const code = within(panel).getByRole('img', { name: /Código QR/ });
+    await waitFor(() => expect(code.querySelector('svg')).not.toBeNull());
+    expect(within(panel).getByText(/BioMap-Angostura/)).toBeTruthy();
+    expect(await axeViolations(container)).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('points the code at the open place', async () => {
+    const feature = { properties: { id: 7, name: 'Playa Quilaco' } };
+    render(<MobilePanel url="http://biomap.local" selectedPoint={feature} onClose={vi.fn()} />);
+    expect(screen.getByRole('dialog', { name: 'Lleva este lugar contigo' })).toBeTruthy();
+    expect(screen.getByText('biomap.local/?point=7')).toBeTruthy();
   });
 });
 
@@ -118,21 +204,11 @@ describe('Compass', () => {
     fireEvent.click(button);
     expect(onResetNorth).toHaveBeenCalled();
   });
-});
 
-describe('AccessibilityBar', () => {
-  it('offers larger text, contrast and language', () => {
-    const props = { onTextScale: vi.fn(), onContrast: vi.fn(), onLanguage: vi.fn() };
-    render(<AccessibilityBar textScale={0} contrast {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Texto más grande' }));
-    fireEvent.click(screen.getByRole('button', { name: /Contraste/ }));
-    fireEvent.click(screen.getByRole('button', { name: /English/ }));
-    expect(props.onTextScale).toHaveBeenCalled();
-    expect(props.onContrast).toHaveBeenCalled();
-    expect(props.onLanguage).toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: /Contraste/ }).getAttribute('aria-pressed')).toBe(
-      'true',
-    );
+  it('is hidden while the map has north up', () => {
+    useViewsStore.setState({ main: VIEW });
+    render(<Compass onResetNorth={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /Brújula/ })).toBeNull();
   });
 });
 
@@ -145,20 +221,6 @@ describe('StatusPill', () => {
   it('shows every problem', () => {
     render(<StatusPill messages={['Uno', 'Dos']} />);
     expect(screen.getByRole('status').textContent).toBe('Uno · Dos');
-  });
-});
-
-describe('BioBook', () => {
-  it('opens in place with a local QR code and the Wi-Fi network, and closes', async () => {
-    const { container } = render(<BioBook url="http://biomap.local" wifi="BioMap-Angostura" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir Bio-Book' }));
-    const book = screen.getByRole('dialog', { name: 'Llévate el mapa vivo' });
-    const code = within(book).getByRole('img', { name: /Código QR/ });
-    await waitFor(() => expect(code.querySelector('svg')).not.toBeNull());
-    expect(within(book).getByText(/BioMap-Angostura/)).toBeTruthy();
-    expect(await axeViolations(container)).toEqual([]);
-    fireEvent.click(screen.getByRole('button', { name: 'Cerrar libro' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
 
@@ -220,32 +282,11 @@ describe('PointSheet', () => {
   });
 });
 
-describe('HeaderCard and AttractOverlay', () => {
-  it('shows the title and the invitation to explore', () => {
+describe('AttractOverlay', () => {
+  it('invites to explore and starts on tap', () => {
     const onExplore = vi.fn();
-    render(
-      <>
-        <HeaderCard />
-        <AttractOverlay stopName="Mirador del embalse" onExplore={onExplore} />
-      </>,
-    );
-    expect(screen.getByRole('heading', { name: 'BioMap' })).toBeTruthy();
+    render(<AttractOverlay stopName="Mirador del embalse" onExplore={onExplore} />);
     fireEvent.click(screen.getByRole('button', { name: /Toca para explorar/ }));
     expect(onExplore).toHaveBeenCalled();
-  });
-});
-
-describe('ReservoirToggle', () => {
-  it('drains the reservoir and explains the submerged valley, accessibly', async () => {
-    const onToggle = vi.fn();
-    const { container, rerender } = render(<ReservoirToggle drained={false} onToggle={onToggle} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Bajo el embalse' }));
-    expect(onToggle).toHaveBeenCalled();
-    rerender(<ReservoirToggle drained onToggle={onToggle} />);
-    expect(screen.getByRole('heading', { name: 'El valle que cubre el embalse' })).toBeTruthy();
-    expect(
-      screen.getByRole('button', { name: 'Volver a llenar' }).getAttribute('aria-pressed'),
-    ).toBe('true');
-    expect(await axeViolations(container)).toEqual([]);
   });
 });

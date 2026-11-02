@@ -169,6 +169,7 @@ export function buildChunk(meta, heights, projection, chunk, step) {
   geometry.setAttribute('position', new BufferAttribute(position, 3));
   geometry.setAttribute('uv', new BufferAttribute(uv, 2));
   geometry.setIndex(new BufferAttribute(new Uint32Array(index), 1));
+  geometry.computeVertexNormals();
   geometry.boundingSphere = new Sphere(new Vector3(...chunk.center), chunk.radius);
   return geometry;
 }

@@ -1,5 +1,7 @@
 export {
   buildDamWall,
+  damLevels,
+  buildEmbankment,
   densify,
   DAM_CREST_WIDTH,
   DAM_SLOPE,

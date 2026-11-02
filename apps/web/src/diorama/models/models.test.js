@@ -26,9 +26,11 @@ describe('diorama/models', () => {
       expect(modelKindFor('Puente Colgante Huequecura')).toBe('bridge');
       expect(modelKindFor('Playa Santa Bárbara')).toBe('beach');
       expect(modelKindFor('Centro de Visitantes Angostura')).toBe('visitors');
-      expect(modelKindFor('Mirador Central Angostura')).toBe('lookout');
+      expect(modelKindFor('Mirador Central Angostura')).toBe('meshDeck');
+      expect(modelKindFor('Cerro el Calvario')).toBe('sanctuary');
       expect(modelKindFor('Puente El Piulo')).toBeNull();
-      expect(modelKindFor('Parque Angostura y Sendero Huequecura')).toBe('trailhead');
+      expect(modelKindFor('Parque Angostura')).toBe('forestTrail');
+      expect(modelKindFor('Sendero Huequecura')).toBe('trailhead');
       expect(modelKindFor('Camping Los Notros')).toBe('camping');
     });
 

@@ -1,24 +1,28 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-forest: #13241d;
-  --color-forest-dark: #0f1c16;
-  --color-forest-light: #2c6b4d;
-  --color-ink: #10201a;
-  --color-muted: #4a5a4e;
-  --color-muted-strong: #33443a;
-  --color-land: #e7ece0;
-  --color-mint: #cfe3d6;
-  --color-mint-muted: #a9c7b6;
-  --color-eyebrow: #9fc2ad;
+  --color-forest: #14334d;
+  --color-forest-dark: #0d2438;
+  --color-forest-light: #1c75bc;
+  --color-ink: #14334d;
+  --color-muted: #494c4e;
+  --color-muted-strong: #2f3a44;
+  --color-land: #f3f9ff;
+  --color-mint: #d6e6f3;
+  --color-mint-muted: #b6c4d0;
+  --color-eyebrow: #b6c4d0;
   --color-focus: #1d4ed8;
-  --color-ok: #4ade80;
+  --color-ok: #8dc63f;
   --color-warning: #f2c14e;
-  --color-accent: #d9631a;
-  --color-cream: #f3ecdc;
-  --color-cream-shade: #e4d8bd;
-  --color-ochre: #c8873a;
-  --color-ochre-deep: #9c6322;
+  --color-accent: #1c75bc;
+  --color-cream: #f3f9ff;
+  --color-colbun-blue: #1c75bc;
+  --color-colbun-green: #8dc63f;
+  --color-colbun-navy: #14334d;
+  --color-colbun-gray: #494c4e;
+  --color-cream-shade: #cfdeeb;
+  --color-ochre: #8dc63f;
+  --color-ochre-deep: #3f6f12;
 
   --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
   --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
@@ -29,20 +33,20 @@
 }
 
 :root {
-  --forest: #13241d;
-  --forest-dark: #0f1c16;
-  --forest-light: #2c6b4d;
-  --ink: #10201a;
-  --muted: #4a5a4e;
-  --muted-strong: #33443a;
-  --land: #e7ece0;
-  --mint: #cfe3d6;
-  --mint-muted: #a9c7b6;
-  --eyebrow: #9fc2ad;
+  --forest: #14334d;
+  --forest-dark: #0d2438;
+  --forest-light: #1c75bc;
+  --ink: #14334d;
+  --muted: #494c4e;
+  --muted-strong: #2f3a44;
+  --land: #f3f9ff;
+  --mint: #d6e6f3;
+  --mint-muted: #b6c4d0;
+  --eyebrow: #b6c4d0;
   --focus: #1d4ed8;
-  --ok: #4ade80;
+  --ok: #8dc63f;
   --warning: #f2c14e;
-  --accent: #d9631a;
+  --accent: #1c75bc;
 
   --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
   --font-display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', sans-serif;
@@ -80,7 +84,7 @@
   body {
     font-family: var(--font-body);
     color: var(--ink);
-    background: #0d110f;
+    background: #0d2438;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
@@ -111,28 +115,23 @@
 }
 
 /*
- * Paneles tipo letrero de parque (mismo lenguaje que la ficha y el Bio-Book):
- * verde bosque macizo con una ranura interior clara, o crema con canto.
- * Sin vidrio: se lee igual sobre agua, bosque o pasto.
+ * Paneles del visor, con los colores de Colbún (hoja de estilos de colbun.cl):
+ * claro (#f3f9ff con texto azul oscuro) u oscuro (#14334d). Sin vidrio ni
+ * desenfoque: se leen igual sobre agua, bosque o pasto y no cuestan en 4K.
  */
 .glass-dark {
-  background: #1c3a2a;
-  border: 1px solid #0f241a;
-  color: #f3ecdc;
-  box-shadow:
-    inset 0 0 0 4px #1c3a2a,
-    inset 0 0 0 5.5px rgba(243, 236, 220, 0.2),
-    0 3px 0 #0f241a,
-    0 12px 28px rgba(10, 20, 14, 0.32);
+  background: #14334d;
+  border: 1px solid rgba(243, 249, 255, 0.22);
+  color: #f3f9ff;
+  box-shadow: 0 10px 30px rgba(20, 51, 77, 0.35);
 }
 
-.glass-light {
-  background: var(--color-cream);
-  border: 1px solid #d9cba8;
-  color: var(--ink);
-  box-shadow:
-    0 3px 0 var(--color-cream-shade),
-    0 10px 24px rgba(10, 20, 14, 0.25);
+.glass-light,
+.panel {
+  background: #f3f9ff;
+  border: 1px solid rgba(20, 51, 77, 0.18);
+  color: #14334d;
+  box-shadow: 0 10px 30px rgba(20, 51, 77, 0.3);
 }
 
 /* Modo atracción: la maqueta se luce sola, sin pines ni etiquetas encima. */

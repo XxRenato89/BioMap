@@ -1,0 +1,28 @@
+{
+  "type": "Feature",
+  "id": 7,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.796316,
+      -37.742917
+    ]
+  },
+  "properties": {
+    "id": 7,
+    "name": "Arboretum",
+    "layerId": 2,
+    "layerSlug": "ecology",
+    "tourStop": null,
+    "description": "Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": [
+      {
+        "url": "/media/arboreto-quilaco.jpg",
+        "altText": "Visita al Arboreto de Quilaco",
+        "credit": "Bastet&Anubis, CC BY-SA 4.0, Wikimedia Commons",
+        "isMain": true,
+        "kind": "photo"
+      }
+    ]
+  }
+}

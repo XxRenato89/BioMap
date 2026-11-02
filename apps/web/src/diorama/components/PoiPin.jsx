@@ -6,6 +6,7 @@ import {
   Bridge,
   Check,
   Footprints,
+  HelpCircle,
   Info,
   Landmark,
   Lock,
@@ -54,19 +55,14 @@ const STEM = new CylinderGeometry(0.05, 0.05, 1.25, 8).translate(0, 0.375, 0);
 const FOOT = new SphereGeometry(0.16, 16, 10);
 /* Alto del poste en pantalla: ~48 px (un píxel ≈ 0,00052 rad). */
 const STEM_PX = 0.00052 * 48;
-const stemMaterials = new Map();
-/** Material del poste en el color de la capa (uno por color, compartido). */
-function stemMaterial(color) {
-  if (!stemMaterials.has(color))
-    stemMaterials.set(color, new MeshStandardMaterial({ color: new Color(color), roughness: 0.5 }));
-  return stemMaterials.get(color);
-}
+/* Sin colores de capa (como en el video de referencia): poste gris claro para todos. */
+const STEM_MATERIAL = new MeshStandardMaterial({ color: new Color('#d4d4d4'), roughness: 0.5 });
 
 /**
- * Un punto de interés: un poste del color de su capa que sale del suelo y,
+ * Un punto de interés: un poste gris claro que sale del suelo y,
  * en su punta, un marcador con el icono del lugar y una placa con su nombre.
  * Poste y marcador miden siempre lo mismo en pantalla y el pie no se mueve al
- * acercarse. Las paradas del recorrido llevan su número.
+ * acercarse.
  */
 export function PoiPin({
   id,
@@ -79,15 +75,16 @@ export function PoiPin({
   lifts,
   state = 'disponible',
   stop = 0,
+  isSecret = false,
 }) {
   const group = useRef(null);
   const lift = useRef(0);
   const foot = useRef(null);
   const anchor = useMemo(() => new Vector3(...position), [position]);
-  /* Punta del poste sin escalón: desde ahí se reparten las insignias (si no, subir una la movería y el reparto oscilaría). */
+  /* Punta del poste sin escalón: desde ahí se reparten las insignias. */
   const base = useMemo(() => new Vector3(...position), [position]);
   const locked = state === 'bloqueado';
-  const material = stemMaterial(layer.color);
+  const material = STEM_MATERIAL;
 
   useFrame(({ camera, invalidate }) => {
     const stem = group.current;
@@ -117,41 +114,45 @@ export function PoiPin({
       <mesh geometry={STEM} material={material} />
       <mesh ref={foot} geometry={FOOT} material={material} />
       {/* En la punta del poste (el grupo se escala con la distancia). */}
-      {/* Bajo los paneles de la interfaz (z-10): un pin nunca tapa la cabecera ni el Bio-Book. */}
+      {/* Bajo los paneles de la interfaz (z-10): un pin nunca tapa la cabecera ni los paneles. */}
       <Html position={[0, 1, 0]} zIndexRange={selected ? [9, 8] : [7, 3]}>
         <button
           ref={register}
           type="button"
-          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[25px] -translate-y-[60px] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale disabled:cursor-default"
+          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale disabled:cursor-default"
           data-selected={selected || undefined}
           data-state={state}
           data-name={name}
           onClick={locked ? undefined : onSelect}
           disabled={locked}
-          aria-label={stop ? `${stop}. ${name}` : name}
+          aria-label={isSecret ? 'Lugar secreto por descubrir' : (stop ? `${stop}. ${name}` : name)}
         >
-          {/* Marcador: círculo del color de la capa con la punta hacia el poste. */}
+          {/* Marcador: círculo blanco con punta hacia el poste y el icono gris del lugar. */}
           <span
-            className="relative z-10 flex-none flex items-center justify-center w-[50px] h-[50px] rounded-full text-white border-[3px] border-cream shadow-[0_5px_12px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:shadow-[0_0_0_7px_rgba(243,236,220,0.55),0_8px_18px_rgba(0,0,0,0.5)] group-data-[mini=true]:scale-[0.36] group-data-[mini=true]:[&>*]:opacity-0 group-data-[state=bloqueado]:saturate-[0.35] group-data-[state=bloqueado]:brightness-90"
-            style={{ backgroundColor: layer.color }}
+            className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[mini=true]:scale-[0.36] group-data-[mini=true]:[&>*]:opacity-0 group-data-[state=bloqueado]:opacity-70"
           >
-            {getPoiIcon(layer, name, 22)}
+            {isSecret ? (
+              <HelpCircle size={22} strokeWidth={2.6} aria-hidden="true" className="text-neutral-400" />
+            ) : locked ? (
+              <Lock size={20} strokeWidth={2.6} aria-hidden="true" />
+            ) : (
+              getPoiIcon(layer, name, 20)
+            )}
             <span
-              className="absolute left-1/2 top-full -mt-px -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] !opacity-100"
-              style={{ borderTopColor: 'var(--color-cream)' }}
+              className="absolute left-1/2 top-full -mt-px -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-white group-data-[selected=true]:border-t-neutral-800 !opacity-100"
               aria-hidden="true"
             />
-            {stop > 0 && (
+            {stop > 0 && !isSecret && (
               <span
-                className="absolute -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-forest text-cream text-[13px] font-extrabold ring-2 ring-cream"
+                className="absolute -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-neutral-800 text-white text-[13px] font-extrabold ring-2 ring-white"
                 aria-hidden="true"
               >
                 {stop}
               </span>
             )}
-            {(state === 'visitado' || locked) && (
+            {(state === 'visitado' || locked) && !isSecret && (
               <span
-                className={`absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-cream ${locked ? 'bg-stone-500' : 'bg-forest-light'}`}
+                className={`absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-white ${locked ? 'bg-neutral-400' : 'bg-neutral-600'}`}
                 aria-hidden="true"
               >
                 {locked ? (
@@ -164,10 +165,9 @@ export function PoiPin({
           </span>
           {/* Placa con el nombre, unida al marcador. */}
           <span
-            className="poi-pin__label -ml-4 pl-6 pr-4 h-9 flex items-center rounded-r-full bg-cream text-forest font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] border-b-[3px] pointer-events-none transition-colors group-data-[selected=true]:bg-forest group-data-[selected=true]:text-cream group-data-[state=bloqueado]:text-forest/60 group-data-[compact=true]:hidden"
-            style={{ borderBottomColor: layer.color }}
+            className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden"
           >
-            {name}
+            {isSecret ? '?' : name}
           </span>
         </button>
       </Html>

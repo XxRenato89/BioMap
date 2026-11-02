@@ -17,11 +17,14 @@ import {
   buildBuildings,
   buildDamWall,
   buildWater,
+  damLevels,
   plantForest,
   plantFringe,
   plantRocks,
 } from '../builders/index.js';
 import { buildTerrainChunks } from './lod.js';
+import { benchRoad, carveDamToe, cellsNear, damClearing, markWater } from './damToe.js';
+import { SPILLWAY_SHARE } from '../models/angosturaFront.js';
 import { RESERVOIR, reservoirDrain, within } from '../utils/reservoir.js';
 import { buildContextTerrain, contextMaterial, createContextSampler } from './context.js';
 import { DAM_HEIGHTS, ROAD_WIDTHS } from '../utils/osm.js';
@@ -36,11 +39,28 @@ import { waterTest } from '../utils/pathfinder.js';
 import {
   createHeightSampler,
   createProjection,
+  metersToY,
   VERTICAL_EXAGGERATION,
 } from '../utils/projection.js';
+import { PRESA_ANGOSTURA_COORDINATES as ANGOSTURA } from '../../data/damCoordinates.js';
 import { TIERS, useRenderStore } from '../utils/quality.js';
 import { rockMaterial, treeMaterial } from './trees.js';
 import { blendShore, shoreTexture, sinkUnderWater, waterMaterial } from './water.js';
+
+/*
+ * Lugares cuyo entorno se ajusta a sus fotos de Google Maps [lng, lat]: el Centro
+ * de Visitantes Colbún (pabellones oscuros de techo plano) y el Santuario San
+ * Sebastián (cima despejada).
+ */
+const VISITOR_CENTER = [-71.8127746, -37.7272949];
+const SANCTUARY = [-71.8044955, -37.7171099];
+const DARK_PAVILION = {
+  roof: [0.2, 0.21, 0.22],
+  wall: [0.08, 0.085, 0.095],
+  base: [0.05, 0.05, 0.06],
+};
+const near = ([lng, lat], [lng0, lat0], km) =>
+  Math.hypot((lng - lng0) * 88, (lat - lat0) * 111) < km;
 
 /**
  * Valida que los metadatos del relieve correspondan a la versión 2 (horneado fuera de línea).
@@ -254,7 +274,7 @@ const TERRAIN_CHUNKS = [8, 8];
 function terrainLevels(meta, heights, projection) {
   const chunks = (step) =>
     buildTerrainChunks(meta, heights, projection, { step, chunks: TERRAIN_CHUNKS });
-  return { near: chunks(2), far: chunks(6) };
+  return { near: chunks(2), far: chunks(4) };
 }
 
 /*
@@ -329,6 +349,23 @@ export function loadDiorama({ anisotropy }) {
       shoreBuffer && shoreBuffer.byteLength === meta.columns * meta.rows
         ? new Uint8Array(shoreBuffer)
         : new Uint8Array(meta.columns * meta.rows).fill(60);
+    /* Agua del cauce al pie del vertedero (ver ANGOSTURA.tailwater). */
+    const { tailwater } = ANGOSTURA;
+    markWater(meta, shore, tailwater.outer);
+    /* Cota del agua de OSM más cercana (sin el embalse, que va más arriba). */
+    const riverLevel = ([lng, lat]) => {
+      let best = { d: Infinity, level: RESERVOIR.level };
+      for (const polygon of water)
+        for (const [x, y, level] of polygon.outer) {
+          if (level >= RESERVOIR.level - 10) continue;
+          const d = Math.hypot(x - lng, y - lat);
+          if (d < best.d) best = { d, level };
+        }
+      return best.level;
+    };
+    /* Un solo nivel: el del río donde empalma (el más bajo de los cercanos). */
+    const level = Math.min(...tailwater.outer.map(riverLevel));
+    water.push({ outer: tailwater.outer.map((point) => [...point, level]), holes: [] });
     const { west, south, east, north } = meta.bounds;
     const { columns, rows } = meta;
 
@@ -357,6 +394,16 @@ export function loadDiorama({ anisotropy }) {
       sinkUnderWater(meta, heights, shore, waterGeometry, projection, 1.5, levels);
       blendShore(meta, heights, shore, levels);
     }
+    /* Después de las orillas: si no, el borde del embalse vuelve a rellenar el pie del muro. */
+    carveDamToe(meta, heights, ANGOSTURA.line, ANGOSTURA.upstream, SPILLWAY_SHARE);
+    /* El camino de la Central baja por una terraza pareja, no por la ladera dentada. */
+    benchRoad(meta, heights, ANGOSTURA.powerhouseRoad);
+    /* Sin árboles ni rocas al pie de la presa. */
+    const clearing = damClearing(meta, ANGOSTURA.line, ANGOSTURA.upstream);
+    /* El camino de la Central baja por ladera despejada (como en la foto). */
+    for (const cell of cellsNear(meta, ANGOSTURA.powerhouseRoad, 0.025)) clearing.add(cell);
+    /* Cima del Cerro el Calvario: pradera abierta de ~250 m, como en su foto. */
+    for (const cell of cellsNear(meta, [SANCTUARY, SANCTUARY], 0.12)) clearing.add(cell);
     const shoreMap = shoreTexture(meta, shore);
 
     const colorMap = crisp(surfaceTexture, anisotropy);
@@ -387,7 +434,7 @@ export function loadDiorama({ anisotropy }) {
           max,
           fade: false,
           /* Nunca sobre el agua (WorldCover y OpenStreetMap no coinciden en las orillas). */
-          blocked: (cell) => shore[cell] > 0,
+          blocked: (cell) => shore[cell] > 0 || clearing.has(cell),
         })
       : null;
     const forest =
@@ -403,7 +450,7 @@ export function loadDiorama({ anisotropy }) {
       ? plantRocks(meta, heights, projection, landcover, {
           spacing: spacing * 2.5,
           max: Math.round(max * 0.08),
-          blocked: (cell) => shore[cell] > 0,
+          blocked: (cell) => shore[cell] > 0 || clearing.has(cell),
         })
       : null;
     /* Bosque del borde: sigue, cada vez más ralo, sobre el paisaje de contexto. */
@@ -443,7 +490,10 @@ export function loadDiorama({ anisotropy }) {
 
     const sites = { dams: [], labels: [], roads: [], buildings: [], ...landmarks };
     /* Calzadas sobre el embalse como puentes (el relieve es anterior al agua). */
-    sites.roads = bridgeReservoirCrossings(sites.roads, waterTest(water));
+    sites.roads = bridgeReservoirCrossings(
+      [...sites.roads, { kind: 'service', line: ANGOSTURA.powerhouseRoad }],
+      waterTest(water),
+    );
 
     /* Paisaje que rodea la zona, para que la pantalla nunca muestre vacío. */
     let context = null;
@@ -473,17 +523,35 @@ export function loadDiorama({ anisotropy }) {
       waterPolygons: water,
       /* Lo que se pisa: tablero de puente, espejo de agua o relieve (para mascota, camino y pines). */
       surfaceAt: surfaceSampler(sites.roads, heightAt, projection, waterTest(water)),
-      dams: sites.dams.map((dam) => ({
-        id: dam.id,
-        name: dam.name,
-        geometry: buildDamWall(dam.line, heightAt, projection, DAM_HEIGHTS[dam.id]),
-      })),
+      /*
+       * Angostura no sale de OSM: su frente es el modelo .glb y su muro lateral,
+       * un terraplén junto a la ruta (ver AngosturaDam), a la cota real del coronamiento.
+       */
+      dams: sites.dams
+        .filter((dam) => dam.id !== ANGOSTURA.id)
+        .map((dam) => ({
+          id: dam.id,
+          name: dam.name,
+          geometry: buildDamWall(dam.line, heightAt, projection, DAM_HEIGHTS[dam.id]),
+        })),
+      angosturaFront: {
+        ...damLevels(ANGOSTURA.line, heightAt, projection),
+        crest: metersToY(ANGOSTURA.crestMeters),
+      },
       forest,
       rocks,
       context,
       roads: buildRoads(sites.roads, ROAD_WIDTHS, heightAt, projection),
       bridges: buildBridges(sites.roads, ROAD_WIDTHS, heightAt, projection),
-      buildings: buildBuildings(sites.buildings, heightAt, projection),
+      buildings: buildBuildings(
+        sites.buildings.map((building) =>
+          near(building.ring[0], VISITOR_CENTER, 0.15)
+            ? { ...building, palette: DARK_PAVILION }
+            : building,
+        ),
+        heightAt,
+        projection,
+      ),
       terrain: terrainLevels(meta, heights, projection),
       water: waterGeometry,
       materials: {

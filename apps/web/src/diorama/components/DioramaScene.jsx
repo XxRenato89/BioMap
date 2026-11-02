@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { use, useEffect, useMemo, useRef } from 'react';
+import { memo, use, useEffect, useMemo, useRef } from 'react';
 import { InstancedBufferAttribute, InstancedMesh, Vector3 } from 'three';
 import { useViewerStore } from '../../store/viewerStore.js';
 import { TIERS, useRenderStore } from '../utils/quality.js';
@@ -7,6 +7,8 @@ import { loadDiorama } from '../terrain/resources.js';
 import { ROCK_MODEL, TREE_KINDS, TREE_MODELS } from '../terrain/trees.js';
 import Birds from './Birds.jsx';
 import PathPainter from './PathPainter.jsx';
+import QuibarBoat from './QuibarBoat.jsx';
+import AngosturaDam from './AngosturaDam.jsx';
 import { useDaylight } from '../../hooks/useDaylight.js';
 import { reservoirDrain } from '../utils/reservoir.js';
 
@@ -104,17 +106,12 @@ function TreeSet({ kind, trees, materials, settings, castShadow }) {
       tileSize,
       members,
       tiles,
-      detailed: make(
-        TREE_MODELS[kind].detailed,
-        materials.detailed,
-        Math.min(settings.nearMax, trees.count),
-      ),
     };
   }, [kind, trees, materials, settings]);
 
   useFrame(({ camera }) => {
     if (!controls) return;
-    const { detailed, tiles, members, origin, tileSize } = meshes;
+    const { tiles } = meshes;
     /* Mosaicos lejanos: no se dibujan. */
     for (const tile of tiles) {
       if (!tile.boundingSphere || tile.count === 0) continue;
@@ -122,45 +119,6 @@ function TreeSet({ kind, trees, materials, settings, castShadow }) {
       tile.visible =
         camera.position.distanceTo(tileCenter) - tile.boundingSphere.radius < TREE_VIEW_KM;
     }
-    controls.getTarget(forestTarget);
-    const near = controls.distance < DETAIL_VIEW_DISTANCE;
-    const last = split.current;
-    if (
-      last &&
-      last.near === near &&
-      (!near ||
-        Math.hypot(forestTarget.x - last.x, forestTarget.z - last.z) < settings.nearRadius * 0.2)
-    )
-      return;
-    split.current = { near, x: forestTarget.x, z: forestTarget.z };
-    /* Un poco más allá del radio: esos árboles nacen de tamaño cero en el shader. */
-    const reach = settings.nearRadius * 1.25;
-    const capacity = detailed.instanceMatrix.count;
-    let d = 0;
-    if (near) {
-      const i0 = Math.max(0, Math.floor((forestTarget.x - reach - origin.x) / tileSize.x));
-      const i1 = Math.min(TILES - 1, Math.floor((forestTarget.x + reach - origin.x) / tileSize.x));
-      const j0 = Math.max(0, Math.floor((forestTarget.z - reach - origin.z) / tileSize.z));
-      const j1 = Math.min(TILES - 1, Math.floor((forestTarget.z + reach - origin.z) / tileSize.z));
-      for (let j = j0; j <= j1; j += 1) {
-        for (let i = i0; i <= i1; i += 1) {
-          for (const k of members[j * TILES + i]) {
-            if (d >= capacity) break;
-            const x = trees.matrices[k * 16 + 12];
-            const z = trees.matrices[k * 16 + 14];
-            if ((x - forestTarget.x) ** 2 + (z - forestTarget.z) ** 2 > reach * reach) continue;
-            detailed.instanceMatrix.array.set(trees.matrices.subarray(k * 16, k * 16 + 16), d * 16);
-            detailed.instanceColor.array.set(trees.colors.subarray(k * 3, k * 3 + 3), d * 3);
-            d += 1;
-          }
-        }
-      }
-    }
-    detailed.count = d;
-    detailed.instanceMatrix.needsUpdate = true;
-    detailed.instanceColor.needsUpdate = true;
-    detailed.computeBoundingSphere();
-    gl.shadowMap.needsUpdate = true;
   });
 
   return (
@@ -168,55 +126,33 @@ function TreeSet({ kind, trees, materials, settings, castShadow }) {
       {meshes.tiles.map((tile) => (
         <primitive key={tile.uuid} object={tile} castShadow={castShadow} receiveShadow />
       ))}
-      <primitive object={meshes.detailed} castShadow={castShadow} receiveShadow />
     </>
   );
 }
 
 /**
- * Relieve en bloques con dos niveles de detalle: cerca de la cámara, la malla
- * fina; lejos, la gruesa (las normales horneadas mantienen la nitidez).
+ * Relieve de la maqueta: mallas optimizadas generadas una sola vez al inicio.
  */
 function Terrain({ terrain, material, castShadow }) {
-  const groups = useRef([]);
-  useFrame(({ camera }) => {
-    terrain.near.forEach((geometry, k) => {
-      const group = groups.current[k];
-      if (!group) return;
-      const { center, radius } = geometry.boundingSphere;
-      const close = camera.position.distanceTo(center) - radius < TERRAIN_NEAR_KM;
-      group.children[0].visible = close;
-      group.children[1].visible = !close;
-    });
-  });
-  return terrain.near.map((geometry, k) => (
-    <group key={geometry.uuid} ref={(element) => (groups.current[k] = element)}>
-      <mesh geometry={geometry} material={material} castShadow={castShadow} receiveShadow />
-      <mesh geometry={terrain.far[k]} material={material} castShadow={castShadow} receiveShadow />
-    </group>
+  return terrain.near.map((geometry) => (
+    <mesh
+      key={geometry.uuid}
+      geometry={geometry}
+      material={material}
+      castShadow={castShadow}
+      receiveShadow
+    />
   ));
 }
-
-/*
- * Distancia (km) bajo la cual un bloque del relieve usa la malla fina.
- */
-const TERRAIN_NEAR_KM = 3;
 
 /**
  * El bosque: las tres especies, y el viento que mueve su follaje.
  */
 function Forest({ forest, materials, castShadow }) {
   const tier = useRenderStore((state) => state.tier);
-  const controls = useThree((state) => state.controls);
   const settings = TIERS[tier].forest;
-  useFrame((_, delta) => {
+  useFrame(() => {
     materials.simple.userData.time.value = performance.now() / 1000;
-    /* El anillo de detalle sigue al punto que se mira y crece o se encoge sin saltos. */
-    const { lod } = materials.simple.userData;
-    if (!controls || !lod) return;
-    controls.getTarget(lod.focus.value);
-    const goal = controls.distance < DETAIL_VIEW_DISTANCE ? settings.nearRadius : 0.0001;
-    lod.radius.value += (goal - lod.radius.value) * Math.min(1, delta * 2.5);
   });
   return TREE_KINDS.map((kind) =>
     forest[kind]?.count ? (
@@ -327,7 +263,7 @@ function ShowcaseLights({ shadows, size, water }) {
  *
  * @param {{ shadows?: boolean, forest?: boolean }} props
  */
-export default function DioramaScene({ shadows = false, forest = false }) {
+export default memo(function DioramaScene({ shadows = false, forest = false }) {
   const diorama = useDiorama();
   const { projection, materials } = diorama;
   const contours = useViewerStore((state) => state.contours);
@@ -373,6 +309,8 @@ export default function DioramaScene({ shadows = false, forest = false }) {
       />
       <PathPainter />
       {forest && <Birds />}
+      <QuibarBoat />
+      <AngosturaDam shadows={shadows} />
     </group>
   );
-}
+});

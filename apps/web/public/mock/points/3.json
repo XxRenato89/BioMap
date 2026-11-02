@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": 3,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.82348,
+      -37.70908
+    ]
+  },
+  "properties": {
+    "id": 3,
+    "name": "Puente El Piulo",
+    "layerId": 1,
+    "layerSlug": "history",
+    "tourStop": null,
+    "description": "El antiguo puente de la ruta, junto al nuevo; hoy solo peatonal. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": []
+  }
+}

@@ -119,12 +119,16 @@ export function parseOverpass(response, bounds) {
     const line = element.geometry?.map(({ lat, lon }) => [lon, lat]);
     if (damName && line) {
       if (!line.some((point) => isInside(point, bounds))) continue;
-      dams.push({ id: element.id, name: damName, line });
+      const cleanLine =
+        element.id === 738577784 && line.length === 66
+          ? [...line.slice(0, 13), ...line.slice(52)]
+          : line;
+      dams.push({ id: element.id, name: damName, line: cleanLine });
       addLabel({
         id: `dam-${element.id}`,
         kind: 'dam',
         name: damName,
-        coordinates: line[Math.floor(line.length / 2)],
+        coordinates: cleanLine[Math.floor(cleanLine.length / 2)],
       });
       continue;
     }

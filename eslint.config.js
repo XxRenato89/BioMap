@@ -9,7 +9,15 @@ import prettier from 'eslint-config-prettier';
  * eslint-config-prettier va al final para desactivar reglas de formato.
  */
 export default [
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '.superpowers/**'] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '.superpowers/**',
+      'docs/diseno-visor/**',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],

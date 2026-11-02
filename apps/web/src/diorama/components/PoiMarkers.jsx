@@ -8,9 +8,25 @@ import { PoiModel } from './PoiModel.jsx';
 import { PoiPin } from './PoiPin.jsx';
 import { declutter, liftBadges } from '../utils/labels.js';
 import { modelKindFor, modelRadius } from '../models/index.js';
-import { placeModels } from '../utils/placement.js';
+import { cliffEdge, placeModels } from '../utils/placement.js';
+import { RESERVOIR, within } from '../utils/reservoir.js';
 import { isOccluded } from '../utils/occlusion.js';
 import { waterTest } from '../utils/pathfinder.js';
+
+/*
+ * Puntos sin modelo propio: la Central queda sobre la presa (su casa de máquinas
+ * es una caverna bajo el cerro), que ya se dibuja a escala real; el Mirador
+ * Huequecura está en el mismo lugar que Parque Angostura y su plataforma es la
+ * de ese modelo; el Centro de Visitantes son sus edificios de OpenStreetMap,
+ * oscuros como en la foto.
+ */
+/* Modelos que van al borde del barranco más cercano, mirando al agua. */
+const EDGE_KINDS = new Set(['forestTrail', 'meshDeck']);
+/* Separación mínima entre dos miradores al borde (km). */
+const EDGE_SPACING_KM = 0.04;
+
+const TERRAIN_ONLY =
+  /^(Central Hidroel[eé]ctrica Angostura|Sendero y Mirador Huequecura|Centro de Visitantes Angostura)$/;
 
 /**
  * Rumbo (rad) hacia el agua más cercana desde (x, z), para que playas y
@@ -31,7 +47,7 @@ function facingWater(x, z, inWater, projection) {
 /*
  * Medidas del pin en pantalla (px) para que las etiquetas no se tapen.
  */
-const DOT = 60;
+const DOT = 52;
 /* La insignia queda justo sobre su ancla (la punta del poste). */
 const STEM = 0;
 const LABEL_GAP = 0;
@@ -76,6 +92,7 @@ export function PoiMarkers({
 
   /* Modelo de cada punto: las presas ya están levantadas a escala real desde OpenStreetMap. */
   const kindOf = (feature) => {
+    if (TERRAIN_ONLY.test(feature.properties.name)) return null;
     const kind = modelKindFor(
       feature.properties.name,
       layerById.get(feature.properties.layerId)?.slug,
@@ -92,12 +109,33 @@ export function PoiMarkers({
       if (!kind) return [];
       const { x, z } = projection.toWorld(feature.geometry.coordinates);
       if (Math.abs(x) > projection.width / 2 || Math.abs(z) > projection.depth / 2) return [];
-      return [{ id: feature.properties.id, x, z, radius: modelRadius(kind) }];
+      return [{ id: feature.properties.id, kind, x, z, radius: modelRadius(kind) }];
     });
-    return placeModels(items, {
-      heightAt,
-      isWater: (x, z) => inWater(projection.toLngLat(x, z)),
-    });
+    const ground = { heightAt, isWater: (x, z) => inWater(projection.toLngLat(x, z)) };
+    const spots = placeModels(
+      items.filter((item) => !EDGE_KINDS.has(item.kind)),
+      ground,
+    );
+    /* Miradores: al borde del barranco, mirando al embalse (como en sus fotos). */
+    for (const feature of points.features) {
+      if (!EDGE_KINDS.has(kindOf(feature))) continue;
+      const { x, z } = projection.toWorld(feature.geometry.coordinates);
+      /* Miran al embalse (en sus fotos se ve la barrera flotante), no al río de abajo. */
+      const edge = cliffEdge(
+        x,
+        z,
+        {
+          heightAt,
+          isWater: (wx, wz) => {
+            const lngLat = projection.toLngLat(wx, wz);
+            return within(lngLat, RESERVOIR.bed) && inWater(lngLat);
+          },
+        },
+        { taken: [...spots.values()], spacing: EDGE_SPACING_KM },
+      );
+      if (edge) spots.set(feature.properties.id, { ...edge, scale: 1, edge: true });
+    }
+    return spots;
     // kindOf solo depende de layerById y dams.
   }, [points, layerById, dams, projection, heightAt, inWater]);
   const registry = useRef(new Map()).current;
@@ -236,19 +274,22 @@ export function PoiMarkers({
         onSelectPoint(id, { x: native.clientX, y: native.clientY });
       };
 
+      const isSecret =
+        Boolean(feature.properties?.secret) && !useUserStore.getState().isSecretDiscovered(id);
+
       return (
         <group key={id}>
-          {kind && spot && (
+          {!isSecret && kind && spot && (
             <PoiModel
               kind={kind}
-              position={[spot.x, spot.y - 0.002, spot.z]}
+              position={[spot.x, spot.y - (spot.edge ? 0 : 0.002), spot.z]}
               size={spot.scale}
-              rotationY={facingWater(spot.x, spot.z, inWater, projection)}
+              rotationY={spot.angle ?? facingWater(spot.x, spot.z, inWater, projection)}
               onSelect={onSelect}
             />
           )}
           <PoiPin
-            position={[x, y, z]}
+            position={spot?.edge ? [spot.x, spot.y, spot.z] : [x, y, z]}
             layer={layerById.get(layerId)}
             id={id}
             name={feature.properties.name}
@@ -258,6 +299,7 @@ export function PoiMarkers({
             onSelect={onSelect}
             state={getPoiState(id)}
             stop={tour.indexOf(Number(id)) + 1}
+            isSecret={isSecret}
           />
         </group>
       );

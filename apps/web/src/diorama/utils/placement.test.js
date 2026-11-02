@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placeModels } from './placement.js';
+import { cliffEdge, placeModels } from './placement.js';
 
 const flat = { heightAt: () => 0, isWater: () => false };
 
@@ -37,5 +37,18 @@ describe('placeModels', () => {
   it('leaves out a model with nowhere to stand', () => {
     const steep = { heightAt: (x) => x * 10, isWater: () => false };
     expect(placeModels([{ id: 1, x: 0, z: 0, radius: 0.1 }], steep).size).toBe(0);
+  });
+});
+
+describe('cliffEdge', () => {
+  it('finds the brink between a point and the nearest water, facing the water', () => {
+    /* Meseta plana hasta x = 0.1, barranco hasta el agua en x ≥ 0.15. */
+    const heightAt = (x) => (x < 0.1 ? 0.4 : 0.4 - (x - 0.1) * 2);
+    const isWater = (x) => x >= 0.15;
+    const edge = cliffEdge(0, 0, { heightAt, isWater });
+    expect(edge.x).toBeGreaterThan(0.09);
+    expect(edge.x).toBeLessThan(0.11);
+    expect(Math.sin(edge.angle)).toBeCloseTo(1);
+    expect(cliffEdge(0, 0, { heightAt, isWater: () => false })).toBeNull();
   });
 });

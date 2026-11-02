@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": 19,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.767656,
+      -37.703407
+    ]
+  },
+  "properties": {
+    "id": 19,
+    "name": "Camping La Patagua de Lo Nieve",
+    "layerId": 3,
+    "layerSlug": "tourism",
+    "tourStop": null,
+    "description": "Camping junto al río Huequecura, en Lo Nieve. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": []
+  }
+}

@@ -141,12 +141,22 @@ export default function CameraRig({
       }
     };
     const onUpdate = () => {
+      invalidate();
       frame ??= requestAnimationFrame(publish);
     };
+    const onControl = () => {
+      invalidate();
+    };
+    c.addEventListener('control', onControl);
     c.addEventListener('update', onUpdate);
+    c.addEventListener('wake', onControl);
+    c.addEventListener('rest', onControl);
     onUpdate();
     return () => {
+      c.removeEventListener('control', onControl);
       c.removeEventListener('update', onUpdate);
+      c.removeEventListener('wake', onControl);
+      c.removeEventListener('rest', onControl);
       if (frame) cancelAnimationFrame(frame);
     };
     // currentView solo depende de la proyección, que no cambia.

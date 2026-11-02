@@ -1,4 +1,4 @@
-import { ContactShadows, useAnimations, useGLTF } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -7,8 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { Box3, MathUtils, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useAvatarStore } from '../../store/avatarStore.js';
+import { useCharacterModel } from '../../diorama/utils/characterModel.js';
+import { ErrorBoundary } from '../../components/ErrorBoundary.jsx';
 
-const MASCOT_GLB_PATH = '/diorama/mascot.glb';
 /* Duración del gesto hacia la ficha al cambiar de foto o pestaña (s). */
 const GESTURE_S = 1.2;
 const MASCOT_HEIGHT = 2.3;
@@ -20,7 +21,7 @@ const MASCOT_FPS = 30;
  */
 export function Mascot({ gestureKey, facing = 0.35 }) {
   const group = useRef(null);
-  const { scene, animations } = useGLTF(MASCOT_GLB_PATH);
+  const { scene, actions } = useCharacterModel(group);
   /* Copia propia (la original la usa el avatar del mapa), con los pies en y = 0 y 2.3 de alto. */
   const model = useMemo(() => {
     const copy = clone(scene);
@@ -39,11 +40,16 @@ export function Mascot({ gestureKey, facing = 0.35 }) {
     );
     return copy;
   }, [scene]);
-  const { actions } = useAnimations(animations, group);
   const gestureAt = useRef(-Infinity);
 
   useEffect(() => {
-    const wave = actions.Wave ?? actions.Idle;
+    const wave =
+      actions?.dance ??
+      actions?.Dance ??
+      actions?.wave ??
+      actions?.Wave ??
+      actions?.idle ??
+      actions?.Idle;
     wave?.reset().fadeIn(0.3).play();
     return () => wave?.fadeOut(0.3);
   }, [actions]);
@@ -91,14 +97,19 @@ export default function SheetMascot({ gestureKey }) {
 
   return (
     <motion.div
-      className="fixed bottom-6 right-[560px] z-[60] w-[340px] flex flex-col items-center pointer-events-none"
+      className="fixed bottom-[124px] right-[600px] z-[60] w-[340px] flex flex-col items-center pointer-events-none"
       initial={{ x: 60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 60, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
     >
       {speech && (
-        <div className="relative mb-2 w-[300px] self-start rounded-2xl bg-cream text-ink p-5 pr-16 shadow-panel pointer-events-auto">
+        <div
+          className="relative mb-2 w-[300px] self-start rounded-2xl bg-cream text-ink p-5 pr-16 shadow-panel pointer-events-auto"
+          role="region"
+          aria-label={t('sheet.guide')}
+          aria-live="polite"
+        >
           <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-ochre-deep">
             {t('sheet.guide')}
           </p>
@@ -123,25 +134,27 @@ export default function SheetMascot({ gestureKey }) {
         </div>
       )}
       <div className="w-[340px] h-[420px]" aria-hidden="true">
-        <Canvas
-          camera={{ position: [0, 0.3, 3.9], fov: 38 }}
-          dpr={[1, 1.5]}
-          frameloop="demand"
-          gl={{ alpha: true }}
-        >
-          <ambientLight intensity={1.1} />
-          <directionalLight position={[3, 5, 4]} intensity={1.6} />
-          <Mascot gestureKey={gestureKey} />
-          {/* La sombra no cambia con el vaivén: se calcula una vez, no en cada cuadro. */}
-          <ContactShadows
-            frames={1}
-            position={[0, -1.15, 0]}
-            opacity={0.45}
-            scale={4}
-            blur={2}
-            far={2}
-          />
-        </Canvas>
+        <ErrorBoundary>
+          <Canvas
+            camera={{ position: [0, 0.3, 3.9], fov: 38 }}
+            dpr={[1, 1.5]}
+            frameloop="demand"
+            gl={{ alpha: true, powerPreference: 'low-power' }}
+          >
+            <ambientLight intensity={1.1} />
+            <directionalLight position={[3, 5, 4]} intensity={1.6} />
+            <Mascot gestureKey={gestureKey} />
+            {/* La sombra no cambia con el vaivén: se calcula una vez, no en cada cuadro. */}
+            <ContactShadows
+              frames={1}
+              position={[0, -1.15, 0]}
+              opacity={0.45}
+              scale={4}
+              blur={2}
+              far={2}
+            />
+          </Canvas>
+        </ErrorBoundary>
       </div>
     </motion.div>
   );

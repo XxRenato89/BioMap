@@ -1,10 +1,11 @@
-import { ArrowRight, BookOpen, Check, Globe, X } from 'lucide-react';
+import { ArrowRight, Check, Globe, Smartphone, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Curiosity from '../../components/Curiosity.jsx';
 import ImageGallery from '../../components/ImageGallery.jsx';
 import LayerShape from '../../components/LayerShape.jsx';
-import { getPoiIcon } from '../../diorama/components/PoiPin.jsx';
+import { getPoiIcon } from '../../map/poiIcon.jsx';
 import { usePointDetail } from '../../hooks/useApi.js';
 import { layerName } from '../../i18n/index.js';
 import { useUserStore } from '../../store/userStore.js';
@@ -20,7 +21,7 @@ function PhotoPlaceholder({ layer, name, label }) {
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center gap-3 text-cream"
-      style={{ background: `linear-gradient(160deg, ${layer.color}, #13241d 85%)` }}
+      style={{ background: `linear-gradient(160deg, #1c75bc, #14334d 85%)` }}
     >
       <span className="flex items-center justify-center w-20 h-20 rounded-full bg-cream/15 border-2 border-cream/40 [&>svg]:w-10 [&>svg]:h-10">
         {getPoiIcon(layer, name)}
@@ -85,7 +86,7 @@ export default function PointSheet({
   return (
     <motion.aside
       ref={ref}
-      className="fixed top-6 right-6 bottom-6 z-50 flex flex-col w-[min(560px,calc(100vw-48px))] rounded-[20px] bg-cream text-ink overflow-hidden pointer-events-auto shadow-[0_4px_0_var(--color-cream-shade),0_24px_60px_rgba(0,0,0,0.45)]"
+      className="fixed top-6 right-10 bottom-[124px] z-50 flex flex-col w-[min(560px,calc(100vw-48px))] rounded-[20px] bg-cream text-ink overflow-hidden pointer-events-auto shadow-[0_4px_0_var(--color-cream-shade),0_24px_60px_rgba(0,0,0,0.45)]"
       role="dialog"
       aria-labelledby={titleId}
       initial={{ x: 80, opacity: 0 }}
@@ -122,7 +123,7 @@ export default function PointSheet({
 
       <div className="flex-1 overflow-y-auto px-8 pt-6 pb-4 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3 text-[length:var(--fs-small)] font-bold">
-          <span className="inline-flex items-center gap-2" style={{ color: layer.color }}>
+          <span className="inline-flex items-center gap-2 text-forest-light">
             <LayerShape layer={layer} size="lg" />
             {layerName(t, layer)}
           </span>
@@ -166,7 +167,10 @@ export default function PointSheet({
         </div>
 
         {tab === 'story' && (
-          <p className="m-0 text-[length:var(--fs-lead)] leading-relaxed">{description}</p>
+          <>
+            <p className="m-0 text-[length:var(--fs-lead)] leading-relaxed">{description}</p>
+            <Curiosity name={name} />
+          </>
         )}
         {tab === 'photos' &&
           (photos.length > 0 ? (
@@ -211,10 +215,10 @@ export default function PointSheet({
           <button
             type="button"
             className="flex-1 whitespace-nowrap inline-flex items-center justify-center gap-2 min-h-16 px-4 rounded-xl border-[3px] border-forest text-forest font-bold text-[length:var(--fs-body)] cursor-pointer"
-            onClick={() => window.dispatchEvent(new CustomEvent('biomap:open-biobook'))}
+            onClick={() => window.dispatchEvent(new CustomEvent('biomap:open-mobile'))}
           >
-            <BookOpen size={22} aria-hidden="true" />
-            Bio-Book
+            <Smartphone size={22} aria-hidden="true" />
+            {t('mobile.name')}
           </button>
         )}
         {next && (

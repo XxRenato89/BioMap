@@ -241,7 +241,8 @@ export function buildRoads(roads, widths, heightAt, projection) {
       }
       if (k === 0) return;
       const v = start + k * 2;
-      index.push(v - 2, v - 1, v, v, v - 1, v + 1);
+      /* De frente desde arriba: con el otro orden la cinta queda de espaldas y no se dibuja. */
+      index.push(v - 2, v, v - 1, v, v + 1, v - 1);
     });
   }
   const geometry = new BufferGeometry();
@@ -286,11 +287,13 @@ varying float vRoadDetail;`,
       .replace(
         '#include <begin_vertex>',
         `#include <begin_vertex>
-/* Ancho mínimo en pantalla (px) por tipo: el ángulo de un píxel es ~0,00052 rad. */
-float minPixels = roadKind < 0.5 ? 3.2 : roadKind < 1.5 ? 2.6 : roadKind < 2.5 ? 1.6 : roadKind < 3.5 ? 1.2 : 1.4;
+/* Ancho mínimo en pantalla (px) por tipo, para que todos los caminos se vean desde lejos: el ángulo de un píxel es ~0,00052 rad. */
+float minPixels = roadKind < 0.5 ? 12.0 : roadKind < 1.5 ? 10.0 : roadKind < 2.5 ? 8.0 : roadKind < 3.5 ? 6.5 : 4.5;
 float toCamera = distance(cameraPosition, (modelMatrix * vec4(position, 1.0)).xyz);
 float halfWidth = max(roadHalf, toCamera * 0.00052 * minPixels * 0.5);
 transformed.xz += roadAcross * roadSide * halfWidth;
+/* Se alzan con la distancia: de lejos el relieve se dibuja más tosco que su altura real y taparía los caminos. */
+transformed.y += toCamera * 0.0025;
 vRoadU = roadSide * 0.5 + 0.5;
 vRoadAlong = roadAlong;
 vRoadKind = roadKind;
@@ -343,13 +346,16 @@ if (vRoadKind < 1.5) {
   float ruts = smoothstep(0.08, 0.0, abs(abs(vRoadU - 0.5) - 0.22));
   road *= 1.0 - ruts * 0.18;
 }
-/* De lejos, tonos reales de ortofoto aérea: asfalto oscuro y tierra cálida. */
-vec3 mapColor = vRoadKind < 0.5 ? vec3(0.26, 0.28, 0.30)
-  : vRoadKind < 1.5 ? vec3(0.32, 0.34, 0.36)
-  : vRoadKind < 2.5 ? vec3(0.42, 0.40, 0.38)
-  : vRoadKind < 3.5 ? vec3(0.55, 0.48, 0.40)
-  : vec3(0.62, 0.46, 0.3);
-mapColor *= mix(0.72, 1.0, smoothstep(0.0, 0.18 + aa, edge));
+/* De lejos, como en un mapa de carreteras: relleno claro y borde oscuro (rutas amarillas, caminos blancos, tierra beige). */
+vec3 mapFill = vRoadKind < 0.5 ? vec3(0.97, 0.78, 0.29)
+  : vRoadKind < 1.5 ? vec3(0.99, 0.97, 0.9)
+  : vRoadKind < 2.5 ? vec3(0.97, 0.97, 0.95)
+  : vRoadKind < 3.5 ? vec3(0.9, 0.82, 0.64)
+  : vec3(0.86, 0.66, 0.4);
+vec3 mapCasing = vRoadKind < 0.5 ? vec3(0.5, 0.38, 0.12)
+  : vRoadKind < 2.5 ? vec3(0.34, 0.37, 0.4)
+  : vec3(0.42, 0.34, 0.22);
+vec3 mapColor = mix(mapCasing, mapFill, smoothstep(0.17, 0.17 + fwidth(vRoadU), edge));
 diffuseColor.rgb = mix(mapColor, road, vRoadDetail);`,
       );
   };

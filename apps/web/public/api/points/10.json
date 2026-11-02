@@ -1,0 +1,35 @@
+{
+  "type": "Feature",
+  "id": 10,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.8155104,
+      -37.7106622
+    ]
+  },
+  "properties": {
+    "id": 10,
+    "name": "Sendero y Mirador Huequecura",
+    "layerId": 3,
+    "layerSlug": "tourism",
+    "tourStop": 3,
+    "description": "Sendero que sube a un mirador sobre la presa y el embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": [
+      {
+        "url": "/media/mirador-huequecura-1.png",
+        "altText": "Vista panorámica desde la terraza del Mirador Huequecura hacia el Embalse Angostura y la presa",
+        "credit": "Google Maps / Parque Angostura",
+        "isMain": true,
+        "kind": "photo"
+      },
+      {
+        "url": "/media/mirador-huequecura-2.png",
+        "altText": "Sendero entre el bosque nativo con vista hacia la captación de la central Angostura",
+        "credit": "Google Maps / Parque Angostura",
+        "isMain": false,
+        "kind": "photo"
+      }
+    ]
+  }
+}

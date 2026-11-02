@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Vector3 } from 'three';
 import { useDiorama } from './DioramaScene.jsx';
+import AngosturaDam from './AngosturaDam.jsx';
 import { DamWalls } from './DamWalls.jsx';
 import { LandmarkLabels } from './LandmarkLabels.jsx';
 
@@ -67,6 +68,7 @@ export default function Landmarks({ shadows = false }) {
   return (
     <group>
       <DamWalls dams={dams} material={materials.dam} shadows={shadows} />
+      <AngosturaDam shadows={shadows} />
       <LandmarkLabels labels={labels} heightAt={heightAt} projection={projection} />
     </group>
   );

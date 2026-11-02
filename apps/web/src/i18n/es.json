@@ -1,14 +1,4 @@
 {
-  "header": {
-    "subtitle": "Mapa Vivo del Bío Bío",
-    "hint": "Toca un punto para ver su ficha: fotos, 360° e historia del lugar."
-  },
-  "layers": {
-    "nav": "Capas temáticas",
-    "title": "Capas",
-    "count_one": "{{count}} punto",
-    "count_other": "{{count}} puntos"
-  },
   "controls": {
     "group": "Controles del mapa",
     "zoomIn": "Acercar",
@@ -16,17 +6,6 @@
     "tilt": "Vista inclinada en 3D",
     "contours": "Curvas de nivel",
     "reset": "Reiniciar vista"
-  },
-  "levels": {
-    "group": "Nivel de acercamiento",
-    "region": "Región",
-    "regionHint": "Toda la cuenca",
-    "zone": "Zona",
-    "zoneHint": "Cada lugar",
-    "detail": "Detalle",
-    "detailHint": "Nombres y hitos",
-    "rest": "Vuelve sola al inicio tras {{seconds}} s sin uso",
-    "gestures": "Arrastra para girar la maqueta · pellizca para acercar"
   },
   "a11y": {
     "textBigger": "Texto más grande",
@@ -46,23 +25,6 @@
     "progress": "Tu recorrido",
     "nextStop": "Seguir ruta",
     "backToStart": "Volver al inicio"
-  },
-  "bioBook": {
-    "open": "¡Ábrelo!",
-    "openAria": "Abrir Bio-Book",
-    "close": "Cerrar libro",
-    "step1": "Abre la cámara",
-    "step2": "Apunta al código",
-    "step3": "Toca el enlace",
-    "scanMapTitle": "Llévate el mapa vivo",
-    "scanMapText": "Escanea el código para seguir explorando todo BioMap desde tu celular.",
-    "scanPointTitle": "Lleva esta ficha contigo",
-    "scanPointText": "Escanea el código y sigue explorando {{name}} en tu celular.",
-    "tagline": "Lleva el mapa en tu teléfono",
-    "stepN": "Paso {{n}}",
-    "wifi": "Conéctate al Wi‑Fi {{wifi}}",
-    "scanMe": "Escanea este código",
-    "qrAlt": "Código QR para abrir BioMap en tu teléfono"
   },
   "card": {
     "close": "Cerrar ficha de {{name}}",
@@ -115,14 +77,63 @@
   "loading": {
     "text": "Preparando la maqueta del Biobío…"
   },
-  "reservoir": {
-    "drain": "Bajo el embalse",
-    "fill": "Volver a llenar",
-    "eyebrow": "Antes de la central (2014)",
-    "title": "El valle que cubre el embalse",
-    "text": "Así era el cañón del Biobío antes de que la presa Angostura lo inundara. La franja clara en las laderas marca hasta dónde llega el agua hoy.",
-    "depth": "Profundidad máxima",
-    "area": "Superficie del embalse",
-    "source": "Relieve: misión SRTM de la NASA, año 2000."
+  "dock": {
+    "label": "Controles del visor",
+    "home": "Inicio",
+    "epoch": "Época",
+    "tour": "Recorrido",
+    "settings": "Ajustes"
+  },
+  "search": {
+    "label": "Buscar un lugar",
+    "placeholder": "Buscar un lugar",
+    "none": "Sin resultados"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "close": "Cerrar",
+    "language": "Idioma",
+    "textSize": "Tamaño del texto",
+    "textSizeN": "Tamaño de texto {{n}}",
+    "yes": "Sí",
+    "no": "No",
+    "view": "Vista del mapa",
+    "flat": "Plana"
+  },
+  "epoch": {
+    "title": "Época del mapa",
+    "year2000": "2000",
+    "today": "Hoy",
+    "noReservoir": "Sin embalse",
+    "withReservoir": "Con embalse",
+    "note": "Reconstrucción ilustrativa: relieve del año 2000, antes del embalse. La franja clara en las laderas marca hasta dónde llega el agua hoy. Fuente: misión SRTM de la NASA."
+  },
+  "mobile": {
+    "name": "BioMap Mobile",
+    "tagline": "Llévalo en tu celular con Quibar",
+    "title": "Llévate el mapa en tu celular",
+    "text": "Sigue explorando con Quibar como guía.",
+    "pointTitle": "Lleva este lugar contigo",
+    "pointText": "Escanea el código y sigue explorando {{name}} en tu celular, con Quibar.",
+    "step1": "Abre la cámara",
+    "step2": "Apunta al código",
+    "step3": "Toca el enlace",
+    "stepN": "Paso {{n}}",
+    "wifi": "Conéctate al Wi‑Fi {{wifi}}",
+    "scanMe": "Escanea este código",
+    "qrAlt": "Código QR para abrir BioMap en tu teléfono",
+    "close": "Cerrar"
+  },
+  "layers": {
+    "count_one": "{{count}} punto",
+    "count_other": "{{count}} puntos"
+  },
+  "m": {
+    "layers": "Capas",
+    "place": "Lugar"
+  },
+  "curiosity": {
+    "title": "¿Sabías que…?",
+    "source": "Fuente"
   }
 }

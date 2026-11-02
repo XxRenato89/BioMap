@@ -55,7 +55,7 @@ export default function DioramaCanvas({ eventSource }) {
       eventPrefix="client"
       frameloop="demand"
       dpr={dpr}
-      shadows="soft"
+      shadows
       gl={{
         antialias: true,
         powerPreference: 'high-performance',
@@ -68,11 +68,9 @@ export default function DioramaCanvas({ eventSource }) {
       <PerformanceMonitor
         onDecline={() => {
           setDpr(1);
-          useRenderStore.getState().stepTier(-1);
         }}
         onIncline={() => {
           setDpr(deviceDpr());
-          useRenderStore.getState().stepTier(1);
         }}
       />
       <View.Port />

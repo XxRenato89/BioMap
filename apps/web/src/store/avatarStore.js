@@ -9,7 +9,7 @@ import { Vector3 } from 'three';
  *     'arrived': llegó al punto y comienza a explicar.
  *     'speaking': interactuando y explicando el lugar con voz y texto.
  */
-export const useAvatarStore = create((set) => ({
+export const useAvatarStore = create((set, get) => ({
   mode: 'patrol',
   targetPoint: null,
   activeSpeech: '',
@@ -32,7 +32,14 @@ export const useAvatarStore = create((set) => ({
 
   setPath: (path) => set({ currentPath: path }),
 
-  setPosition: (pos) => set({ currentPosition: pos }),
+  setPosition: (pos) => {
+    const cur = get().currentPosition;
+    if (cur && pos) {
+      cur.copy(pos);
+    } else {
+      set({ currentPosition: pos });
+    }
+  },
 
   setLastArrivedPoint: (point) => set({ lastArrivedPoint: point }),
 

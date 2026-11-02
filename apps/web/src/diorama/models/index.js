@@ -10,6 +10,7 @@ export {
 } from './registry.js';
 
 export { buildDam } from './dam.js';
+export { buildAngosturaFront } from './angosturaFront.js';
 export { buildBridge } from './bridge.js';
 export { buildRuka } from './ruka.js';
 export { buildAraucarias, buildLengas } from './trees.js';

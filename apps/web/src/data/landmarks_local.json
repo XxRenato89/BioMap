@@ -5,42 +5,60 @@
       "id": "river-biobio-inlet",
       "kind": "river",
       "name": "Río Biobío",
-      "coordinates": [-71.7912, -37.7428],
+      "coordinates": [
+        -71.7912,
+        -37.7428
+      ],
       "rank": 85
     },
     {
       "id": "local-embalse-angostura",
       "kind": "reservoir",
       "name": "Embalse Angostura",
-      "coordinates": [-71.806, -37.7265],
+      "coordinates": [
+        -71.806,
+        -37.7265
+      ],
       "rank": 80
     },
     {
       "id": "river-huequecura",
       "kind": "river",
       "name": "Río Huequecura",
-      "coordinates": [-71.79327, -37.70843],
+      "coordinates": [
+        -71.79327,
+        -37.70843
+      ],
       "rank": 45
     },
     {
       "id": "river-biobio-outlet",
       "kind": "river",
       "name": "Río Biobío",
-      "coordinates": [-71.821, -37.7095],
+      "coordinates": [
+        -71.821,
+        -37.7095
+      ],
       "rank": 45
     },
     {
       "id": "sector-los-notros",
       "kind": "village",
       "name": "Sector Los Notros",
-      "coordinates": [-71.79234, -37.73515],
+      "coordinates": [
+        -71.79234,
+        -37.73515
+      ],
       "rank": 40
     },
     {
       "id": "sector-el-piulo",
       "kind": "village",
       "name": "Sector El Piulo",
-      "coordinates": [-71.8235, -37.7115],
+      "coordinates": [
+        -71.8235,
+        -37.7115
+      ],
       "rank": 40
     }
   ],

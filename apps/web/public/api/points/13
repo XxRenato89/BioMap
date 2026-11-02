@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": 13,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.816259,
+      -37.70972
+    ]
+  },
+  "properties": {
+    "id": 13,
+    "name": "Informaciones Turísticas",
+    "layerId": 3,
+    "layerSlug": "tourism",
+    "tourStop": null,
+    "description": "Punto de información turística del parque. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": []
+  }
+}

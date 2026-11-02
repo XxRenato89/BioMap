@@ -7,22 +7,24 @@ import { useViewerStore } from '../../store/viewerStore.js';
 /*
  * Cámara del recorrido (m y grados): mientras sigue a la mascota por el
  * camino, y al llegar, de cerca y algo inclinada para ver el relieve que
- * rodea el lugar. Con la ficha abierta, el lugar se corre esta fracción del
- * ancho de pantalla, para quedar a la vista junto a la mascota y la ficha.
+ * rodea el lugar. Con la ficha abierta, el lugar se corre estas fracciones del
+ * ancho (x) y del alto (y) de la pantalla, para quedar a la vista junto a la
+ * mascota y la ficha: en el kiosco la ficha va al costado; en el teléfono, abajo.
  */
 const ROUTE_RANGE = 2_400;
 const POINT_RANGE = 1_000;
 const POINT_PITCH = -32;
-const SHEET_SHIFT = 0.13;
+const SHEET_SHIFT = { x: 0.13, y: 0 };
 
 /**
  * El recorrido por los puntos: elegir uno manda a la mascota por los
  * caminos con la cámara siguiéndola; al llegar se abre la ficha, se cuenta
  * la visita y se celebra. Las paradas del recorrido guiado salen de los datos.
  *
- * @param {{ points: { features: Array<object> }, camera: import('react').RefObject<object> }} options
+ * @param {{ points: { features: Array<object> }, camera: import('react').RefObject<object>,
+ *   sheetShift?: { x: number, y: number } }} options
  */
-export function useTour({ points, camera }) {
+export function useTour({ points, camera, sheetShift = SHEET_SHIFT }) {
   useEffect(() => useUserStore.getState().setTour(tourFrom(points.features)), [points]);
 
   const selectPoint = useCallback(
@@ -46,7 +48,8 @@ export function useTour({ points, camera }) {
         range: POINT_RANGE,
         heading: camera.current?.view().heading ?? 0,
         pitch: POINT_PITCH,
-        shift: SHEET_SHIFT,
+        shift: sheetShift.x,
+        shiftY: sheetShift.y,
       });
       const user = useUserStore.getState();
       const isNewVisit = !user.visitedPoints.includes(id);
@@ -54,7 +57,7 @@ export function useTour({ points, camera }) {
       /* Celebración en cada lugar nuevo, y una mayor al completar el recorrido. */
       if (isNewVisit) triggerConfetti({ grandFinale: useUserStore.getState().tourCompleted() });
     },
-    [camera],
+    [camera, sheetShift],
   );
 
   /* Al cerrar la última ficha, la vista vuelve al encuadre general. */

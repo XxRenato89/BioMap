@@ -27,9 +27,4 @@ describe('i18n', () => {
     expect(layerName(i18n.t, layer)).toBe('History');
     expect(layerName(i18n.t, { slug: 'energy', name: 'Energía' })).toBe('Energía');
   });
-
-  it('pluralizes counts', () => {
-    expect(i18n.t('layers.count', { count: 1 })).toBe('1 punto');
-    expect(i18n.t('layers.count', { count: 4 })).toBe('4 puntos');
-  });
 });

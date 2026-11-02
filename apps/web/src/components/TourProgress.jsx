@@ -18,7 +18,7 @@ export default function TourProgress() {
     <div className="mt-4 pt-3.5 border-t border-cream/15">
       <div className="flex justify-between items-center text-sm font-bold mb-2 text-cream">
         <span>{t('tour.progress')}</span>
-        <span className="font-extrabold text-[#9fd3ad] bg-[#9fd3ad]/15 px-2.5 py-0.5 rounded-full text-sm tabular-nums">
+        <span className="font-extrabold text-[#8dc63f] bg-[#8dc63f]/15 px-2.5 py-0.5 rounded-full text-sm tabular-nums">
           {visitedCount} / {tour.length}
         </span>
       </div>

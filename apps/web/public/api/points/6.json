@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": 6,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.8154768,
+      -37.7106418
+    ]
+  },
+  "properties": {
+    "id": 6,
+    "name": "Parque Angostura",
+    "layerId": 2,
+    "layerSlug": "ecology",
+    "tourStop": 2,
+    "description": "Área natural junto a la central y el embalse, con senderos entre bosque nativo, playas, campings y un mirador. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": []
+  }
+}

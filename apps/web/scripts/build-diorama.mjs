@@ -297,16 +297,7 @@ async function queryOverpass(query) {
 rmSync(TMP_DIR, { recursive: true, force: true });
 mkdirSync(TMP_DIR, { recursive: true });
 
-/* Preservar modelo 3D de la mascota en el directorio de salida */
-const mascotBackup = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../src/data/mascot.glb',
-);
-if (existsSync(mascotBackup)) {
-  cpSync(mascotBackup, path.join(TMP_DIR, 'mascot.glb'));
-} else if (existsSync(path.join(OUT_DIR, 'mascot.glb'))) {
-  cpSync(path.join(OUT_DIR, 'mascot.glb'), path.join(TMP_DIR, 'mascot.glb'));
-}
+
 
 step('hitos, caminos y edificios (OpenStreetMap + datos locales de Angostura)');
 const boundsPair = [
@@ -332,7 +323,8 @@ try {
 if (landmarksLocal) {
   if (landmarksLocal.dams) {
     for (const dam of landmarksLocal.dams) {
-      if (!landmarks.dams.some((d) => d.name === dam.name)) landmarks.dams.push(dam);
+      landmarks.dams = landmarks.dams.filter((d) => d.name !== dam.name && d.id !== dam.id);
+      landmarks.dams.push(dam);
     }
   }
   if (landmarksLocal.labels) {

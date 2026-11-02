@@ -44,12 +44,13 @@ export function placeModels(items, { heightAt, isWater }) {
           const x = item.x + Math.sin(angle) * ring * r;
           const z = item.z + Math.cos(angle) * ring * r;
           if (placed.some((p) => Math.hypot(p.x - x, p.z - z) < p.r + r)) continue;
+          const isBridge = item.kind === 'bridge' || item.type === 'bridge' || item.id === 15;
           const samples = footprint(x, z, r);
-          if (samples.some(([sx, sz]) => isWater(sx, sz))) continue;
+          if (!isBridge && samples.some(([sx, sz]) => isWater(sx, sz))) continue;
           const heights = samples.map(([sx, sz]) => heightAt(sx, sz));
           const low = Math.min(...heights);
           const relief = (Math.max(...heights) - low) / (2 * r);
-          if (relief > MAX_RELIEF) continue;
+          if (relief > MAX_RELIEF && !isBridge) continue;
           /* Lo más plano y lo más cerca de su punto. */
           const score = relief + ring * 0.04;
           if (!best || score < best.score) best = { x, z, y: low, scale, r, score };
@@ -62,4 +63,48 @@ export function placeModels(items, { heightAt, isWater }) {
     result.set(item.id, { x: best.x, y: best.y, z: best.z, scale: best.scale });
   }
   return result;
+}
+
+/* Borde de barranco: hasta dónde buscar agua (km), paso de avance y caída que marca el borde. */
+const EDGE_SEARCH_KM = 0.35;
+const EDGE_STEP_KM = 0.004;
+const EDGE_DROP = 0.5;
+
+/**
+ * Borde del barranco entre un punto y el agua cercana: se avanza desde (x, z)
+ * hacia el agua y se para donde el terreno empieza a caer fuerte (pendiente
+ * mayor que EDGE_DROP en unidades de maqueta). Es donde van los miradores,
+ * mirando al agua. Se prueban las direcciones con agua de la más cercana a la
+ * más lejana, saltando los bordes a menos de `spacing` de los ya ocupados.
+ *
+ * @param {number} x
+ * @param {number} z
+ * @param {{ heightAt: (x: number, z: number) => number, isWater: (x: number, z: number) => boolean }} ground
+ * @param {{ taken?: Array<{ x: number, z: number }>, spacing?: number }} [options]
+ * @returns {{ x: number, y: number, z: number, angle: number } | null} Sin agua cerca, null.
+ */
+export function cliffEdge(x, z, { heightAt, isWater }, { taken = [], spacing = 0 } = {}) {
+  const directions = [];
+  for (let k = 0; k < 48; k += 1) {
+    const angle = (k / 48) * Math.PI * 2;
+    for (let reach = 0.01; reach <= EDGE_SEARCH_KM; reach += 0.01) {
+      if (isWater(x + Math.sin(angle) * reach, z + Math.cos(angle) * reach)) {
+        directions.push({ angle, reach });
+        break;
+      }
+    }
+  }
+  directions.sort((a, b) => a.reach - b.reach);
+  for (const { angle, reach } of directions) {
+    const [dx, dz] = [Math.sin(angle), Math.cos(angle)];
+    for (let s = 0; s < reach; s += EDGE_STEP_KM) {
+      const here = heightAt(x + dx * s, z + dz * s);
+      const ahead = heightAt(x + dx * (s + EDGE_STEP_KM), z + dz * (s + EDGE_STEP_KM));
+      if ((here - ahead) / EDGE_STEP_KM <= EDGE_DROP) continue;
+      const edge = { x: x + dx * s, y: here, z: z + dz * s, angle };
+      if (taken.every((p) => Math.hypot(p.x - edge.x, p.z - edge.z) >= spacing)) return edge;
+      break;
+    }
+  }
+  return null;
 }

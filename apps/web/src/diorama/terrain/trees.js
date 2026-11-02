@@ -276,12 +276,6 @@ vColor.xyz = mix(color.xyz, color.xyz * instanceColor.xyz, foliage);
 #ifdef USE_INSTANCING
 vec3 treeBase = (modelMatrix * vec4(instanceMatrix[3].xyz, 1.0)).xyz;
 transformed *= 1.0 - smoothstep(treeFade.x, treeFade.y, distance(cameraPosition, treeBase));
-float lodOutside = smoothstep(lodRadius * 0.7, lodRadius, distance(treeBase.xz, lodFocus.xz));
-#ifdef TREE_DETAILED
-transformed *= 1.0 - lodOutside;
-#else
-transformed *= lodOutside;
-#endif
 float sway = sin(windTime * 1.4 + instanceMatrix[3].x * 700.0 + instanceMatrix[3].z * 500.0);
 transformed.x += sway * 0.025 * position.y * position.y * foliage;
 transformed.z += cos(windTime * 1.1 + instanceMatrix[3].z * 600.0) * 0.015 * position.y * position.y * foliage;

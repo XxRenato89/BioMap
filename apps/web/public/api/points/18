@@ -1,0 +1,28 @@
+{
+  "type": "Feature",
+  "id": 18,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.791274,
+      -37.743429
+    ]
+  },
+  "properties": {
+    "id": 18,
+    "name": "Camping Trompelhueno de Quilaco",
+    "layerId": 3,
+    "layerSlug": "tourism",
+    "tourStop": null,
+    "description": "Camping y playa en la ribera sur del embalse, con quinchos de paja. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": [
+      {
+        "url": "/media/camping-trompelhueno.jpg",
+        "altText": "Playa del Camping Trompelhueno, con quinchos de paja junto al embalse",
+        "credit": "Bastet&Anubis, CC BY-SA 4.0, Wikimedia Commons",
+        "isMain": true,
+        "kind": "photo"
+      }
+    ]
+  }
+}

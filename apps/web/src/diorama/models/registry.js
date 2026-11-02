@@ -4,7 +4,6 @@ import { buildBridge } from './bridge.js';
 import { buildRuka } from './ruka.js';
 import { buildAraucarias, buildLengas } from './trees.js';
 import { buildWetland } from './wetland.js';
-import { buildVisitorCenter } from './visitorCenter.js';
 import { buildLookout } from './lookout.js';
 import { buildCamping } from './camping.js';
 import { buildBeach } from './beach.js';
@@ -12,6 +11,12 @@ import { buildInfo } from './info.js';
 import { buildArboretum } from './arboretum.js';
 import { buildPowerhouse } from './powerhouse.js';
 import { buildTrailhead } from './trailhead.js';
+import {
+  buildForestTrail,
+  buildMeshDeck,
+  buildSanctuary,
+  buildVisitorPavilions,
+} from './angosturaPlaces.js';
 
 /*
  * Modelos 3D de los puntos de interés (portados de ejemplo.html). Cada uno
@@ -30,7 +35,11 @@ export const METERS_PER_UNIT = {
   araucaria: 10 * MODEL_SCALE_MULTIPLIER,
   lenga: 7.4 * MODEL_SCALE_MULTIPLIER,
   wetland: 20 * MODEL_SCALE_MULTIPLIER,
-  visitors: 7.4 * MODEL_SCALE_MULTIPLIER,
+  /* Modelos según fotos de Google Maps, ya en metros (ver angosturaPlaces.js). */
+  visitors: MODEL_SCALE_MULTIPLIER,
+  forestTrail: MODEL_SCALE_MULTIPLIER,
+  meshDeck: MODEL_SCALE_MULTIPLIER,
+  sanctuary: MODEL_SCALE_MULTIPLIER,
   lookout: 2.1 * MODEL_SCALE_MULTIPLIER,
   camping: 6.6 * MODEL_SCALE_MULTIPLIER,
   beach: 5 * MODEL_SCALE_MULTIPLIER,
@@ -57,7 +66,10 @@ export const BUILDERS = {
   araucaria: buildAraucarias,
   lenga: buildLengas,
   wetland: buildWetland,
-  visitors: buildVisitorCenter,
+  visitors: buildVisitorPavilions,
+  forestTrail: buildForestTrail,
+  meshDeck: buildMeshDeck,
+  sanctuary: buildSanctuary,
   lookout: buildLookout,
   camping: buildCamping,
   beach: buildBeach,
@@ -72,6 +84,10 @@ export const BUILDERS = {
  * caminos ya se ven como caminos reales: solo un puente colgante usa el modelo.
  */
 export const KEYWORDS = [
+  /* Lugares reales de Angostura con modelo propio (antes que las palabras genéricas). */
+  [/parque angostura/i, 'forestTrail'],
+  [/mirador central angostura/i, 'meshDeck'],
+  [/calvario|san sebasti[aá]n/i, 'sanctuary'],
   [/playa|balneario/i, 'beach'],
   [/camping|camp|acampar/i, 'camping'],
   [/mirador|vista/i, 'lookout'],

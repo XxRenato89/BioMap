@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "slug": "history",
+    "name": "Historia",
+    "color": "#b45309",
+    "icon": "landmark",
+    "sortOrder": 1
+  },
+  {
+    "id": 2,
+    "slug": "ecology",
+    "name": "Ecología y Biodiversidad",
+    "color": "#15803d",
+    "icon": "leaf",
+    "sortOrder": 2
+  },
+  {
+    "id": 3,
+    "slug": "tourism",
+    "name": "Turismo",
+    "color": "#1d4ed8",
+    "icon": "binoculars",
+    "sortOrder": 3
+  }
+]

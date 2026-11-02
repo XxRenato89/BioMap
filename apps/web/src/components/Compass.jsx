@@ -9,6 +9,9 @@ import { useViewsStore } from '../store/viewsStore.js';
 export default function Compass({ onResetNorth }) {
   const { t } = useTranslation();
   const heading = useViewsStore((state) => Math.round(state.main?.heading ?? 0));
+  /* Solo aparece cuando el mapa está girado: con el norte arriba no hace falta. */
+  const turned = ((heading % 360) + 360) % 360;
+  if (turned < 2 || turned > 358) return null;
   return (
     <button
       type="button"
@@ -24,13 +27,13 @@ export default function Compass({ onResetNorth }) {
         className="transition-transform duration-200 ease-out"
         style={{ transform: `rotate(${-heading}deg)` }}
       >
-        <path d="M30 6 L38 32 L30 28 L22 32 Z" fill="#d9631a" />
-        <path d="M30 54 L22 28 L30 32 L38 28 Z" fill="#a9c7b6" />
+        <path d="M30 6 L38 32 L30 28 L22 32 Z" fill="#8dc63f" />
+        <path d="M30 54 L22 28 L30 32 L38 28 Z" fill="#b6c4d0" />
         <text
           x="30"
           y="21"
           textAnchor="middle"
-          fill="#ffffff"
+          fill="#14334d"
           fontWeight="800"
           fontSize="11"
           fontFamily="sans-serif"

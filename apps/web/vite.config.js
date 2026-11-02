@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 /**
- * En desarrollo, Vite reenvía /api y /media a la API para que todo salga
+ * En desarrollo, Vite reenvía /api a la API para que todo salga
  * del mismo origen (sin CORS). En Docker, API_PROXY_TARGET apunta al servicio `api`.
  */
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
@@ -12,7 +12,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
-    proxy: { '/api': apiTarget, '/media': apiTarget },
+    /* /media sale de public/media (mismas fotos que la API): así se ven aunque la API esté apagada. */
+    proxy: { '/api': apiTarget },
   },
   build: {
     /*

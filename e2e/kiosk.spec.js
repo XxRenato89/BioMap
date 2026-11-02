@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('shows the map with its tour and the guided-tour lock', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'BioMap' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Buscar un lugar' })).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Central Hidroeléctrica Angostura' }),
   ).toBeEnabled();
@@ -38,26 +38,40 @@ test('walks to a place, opens its sheet and moves on to the next stop', async ({
   );
 });
 
-test('opens the Bio-Book in place with a QR code and closes it', async ({ page }) => {
-  await page.getByRole('button', { name: 'Abrir Bio-Book' }).click();
-  const book = page.getByRole('dialog', { name: 'Llévate el mapa vivo' });
-  await expect(book.getByRole('img', { name: /Código QR/ }).locator('svg')).toBeVisible();
-  await page.getByRole('button', { name: 'Cerrar libro' }).click();
-  await expect(book).toBeHidden();
+test('opens BioMap Mobile with a QR code and closes it', async ({ page }) => {
+  await page.getByRole('button', { name: /BioMap Mobile/ }).click();
+  const panel = page.getByRole('dialog', { name: 'Llévate el mapa en tu celular' });
+  await expect(panel.getByRole('img', { name: /Código QR/ }).locator('svg')).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(panel).toBeHidden();
 });
 
-test('switches to English and to high contrast', async ({ page }) => {
-  await page.getByRole('button', { name: 'Change language to English' }).click();
-  await expect(page.getByText('Living Map of the Biobío')).toBeVisible();
-  await page.getByRole('button', { name: /Contrast/ }).click();
+test('finds a place with the search box and walks to it', async ({ page }) => {
+  await page.getByRole('textbox', { name: 'Buscar un lugar' }).fill('central');
+  await page
+    .getByRole('button', { name: /Central Hidroeléctrica Angostura/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Saltar caminata' }).click();
+  await expect(
+    page.getByRole('dialog', { name: 'Central Hidroeléctrica Angostura' }),
+  ).toBeVisible();
+});
+
+test('switches to English and to high contrast from the settings', async ({ page }) => {
+  await page.getByRole('button', { name: /Ajustes/ }).click();
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+  await page.getByRole('button', { name: 'Yes' }).click();
   await expect(page.locator('main')).toHaveAttribute('data-contrast', 'high');
 });
 
-test('drains the reservoir to show the valley before 2014, and fills it again', async ({
+test('shows the valley before 2014 with the epoch selector, and goes back to today', async ({
   page,
 }) => {
-  await page.getByRole('button', { name: 'Bajo el embalse' }).click();
-  await expect(page.getByRole('heading', { name: 'El valle que cubre el embalse' })).toBeVisible();
-  await page.getByRole('button', { name: 'Volver a llenar' }).click();
-  await expect(page.getByRole('heading', { name: 'El valle que cubre el embalse' })).toBeHidden();
+  await page.getByRole('button', { name: /Época/ }).click();
+  await page.getByRole('button', { name: /2000/ }).click();
+  await expect(page.getByText(/Reconstrucción ilustrativa/)).toBeVisible();
+  await page.getByRole('button', { name: /Hoy/ }).click();
+  await expect(page.getByText(/Reconstrucción ilustrativa/)).toBeHidden();
 });

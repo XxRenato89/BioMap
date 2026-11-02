@@ -9,3 +9,6 @@ kiosk.log
 test-results
 playwright-report
 fotos/
+docs/
+apps/web/public/models/model.glb
+.agents/

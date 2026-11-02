@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": 5,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.766676,
+      -37.701958
+    ]
+  },
+  "properties": {
+    "id": 5,
+    "name": "Sector Lo Nieve",
+    "layerId": 1,
+    "layerSlug": "history",
+    "tourStop": null,
+    "description": "Localidad rural junto al río Huequecura, al norte del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": []
+  }
+}

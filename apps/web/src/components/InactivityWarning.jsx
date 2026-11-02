@@ -41,7 +41,7 @@ export default function InactivityWarning({
               cy="84"
               r={RADIUS}
               fill="none"
-              stroke="#13241d"
+              stroke="#14334d"
               strokeWidth="14"
               strokeLinecap="round"
               strokeDasharray={CIRCUMFERENCE}
@@ -71,7 +71,7 @@ export default function InactivityWarning({
         <div className="flex flex-wrap justify-center gap-4 mt-2 w-full">
           <button
             type="button"
-            className="flex-1 min-w-[200px] py-4 px-6 rounded-2xl bg-forest text-white font-display font-bold text-lg hover:bg-[#2c6b4d] shadow-lg active:scale-95 transition-all cursor-pointer"
+            className="flex-1 min-w-[200px] py-4 px-6 rounded-2xl bg-forest text-white font-display font-bold text-lg hover:bg-[#1c75bc] shadow-lg active:scale-95 transition-all cursor-pointer"
             onClick={onKeepExploring}
           >
             {t('idle.keep')}

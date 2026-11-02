@@ -1,0 +1,28 @@
+{
+  "type": "Feature",
+  "id": 11,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -71.81516,
+      -37.7102651
+    ]
+  },
+  "properties": {
+    "id": 11,
+    "name": "Mirador Central Angostura",
+    "layerId": 3,
+    "layerSlug": "tourism",
+    "tourStop": null,
+    "description": "Vista a la represa, junto al Biobío al pie de la presa. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
+    "images": [
+      {
+        "url": "/media/presa-angostura-carretera.png",
+        "altText": "Vista al aliviadero y caída de agua de la presa Angostura desde la Ruta Q-61",
+        "credit": "Google Maps / Parque Angostura",
+        "isMain": true,
+        "kind": "photo"
+      }
+    ]
+  }
+}

@@ -70,6 +70,13 @@ export function buildDam() {
   // Antena de telecomunicaciones
   g.add(cyl(0.03, 0.03, 1.8, 6, railMat, 0.4, 9.5, -0.55));
 
+  // Pórticos amarillos de maniobra sobre las compuertas (característicos de Angostura)
+  const yellowMat = mat('gantryYellow', 0xe8c21c, { roughness: 0.5 });
+  for (let k = -2; k <= 2; k += 1) {
+    g.add(box(0.18, 1.2, 0.18, yellowMat, k * 1.8 + 0.9, 7.7, -0.45));
+  }
+  g.add(box(7.6, 0.16, 0.2, yellowMat, 0, 8.3, -0.45));
+
   // Tuberías forzadas (Penstocks) de acero que alimentan las turbinas
   const penstockMat = mat('steelPenstock', 0x4a5358, { metalness: 0.7, roughness: 0.35 });
   for (let p = -1; p <= 1; p += 1) {
@@ -78,10 +85,11 @@ export function buildDam() {
     g.add(penstock);
   }
 
-  // Casa de máquinas (Powerhouse)
+  // Edificio de control y mando con techo azul cobalto (como en la foto real de Angostura)
   const phX = -(wh + 0.4);
+  const blueRoof = mat('roofBlue', 0x1d68aa, { roughness: 0.4 });
   g.add(box(5.4, 3.2, 3.8, white(), phX, 1.6, 3.2));
-  g.add(box(5.6, 0.4, 4.1, red(), phX, 3.35, 3.2));
+  g.add(box(5.6, 0.4, 4.1, blueRoof, phX, 3.35, 3.2));
   // Ventanales industriales de la sala de generadores
   for (let q = 0; q < 4; q += 1) {
     g.add(box(0.65, 1.4, 0.05, glass(), phX - 1.8 + q * 1.2, 2.1, 5.12));

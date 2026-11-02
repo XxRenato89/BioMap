@@ -1,0 +1,19 @@
+{
+  "description": "BioMap / Quibar 3D Animations Registry",
+  "standardNames": [
+    "walk",
+    "run"
+  ],
+  "animations": [
+    {
+      "name": "walk",
+      "file": "walk.glb",
+      "description": "Paseo / caminata estándar por el mapa"
+    },
+    {
+      "name": "run",
+      "file": "run.glb",
+      "description": "Carrera hacia un hito seleccionado"
+    }
+  ]
+}

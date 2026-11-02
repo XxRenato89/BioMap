@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { Box3, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useAvatarStore } from '../../store/avatarStore.js';
@@ -7,13 +7,25 @@ import { useViewerStore } from '../../store/viewerStore.js';
 import i18n from '../../i18n/index.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { Pathfinder } from '../utils/pathfinder.js';
-import { useGLTF, useAnimations } from '@react-three/drei';
+import { useCharacterModel } from '../utils/characterModel.js';
+import { useUserStore } from '../../store/userStore.js';
 
-const PATROL_SPEED = 0.35;
-const RUN_TO_POINT_SPEED = 0.95;
-const MASCOT_GLB_PATH = '/diorama/mascot.glb';
-
-useGLTF.preload(MASCOT_GLB_PATH);
+/**
+ * Configuración por defecto de la mascota 3D en el diorama.
+ * Modifica estos valores para cambiar el tamaño, velocidad o cadencia del avatar.
+ */
+export const AVATAR_CONFIG = {
+  /** Multiplicador de escala visible (aumentado para que no se vea diminuto en el mapa) */
+  screenScale: 2.4,
+  /** Velocidad de caminata en modo patrulla automática */
+  patrolSpeed: 0.14,
+  /** Velocidad de carrera al dirigirse a un hito seleccionado */
+  runSpeed: 0.36,
+  /** Cadencia / velocidad de reproducción de la animación de trote */
+  runCadence: 0.85,
+  /** Cadencia / velocidad de reproducción de la animación de caminata / trote suave */
+  walkCadence: 0.72,
+};
 
 /**
  * Ruta por caminos reales y puentes, o null si no hay una que evite el agua
@@ -23,7 +35,32 @@ function createPath(startCoord, endCoord, pathfinder) {
   return pathfinder?.findPath(startCoord, endCoord) ?? null;
 }
 
-export default function Avatar({ points, onArrivedAtPoint }) {
+/* Paseo: próximo destino al azar entre los lugares a menos de esto (km). */
+const WANDER_KM = 3;
+
+/**
+ * Índice del próximo lugar del paseo: uno cercano al azar (distinto del
+ * actual); si no hay ninguno cerca, cualquiera.
+ */
+export function nextWanderIndex(pois, current, from, random = Math.random) {
+  const others = pois.map((_, i) => i).filter((i) => i !== current);
+  if (others.length === 0) return current;
+  const near = others.filter(
+    (i) => Math.hypot(pois[i].x - from.x, pois[i].z - from.z) < WANDER_KM,
+  );
+  const pool = near.length > 0 ? near : others;
+  return pool[Math.floor(random() * pool.length) % pool.length];
+}
+
+export default memo(function Avatar({
+  points,
+  onArrivedAtPoint,
+  screenScale = AVATAR_CONFIG.screenScale,
+  patrolSpeed = AVATAR_CONFIG.patrolSpeed,
+  runSpeed = AVATAR_CONFIG.runSpeed,
+  runCadence = AVATAR_CONFIG.runCadence,
+  walkCadence = AVATAR_CONFIG.walkCadence,
+}) {
   /* La mascota pisa lo que se ve: relieve, o el tablero si cruza un puente. */
   const { projection, surfaceAt: heightAt, roadsData, waterPolygons } = useDiorama();
 
@@ -33,10 +70,13 @@ export default function Avatar({ points, onArrivedAtPoint }) {
   const setMode = useAvatarStore((state) => state.setMode);
   const setPath = useAvatarStore((state) => state.setPath);
   const setPosition = useAvatarStore((state) => state.setPosition);
+  const setLastArrivedPoint = useAvatarStore((state) => state.setLastArrivedPoint);
   const startSpeaking = useAvatarStore((state) => state.startSpeaking);
+  const stopSpeaking = useAvatarStore((state) => state.stopSpeaking);
+  const isSpeaking = useAvatarStore((state) => state.isSpeaking);
+  const selectedPointIds = useViewerStore((state) => state.selectedPointIds);
 
   const groupRef = useRef();
-  const beaconRef = useRef();
 
   const currentPos = useRef(new Vector3(0, 0, 0));
   const currentHeading = useRef(0);
@@ -47,14 +87,21 @@ export default function Avatar({ points, onArrivedAtPoint }) {
 
   const pathRef = useRef([]);
   const pathIndex = useRef(0);
+  const plannedTargetRef = useRef(null);
+  const jumpingRef = useRef(null);
+  const lastArrivedPointRef = useRef(null);
+  const wasSheetOpenRef = useRef(false);
+  /* Pausa del paseo: salta y mira el paisaje a un lado y otro. */
+  const lookRef = useRef(null);
 
-  const { scene, animations } = useGLTF(MASCOT_GLB_PATH);
-  const { actions } = useAnimations(animations, groupRef);
-  /* Alto del modelo en sus unidades (la armadura viene escalada ×100). */
+  const { scene, actions } = useCharacterModel(groupRef);
+  /* Alto del modelo en sus unidades para normalizar la escala de la maqueta */
   const modelHeight = useMemo(() => {
     const copy = clone(scene);
+    copy.position.set(0, 0, 0);
     copy.updateMatrixWorld(true);
-    return new Box3().setFromObject(copy).getSize(new Vector3()).y || 1;
+    const box = new Box3().setFromObject(copy);
+    return box.getSize(new Vector3()).y || 1.9;
   }, [scene]);
 
   useEffect(() => {
@@ -69,8 +116,9 @@ export default function Avatar({ points, onArrivedAtPoint }) {
   }, [scene]);
 
   useEffect(() => {
-    if (actions && actions['Idle']) {
-      actions['Idle'].reset().fadeIn(0.2).play();
+    const idleAction = actions?.idle || actions?.Idle;
+    if (idleAction) {
+      idleAction.reset().fadeIn(0.2).play();
       currentAnimRef.current = 'Idle';
     }
   }, [actions]);
@@ -100,34 +148,115 @@ export default function Avatar({ points, onArrivedAtPoint }) {
 
   useEffect(() => {
     if (!isInitialized.current && poiWorldPositions.length > 0) {
-      const first = poiWorldPositions[0];
-      currentPos.current.set(first.x, first.y, first.z);
+      const startPoi =
+        poiWorldPositions.find(
+          (p) => p.id === 12 || p.name?.toLowerCase().includes('visitante'),
+        ) || poiWorldPositions[0];
+      currentPos.current.set(startPoi.x, startPoi.y, startPoi.z);
       if (groupRef.current) {
         groupRef.current.position.copy(currentPos.current);
       }
       setPosition(currentPos.current);
       isInitialized.current = true;
-      idleWaitUntil.current = performance.now() + 2000;
+      const startIdx = poiWorldPositions.findIndex((p) => p.id === startPoi.id);
+      patrolIndex.current = startIdx >= 0 ? startIdx : 0;
+      idleWaitUntil.current = performance.now() + 800;
     }
   }, [poiWorldPositions, setPosition]);
 
   useFrame((state, delta) => {
     if (poiWorldPositions.length === 0 || !groupRef.current) return;
 
-    /* ~60 px de alto en pantalla (un píxel ≈ 0,00052 rad), nunca menos de 4 m. */
+    /* Tamaño en pantalla proporcional a la distancia de cámara, configurable y legible */
     const camDist = state.camera.position.distanceTo(currentPos.current);
-    groupRef.current.scale.setScalar(Math.max(0.004, camDist * 0.031) / modelHeight);
-    /* Con una ficha abierta, la mascota la presenta al costado (SheetMascot). */
-    groupRef.current.visible = useViewerStore.getState().selectedPointIds.length === 0;
+    const avatarWorldSize = Math.max(0.012, Math.min(0.22, camDist * 0.046 * screenScale));
+    const roadOffset = 0.0006;
+
+    const isSheetOpen = selectedPointIds && selectedPointIds.length > 0;
+
+    // Solo una instancia de Quibar en pantalla: si la ficha está abierta, Quibar está
+    // en primer plano (SheetMascot) y se oculta en la maqueta 3D, pausando su recorrido.
+    if (isSheetOpen) {
+      groupRef.current.visible = false;
+      wasSheetOpenRef.current = true;
+      return;
+    }
+
+    // Al cerrar la pestaña/ficha, vuelve al punto de interés seleccionado y reanuda el recorrido normal
+    if (wasSheetOpenRef.current) {
+      wasSheetOpenRef.current = false;
+      const returnPoint = lastArrivedPointRef.current;
+      if (returnPoint) {
+        currentPos.current.set(returnPoint.x, returnPoint.y, returnPoint.z);
+        const groundY = heightAt(returnPoint.x, returnPoint.z) + roadOffset;
+        currentPos.current.y = groundY;
+        groupRef.current.position.set(returnPoint.x, groundY, returnPoint.z);
+        setPosition(currentPos.current);
+
+        const idx = poiWorldPositions.findIndex((p) => p.id === returnPoint.id);
+        patrolIndex.current = nextWanderIndex(poiWorldPositions, idx, returnPoint);
+        pathRef.current = [];
+        plannedTargetRef.current = null;
+        idleWaitUntil.current = performance.now() + 1500;
+      }
+      setMode('patrol');
+      groupRef.current.visible = true;
+    }
+
+    groupRef.current.scale.setScalar(avatarWorldSize / modelHeight);
+    groupRef.current.visible = true;
+
+    const now = performance.now();
+
+    // Animación de salto al llegar al hito antes de pasar al frente de la pantalla
+    if (jumpingRef.current) {
+      const elapsed = (now - jumpingRef.current.startTime) / jumpingRef.current.duration;
+      if (elapsed < 1) {
+        const dxCam = state.camera.position.x - currentPos.current.x;
+        const dzCam = state.camera.position.z - currentPos.current.z;
+        currentHeading.current = Math.atan2(dxCam, dzCam);
+
+        // Salto parabólico y squash/stretch celebratorio
+        const jumpHeight = avatarWorldSize * 1.5;
+        const hopY = Math.sin(elapsed * Math.PI) * jumpHeight;
+        const groundY = heightAt(currentPos.current.x, currentPos.current.z) + roadOffset;
+
+        let stretch = 1;
+        if (elapsed < 0.15) stretch = 0.88;
+        else if (elapsed < 0.85) stretch = 1.18;
+        else stretch = 0.92;
+
+        const baseScale = avatarWorldSize / modelHeight;
+        groupRef.current.scale.set(
+          baseScale / Math.sqrt(stretch),
+          baseScale * stretch,
+          baseScale / Math.sqrt(stretch),
+        );
+        groupRef.current.position.set(currentPos.current.x, groundY + hopY, currentPos.current.z);
+        groupRef.current.rotation.y = currentHeading.current;
+        return;
+      }
+
+      // Salto completado: pasa hacia adelante de la pantalla
+      const arrivedPoint = jumpingRef.current.point;
+      jumpingRef.current = null;
+      lastArrivedPointRef.current = arrivedPoint;
+      setLastArrivedPoint(arrivedPoint.raw);
+      pathRef.current = [];
+      setMode('speaking');
+      startSpeaking(i18n.t('avatar.arrived', { name: arrivedPoint.name }));
+      onArrivedAtPoint?.(arrivedPoint.raw);
+      return;
+    }
 
     const dt = Math.min(delta, 0.1);
-    let speed = PATROL_SPEED;
+    let speed = patrolSpeed;
     let activePoint = null;
     let targetCoord = null;
 
     if (mode === 'running_to_point' && targetPoint) {
       targetCoord = targetPoint.geometry.coordinates;
-      speed = RUN_TO_POINT_SPEED;
+      speed = runSpeed;
       const found = poiWorldPositions.find((p) => p.id === targetPoint.properties.id);
       if (found) activePoint = found;
     } else if (mode === 'patrol') {
@@ -136,21 +265,37 @@ export default function Avatar({ points, onArrivedAtPoint }) {
       activePoint = p;
     }
 
-    const isWaiting = mode === 'patrol' && performance.now() < idleWaitUntil.current;
+    const isWaiting = (mode === 'patrol' || mode === 'speaking') && now < idleWaitUntil.current;
+
+    // Mensaje pendiente (p. ej. un secreto hallado) mientras pasea: se cierra al terminar la pausa.
+    if (!isWaiting && isSpeaking && mode === 'patrol') stopSpeaking();
 
     // Planificar ruta si no existe o cambió el destino
-    if (
-      !isWaiting &&
+    const targetChanged = Boolean(
       targetCoord &&
-      (!pathRef.current.length ||
-        pathRef.current[pathRef.current.length - 1][0] !== targetCoord[0] ||
-        pathRef.current[pathRef.current.length - 1][1] !== targetCoord[1])
-    ) {
+        (!plannedTargetRef.current ||
+          plannedTargetRef.current[0] !== targetCoord[0] ||
+          plannedTargetRef.current[1] !== targetCoord[1]),
+    );
+
+    if (targetChanged) {
+      jumpingRef.current = null;
+    }
+
+    if (!isWaiting && targetCoord && (targetChanged || !pathRef.current.length)) {
+      plannedTargetRef.current = targetCoord;
       const currentCoord = projection.toLngLat(currentPos.current.x, currentPos.current.z);
       const path = createPath(currentCoord, targetCoord, pathfinder);
       if (path) {
         pathRef.current = path;
         pathIndex.current = 0;
+      } else if (mode === 'patrol') {
+        /* Paseando no se teletransporta: busca otro lugar al que se llegue caminando. */
+        patrolIndex.current = nextWanderIndex(poiWorldPositions, patrolIndex.current, currentPos.current);
+        plannedTargetRef.current = null;
+        pathRef.current = [];
+        idleWaitUntil.current = now + 300;
+        return;
       } else {
         const { x, z } = projection.toWorld(targetCoord);
         currentPos.current.set(x, heightAt(x, z), z);
@@ -169,9 +314,12 @@ export default function Avatar({ points, onArrivedAtPoint }) {
     if (skipRequested && mode === 'running_to_point' && activePoint) {
       currentPos.current.x = activePoint.x;
       currentPos.current.z = activePoint.z;
-      currentPos.current.y = heightAt(activePoint.x, activePoint.z);
+      currentPos.current.y = heightAt(activePoint.x, activePoint.z) + roadOffset;
       pathIndex.current = pathRef.current.length;
       pathRef.current = [];
+      jumpingRef.current = null;
+      lastArrivedPointRef.current = activePoint;
+      setLastArrivedPoint(activePoint.raw);
       groupRef.current.position.copy(currentPos.current);
       setPosition(currentPos.current);
       setMode('speaking');
@@ -221,35 +369,61 @@ export default function Avatar({ points, onArrivedAtPoint }) {
         }
       }
 
-      currentPos.current.y = heightAt(currentPos.current.x, currentPos.current.z);
-    } else if (!isWaiting) {
-      if (mode === 'running_to_point' && activePoint) {
-        setMode('speaking');
-        startSpeaking(i18n.t('avatar.arrived', { name: activePoint.name }));
-        onArrivedAtPoint?.(activePoint.raw);
+      currentPos.current.y = heightAt(currentPos.current.x, currentPos.current.z) + roadOffset;
+    } else if (!isWaiting && activePoint) {
+      if (mode === 'running_to_point') {
+        if (!jumpingRef.current) {
+          jumpingRef.current = {
+            startTime: performance.now(),
+            duration: 750,
+            point: activePoint,
+          };
+        }
       } else if (mode === 'patrol') {
-        idleWaitUntil.current = performance.now() + 4000;
-        patrolIndex.current = (patrolIndex.current + 1) % poiWorldPositions.length;
+        /* Sin hablar: una pausa corta mirando el paisaje y sigue paseando. */
+        const pause = 1800 + Math.random() * 1700;
+        idleWaitUntil.current = now + pause;
+        lookRef.current = { start: now, end: now + pause, heading: currentHeading.current };
+        patrolIndex.current = nextWanderIndex(poiWorldPositions, patrolIndex.current, currentPos.current);
         pathRef.current = [];
+        plannedTargetRef.current = null;
       }
     }
 
-    // Selección de animación (0.35 patrol -> Walking, 0.95 run -> Running)
+    /* Durante la pausa: un saltito al llegar y mira a un lado y otro. */
+    let hop = 0;
+    const look = lookRef.current;
+    if (look && mode === 'patrol' && now < look.end) {
+      const t = (now - look.start) / 1000;
+      if (t < 0.4) hop = Math.sin((t / 0.4) * Math.PI) * avatarWorldSize * 0.35;
+      currentHeading.current = look.heading + Math.sin(t * 1.8) * 0.9;
+    } else if (look) {
+      lookRef.current = null;
+    }
+
+    // Selección de animación: solo caminar al pasear / desplazarse
     let currentAnim = 'Idle';
-    if (mode === 'speaking') {
-      currentAnim = 'Wave';
-    } else if (isMoving) {
-      currentAnim = speed > 0.5 ? 'Running' : 'Walking';
+    if (isMoving) {
+      currentAnim = (actions?.Running && mode === 'running_to_point') ? 'Running' : 'Walking';
     } else {
       currentAnim = 'Idle';
     }
 
-    // Transición suave entre animaciones
+    // Transición suave entre animaciones y ritmo más pausado
     if (actions && currentAnim !== currentAnimRef.current) {
       const prevAnim = currentAnimRef.current;
       currentAnimRef.current = currentAnim;
       const nextAction = actions[currentAnim];
       if (nextAction) {
+        if (currentAnim === 'Running') {
+          nextAction.setEffectiveTimeScale(runCadence);
+        } else if (currentAnim === 'Walking') {
+          nextAction.setEffectiveTimeScale(walkCadence);
+        } else if (currentAnim === 'Idle') {
+          nextAction.setEffectiveTimeScale(0.12);
+        } else {
+          nextAction.setEffectiveTimeScale(1.0);
+        }
         nextAction.reset().fadeIn(0.25).play();
       }
       if (prevAnim && actions[prevAnim] && actions[prevAnim] !== nextAction) {
@@ -257,37 +431,40 @@ export default function Avatar({ points, onArrivedAtPoint }) {
       }
     }
 
-    // Apoyar siempre al personaje sobre la altura real del relieve
-    const groundY = heightAt(currentPos.current.x, currentPos.current.z);
+    // Apoyar siempre al personaje sobre la cota exacta del relieve o camino
+    const groundY = heightAt(currentPos.current.x, currentPos.current.z) + roadOffset;
     currentPos.current.y = groundY;
-    groupRef.current.position.copy(currentPos.current);
+    groupRef.current.position.set(currentPos.current.x, groundY + hop, currentPos.current.z);
     groupRef.current.rotation.y = currentHeading.current;
     setPosition(currentPos.current);
 
-    if (beaconRef.current) {
-      beaconRef.current.rotation.y += dt * 2.5;
-      beaconRef.current.position.y = modelHeight * (1.2 + Math.sin(performance.now() / 350) * 0.05);
+    // Comprobar si Quibar descubre un punto secreto al pasar cerca
+    const userStore = useUserStore.getState();
+    for (const poi of poiWorldPositions) {
+      if (poi.raw?.properties?.secret && !userStore.isSecretDiscovered(poi.id)) {
+        const dist = Math.hypot(currentPos.current.x - poi.x, currentPos.current.z - poi.z);
+        if (dist < 0.15) {
+          userStore.discoverSecret(poi.id);
+          startSpeaking(`¡Oh, he encontrado algo misterioso! Es: ${poi.name}`);
+          /* No frena el paseo: se detiene a mirar y sigue. */
+          if (mode === 'patrol') {
+            setMode('patrol');
+            idleWaitUntil.current = now + 3500;
+            lookRef.current = { start: now, end: now + 3500, heading: currentHeading.current };
+          }
+          break;
+        }
+      }
     }
   });
 
   return (
     <group ref={groupRef}>
-      <group ref={beaconRef} position={[0, modelHeight * 1.2, 0]} scale={modelHeight / 2.2}>
-        <mesh>
-          <octahedronGeometry args={[0.2, 0]} />
-          <meshStandardMaterial
-            color="#48cae4"
-            emissive="#00b4d8"
-            emissiveIntensity={0.8}
-            roughness={0.2}
-          />
-        </mesh>
-      </group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} scale={modelHeight / 2.2}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]} scale={modelHeight / 2.2}>
         <ringGeometry args={[0, 0.42, 16]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.35} />
       </mesh>
       <primitive object={scene} />
     </group>
   );
-}
+});

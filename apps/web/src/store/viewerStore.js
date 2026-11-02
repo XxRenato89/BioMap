@@ -27,6 +27,8 @@ export function initialViewerState() {
     contours: false,
     /* «Bajo el embalse»: el agua se retira y deja ver el valle de antes de 2014. */
     drained: false,
+    /* Iluminación horaria: 'auto' | 'day' | 'sunset' | 'night' */
+    timeOfDay: 'auto',
   };
 }
 
@@ -76,6 +78,7 @@ export const useViewerStore = create((set) => ({
 
   cycleTextScale: () =>
     set(({ textScale }) => ({ textScale: (textScale + 1) % TEXT_SCALES.length })),
+  setTextScale: (scale) => set({ textScale: scale }),
 
   toggleContrast: () => set(({ contrast }) => ({ contrast: !contrast })),
 
@@ -85,6 +88,7 @@ export const useViewerStore = create((set) => ({
 
   toggleContours: () => set(({ contours }) => ({ contours: !contours })),
   toggleDrained: () => set(({ drained }) => ({ drained: !drained })),
+  setTimeOfDay: (timeOfDay) => set({ timeOfDay }),
 
   /*
    * «Reiniciar vista»: todas las capas, curvas de nivel y sin ficha abierta. Respeta los

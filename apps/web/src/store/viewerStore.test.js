@@ -48,6 +48,11 @@ describe('viewerStore', () => {
     expect(store().hiddenLayerIds.size).toBe(0);
   });
 
+  it('setTextScale picks one of the text sizes directly', () => {
+    store().setTextScale(2);
+    expect(store().textScale).toBe(2);
+  });
+
   it('resetAll returns everything to the initial state', () => {
     store().openPoint(10);
     store().setLang('en');

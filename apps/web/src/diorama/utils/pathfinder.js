@@ -10,7 +10,7 @@ const WET_TOLERANCE_KM = 0.03;
 /* Extremos sueltos a menos de esto se unen (cortes de OSM y del recorte). */
 const JOIN_KM = 0.015;
 /* Hasta dónde se busca el camino más cercano a un punto. */
-const MAX_SNAP_KM = 0.6;
+const MAX_SNAP_KM = 1.2;
 const SNAP_CANDIDATES = 12;
 /* Para un destino en el agua, hasta dónde se busca el camino de la orilla. */
 const MAX_SHORE_KM = 1.5;
@@ -213,7 +213,8 @@ export class Pathfinder {
    * @returns {number[][] | null}
    */
   findPath(startCoord, endCoord) {
-    const starts = this.snapCandidates(startCoord);
+    const startOnWater = this.inWater(startCoord);
+    const starts = this.snapCandidates(startCoord, { overWater: startOnWater });
     /*
      * Un destino en el agua (el embalse) no se pisa: la ruta llega al camino
      * de la orilla más cercano y termina ahí.
@@ -221,21 +222,23 @@ export class Pathfinder {
     const onWater = this.inWater(endCoord);
     const ends = this.snapCandidates(endCoord, { overWater: onWater });
     let best = null;
-    for (const start of starts) {
-      for (const end of ends) {
+    for (const end of ends) {
+      for (const start of starts) {
         if (this.component[start.u] !== this.component[end.u]) continue;
         const route = this.route(start, end);
         if (!route) continue;
-        const total = route.length + start.distance + end.distance;
+        const total = route.length + start.distance;
         if (!best || total < best.total) best = { total, nodes: route.nodes, start, end };
       }
-      /* El candidato más cercano con ruta basta: los siguientes están más lejos. */
+      /* Priorizar el punto de llegada más cercano al destino real */
       if (best) break;
     }
     if (!best) return null;
     const middle = best.nodes.map((id) => this.nodes[id]);
     const path = [startCoord, best.start.point, ...middle, best.end.point];
-    return onWater ? path : [...path, endCoord];
+    /* Si el camino pasa a menos de 50m del destino (como un puente o mirador), llegar hasta el punto */
+    const reachedDestination = best.end.distance <= 0.05;
+    return onWater && !reachedDestination ? path : [...path, endCoord];
   }
 
   /**

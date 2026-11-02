@@ -37,7 +37,7 @@ export default function AttractOverlay({ stopName, onExplore }) {
           {stopName && (
             <motion.span
               key={stopName}
-              className="flex flex-col items-center gap-1 rounded-2xl bg-forest px-8 py-4 shadow-[0_4px_0_#0f241a,0_18px_40px_rgba(0,0,0,0.4)]"
+              className="flex flex-col items-center gap-1 rounded-2xl bg-forest px-8 py-4 shadow-[0_4px_0_#0d2438,0_18px_40px_rgba(0,0,0,0.4)]"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

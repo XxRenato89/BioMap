@@ -31,26 +31,32 @@ export default function AvatarNarrator() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(activeSpeech);
-      utterance.lang = 'es-CL'; // Prioridad español de Chile / neutro
-      utterance.rate = 1.0;
-      utterance.pitch = 1.05; // Tono amigable y enérgico de explorador
+      try {
+        const utterance = new SpeechSynthesisUtterance(activeSpeech);
+        utterance.lang = 'es-CL'; // Prioridad español de Chile / neutro
+        utterance.rate = 1.0;
+        utterance.pitch = 1.05; // Tono amigable y enérgico de explorador
 
-      // Buscar voz en español si están cargadas en el sistema
-      const voices = window.speechSynthesis.getVoices();
-      const spanishVoice = voices.find(
-        (v) => v.lang.startsWith('es') || v.name.includes('Spanish') || v.name.includes('Sabina'),
-      );
-      if (spanishVoice) {
-        utterance.voice = spanishVoice;
+        const assignVoice = () => {
+          const voices = window.speechSynthesis.getVoices();
+          const spanishVoice = voices.find(
+            (v) => v.lang.startsWith('es') || v.name.includes('Spanish') || v.name.includes('Sabina'),
+          );
+          if (spanishVoice) {
+            utterance.voice = spanishVoice;
+          }
+        };
+
+        assignVoice();
+        if (!utterance.voice && window.speechSynthesis.onvoiceschanged !== undefined) {
+          window.speechSynthesis.onvoiceschanged = assignVoice;
+        }
+
+        utteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        // En caso de que el navegador bloquee la síntesis de voz
       }
-
-      utterance.onend = () => {
-        // Al terminar el audio sigue visible el texto para lectura
-      };
-
-      utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
     }
 
     return () => {
@@ -67,7 +73,7 @@ export default function AvatarNarrator() {
   return (
     <AnimatePresence>
       <motion.aside
-        className="fixed bottom-28 left-6 z-40 w-[min(440px,calc(100vw-48px))] rounded-[24px] bg-[#11221b]/90 backdrop-blur-xl border border-white/20 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] text-white pointer-events-auto flex flex-col gap-3.5"
+        className="fixed bottom-[140px] left-6 sm:left-10 z-40 w-[min(440px,calc(100vw-48px))] rounded-[24px] bg-[#11221b]/90 backdrop-blur-xl border border-white/20 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] text-white pointer-events-auto flex flex-col gap-3.5"
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 30, scale: 0.95 }}

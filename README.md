@@ -10,9 +10,9 @@ caminos reales para presentarle su ficha: historia, fotos y vista 360°.
 
 ## Qué hace
 
-- **Bajo el embalse**: con un botón, el embalse se vacía y deja ver el cañón del Biobío
+- **Época 2000**: desde el botón «Época» de la barra inferior, el embalse se vacía y deja ver el cañón del Biobío
   como era antes de la inundación de 2014 (relieve SRTM del año 2000), con la cota de hoy
-  marcada en las laderas. Hasta ~45 m de profundidad.
+  marcada en las laderas. Es una reconstrucción ilustrativa. Hasta ~45 m de profundidad.
 - **Luz según la hora**: amanecer, mediodía, tarde dorada y atardecer siguen el reloj del
   kiosco (`?hora=19` en la URL para presentarlo). Aves sobre el embalse.
 
@@ -30,8 +30,8 @@ caminos reales para presentarle su ficha: historia, fotos y vista 360°.
   al agua.
 - **Ficha del lugar** con la mascota a su lado, pestañas Historia / Fotos / 360° y el
   crédito de cada foto.
-- **Bio-Book**: un libro que se abre en su lugar con un código QR para seguir en el
-  teléfono.
+- **BioMap Mobile**: un panel con un código QR para seguir el mapa en el teléfono, con tres pasos
+  (el nombre es provisional; antes se llamaba Bio-Book).
 - **Kiosco**: modo atracción, regreso automático a la vista inicial, aviso y reinicio
   por inactividad (borra el progreso del visitante), alto contraste, texto grande e
   inglés.

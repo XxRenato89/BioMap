@@ -31,7 +31,7 @@ export default function SkipWalkButton() {
 
   return (
     <div
-      className="fixed left-1/2 bottom-24 -translate-x-1/2 z-50 pointer-events-auto"
+      className="fixed left-1/2 bottom-[132px] -translate-x-1/2 z-50 pointer-events-auto"
       role="region"
       aria-label="Control de animación"
     >

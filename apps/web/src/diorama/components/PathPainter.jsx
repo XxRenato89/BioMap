@@ -79,10 +79,10 @@ function pathMaterial() {
     uniforms: {
       uTime: { value: 0 },
       uDone: { value: 0 },
-      uAhead: { value: new Color('#e39b3d') },
-      uDots: { value: new Color('#fff4dc') },
-      uEdge: { value: new Color('#1d231c') },
-      uBehind: { value: new Color('#f3ecdc') },
+      uAhead: { value: new Color('#8dc63f') },
+      uDots: { value: new Color('#ffffff') },
+      uEdge: { value: new Color('#14334d') },
+      uBehind: { value: new Color('#f3f9ff') },
     },
     vertexShader: `
 #include <common>

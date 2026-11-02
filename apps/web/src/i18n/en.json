@@ -1,14 +1,4 @@
 {
-  "header": {
-    "subtitle": "Living Map of the Biobío",
-    "hint": "Tap a point to see its sheet: photos, 360° and the story of the place."
-  },
-  "layers": {
-    "nav": "Thematic layers",
-    "title": "Layers",
-    "count_one": "{{count}} place",
-    "count_other": "{{count}} places"
-  },
   "layerNames": {
     "history": "History",
     "ecology": "Ecology and Biodiversity",
@@ -21,17 +11,6 @@
     "tilt": "Tilted 3D view",
     "contours": "Contour lines",
     "reset": "Reset view"
-  },
-  "levels": {
-    "group": "Zoom level",
-    "region": "Region",
-    "regionHint": "The whole basin",
-    "zone": "Area",
-    "zoneHint": "Each place",
-    "detail": "Detail",
-    "detailHint": "Names and landmarks",
-    "rest": "Returns to the start after {{seconds}} s without use",
-    "gestures": "Drag to turn the model · pinch to zoom"
   },
   "a11y": {
     "textBigger": "Larger text",
@@ -51,23 +30,6 @@
     "progress": "Your tour",
     "nextStop": "Next stop",
     "backToStart": "Back to start"
-  },
-  "bioBook": {
-    "open": "Open me!",
-    "openAria": "Open Bio-Book",
-    "close": "Close book",
-    "step1": "Open your camera",
-    "step2": "Point at the code",
-    "step3": "Tap the link",
-    "scanMapTitle": "Take the map with you",
-    "scanMapText": "Scan the code and keep exploring BioMap on your phone.",
-    "scanPointTitle": "Take this card with you",
-    "scanPointText": "Scan the code to keep exploring {{name}} on your phone.",
-    "tagline": "Take the map on your phone",
-    "stepN": "Step {{n}}",
-    "wifi": "Join the {{wifi}} Wi‑Fi",
-    "scanMe": "Scan this code",
-    "qrAlt": "QR code to open BioMap on your phone"
   },
   "card": {
     "close": "Close the card for {{name}}",
@@ -120,14 +82,63 @@
   "loading": {
     "text": "Preparing the Biobío model…"
   },
-  "reservoir": {
-    "drain": "Under the reservoir",
-    "fill": "Fill it again",
-    "eyebrow": "Before the power plant (2014)",
-    "title": "The valley under the reservoir",
-    "text": "This is how the Biobío canyon looked before the Angostura dam flooded it. The light band on the slopes marks today's water level.",
-    "depth": "Maximum depth",
-    "area": "Reservoir area",
-    "source": "Terrain: NASA SRTM mission, year 2000."
+  "dock": {
+    "label": "Viewer controls",
+    "home": "Home",
+    "epoch": "Era",
+    "tour": "Tour",
+    "settings": "Settings"
+  },
+  "search": {
+    "label": "Search for a place",
+    "placeholder": "Search for a place",
+    "none": "No results"
+  },
+  "settings": {
+    "title": "Settings",
+    "close": "Close",
+    "language": "Language",
+    "textSize": "Text size",
+    "textSizeN": "Text size {{n}}",
+    "yes": "Yes",
+    "no": "No",
+    "view": "Map view",
+    "flat": "Flat"
+  },
+  "epoch": {
+    "title": "Map era",
+    "year2000": "2000",
+    "today": "Today",
+    "noReservoir": "No reservoir",
+    "withReservoir": "With reservoir",
+    "note": "Illustrative reconstruction: year-2000 terrain, before the reservoir. The pale band on the slopes marks where the water reaches today. Source: NASA SRTM mission."
+  },
+  "mobile": {
+    "name": "BioMap Mobile",
+    "tagline": "Take it on your phone with Quibar",
+    "title": "Take the map on your phone",
+    "text": "Keep exploring with Quibar as your guide.",
+    "pointTitle": "Take this place with you",
+    "pointText": "Scan the code and keep exploring {{name}} on your phone, with Quibar.",
+    "step1": "Open your camera",
+    "step2": "Point at the code",
+    "step3": "Tap the link",
+    "stepN": "Step {{n}}",
+    "wifi": "Join the {{wifi}} Wi‑Fi",
+    "scanMe": "Scan this code",
+    "qrAlt": "QR code to open BioMap on your phone",
+    "close": "Close"
+  },
+  "layers": {
+    "count_one": "{{count}} place",
+    "count_other": "{{count}} places"
+  },
+  "m": {
+    "layers": "Layers",
+    "place": "Place"
+  },
+  "curiosity": {
+    "title": "Did you know…?",
+    "source": "Source"
   }
 }

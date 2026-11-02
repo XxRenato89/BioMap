@@ -1,7 +1,7 @@
 import { layerShape } from '../map/shapes.js';
 
 /**
- * Figura de una capa (círculo, cuadrado o rombo con su color), igual a la de
+ * Figura de una capa (círculo, cuadrado o rombo, siempre en el azul de Colbún), igual a la de
  * sus alfileres en el mapa.
  *
  * @param {{ layer: { slug: string, color: string }, size?: 'sm' | 'md' | 'lg' }} props
@@ -25,7 +25,7 @@ export default function LayerShape({ layer, size = 'md' }) {
   return (
     <span
       className={`inline-block shrink-0 ${sizeClasses} ${shapeClasses}`}
-      style={{ backgroundColor: layer.color }}
+      style={{ backgroundColor: '#1c75bc' }}
       aria-hidden="true"
     />
   );

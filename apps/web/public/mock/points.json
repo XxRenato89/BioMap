@@ -1,0 +1,349 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8175502,
+          -37.7122666
+        ]
+      },
+      "properties": {
+        "id": 1,
+        "name": "Central Hidroeléctrica Angostura",
+        "layerId": 1,
+        "layerSlug": "history",
+        "tourStop": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.82189,
+          -37.70965
+        ]
+      },
+      "properties": {
+        "id": 2,
+        "name": "Puente Piulo Oriente",
+        "layerId": 1,
+        "layerSlug": "history",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.82348,
+          -37.70908
+        ]
+      },
+      "properties": {
+        "id": 3,
+        "name": "Puente El Piulo",
+        "layerId": 1,
+        "layerSlug": "history",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 4,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.795905,
+          -37.737284
+        ]
+      },
+      "properties": {
+        "id": 4,
+        "name": "Puente Quilaco",
+        "layerId": 1,
+        "layerSlug": "history",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 5,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.766676,
+          -37.701958
+        ]
+      },
+      "properties": {
+        "id": 5,
+        "name": "Sector Lo Nieve",
+        "layerId": 1,
+        "layerSlug": "history",
+        "tourStop": null,
+        "secret": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 6,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8154768,
+          -37.7106418
+        ]
+      },
+      "properties": {
+        "id": 6,
+        "name": "Parque Angostura",
+        "layerId": 2,
+        "layerSlug": "ecology",
+        "tourStop": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 7,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.796316,
+          -37.742917
+        ]
+      },
+      "properties": {
+        "id": 7,
+        "name": "Arboretum",
+        "layerId": 2,
+        "layerSlug": "ecology",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 8,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8044955,
+          -37.7171099
+        ]
+      },
+      "properties": {
+        "id": 8,
+        "name": "Cerro el Calvario",
+        "layerId": 2,
+        "layerSlug": "ecology",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 9,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.806,
+          -37.7265
+        ]
+      },
+      "properties": {
+        "id": 9,
+        "name": "Embalse Angostura",
+        "layerId": 2,
+        "layerSlug": "ecology",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 10,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8155104,
+          -37.7106622
+        ]
+      },
+      "properties": {
+        "id": 10,
+        "name": "Sendero y Mirador Huequecura",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 11,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.81516,
+          -37.7102651
+        ]
+      },
+      "properties": {
+        "id": 11,
+        "name": "Mirador Central Angostura",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 12,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8127746,
+          -37.7272949
+        ]
+      },
+      "properties": {
+        "id": 12,
+        "name": "Centro de Visitantes Angostura",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 13,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.816259,
+          -37.70972
+        ]
+      },
+      "properties": {
+        "id": 13,
+        "name": "Informaciones Turísticas",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 14,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.7968,
+          -37.7064
+        ]
+      },
+      "properties": {
+        "id": 14,
+        "name": "Playa Santa Bárbara",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 15,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.78065,
+          -37.70778
+        ]
+      },
+      "properties": {
+        "id": 15,
+        "name": "Puente Colgante Huequecura",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null,
+        "secret": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 16,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.793541,
+          -37.741749
+        ]
+      },
+      "properties": {
+        "id": 16,
+        "name": "Playa Quilaco",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 17,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.798078,
+          -37.726323
+        ]
+      },
+      "properties": {
+        "id": 17,
+        "name": "Camping Los Notros",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 18,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.791274,
+          -37.743429
+        ]
+      },
+      "properties": {
+        "id": 18,
+        "name": "Camping Trompelhueno de Quilaco",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 19,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.767656,
+          -37.703407
+        ]
+      },
+      "properties": {
+        "id": 19,
+        "name": "Camping La Patagua de Lo Nieve",
+        "layerId": 3,
+        "layerSlug": "tourism",
+        "tourStop": null
+      }
+    }
+  ]
+}
