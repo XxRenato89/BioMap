@@ -32,6 +32,8 @@ const TRUNK_COLORS = {
   native: hex(0x5a4231),
   pine: hex(0x6b4a33),
   eucalyptus: hex(0x8f7f68),
+  coigue: hex(0x4b3a2c),
+  peumo: hex(0x5c4a3a),
 };
 
 /**
@@ -217,12 +219,79 @@ function eucalyptusSimple() {
 }
 
 /**
+ * Coigüe: tronco alto y recto y el follaje en pisos horizontales, planos y
+ * escalonados, lo que lo distingue del roble en el bosque nativo.
+ */
+function coigueDetailed() {
+  const random = seeded(47);
+  const shade = canopyShade(0.45, 1.2);
+  const leaves = (geometry) => piece(geometry, WHITE, 1, shade);
+  const tiers = [
+    [0.3, 0.5, 0.06, 0.02],
+    [0.27, 0.66, -0.07, 0.05],
+    [0.24, 0.8, 0.05, -0.06],
+    [0.2, 0.94, -0.03, 0.03],
+    [0.14, 1.06, 0.02, 0.0],
+  ];
+  return assemble([
+    piece(new CylinderGeometry(0.035, 0.07, 0.95, 7).translate(0, 0.47, 0), TRUNK_COLORS.coigue, 0),
+    ...tiers.map(([r, y, dx, dz]) =>
+      leaves(blob(r, r > 0.25 ? 1 : 0, random, 0.14).scale(1, 0.32, 1).translate(dx, y, dz)),
+    ),
+  ]);
+}
+
+function coigueSimple() {
+  return assemble([
+    piece(new CylinderGeometry(0.04, 0.06, 0.6, 5).translate(0, 0.3, 0), FAR_TRUNK, 0),
+    piece(
+      new IcosahedronGeometry(0.28, 0).scale(1, 1.25, 1).translate(0, 0.78, 0),
+      WHITE,
+      1,
+      farShade,
+    ),
+  ]);
+}
+
+/**
+ * Peumo / quillay (bosque esclerófilo de los valles): árbol bajo, de tronco
+ * corto y copa redonda, densa y ancha.
+ */
+function peumoDetailed() {
+  const random = seeded(63);
+  const shade = canopyShade(0.3, 0.95);
+  const leaves = (geometry) => piece(geometry, WHITE, 1, shade);
+  return assemble([
+    piece(new CylinderGeometry(0.05, 0.08, 0.4, 6).translate(0, 0.2, 0), TRUNK_COLORS.peumo, 0),
+    leaves(blob(0.4, 1, random, 0.12).scale(1.15, 0.85, 1.15).translate(0, 0.62, 0)),
+    leaves(blob(0.24, 0, random).translate(0.3, 0.5, 0.1)),
+    leaves(blob(0.23, 0, random).translate(-0.28, 0.52, -0.12)),
+    leaves(blob(0.22, 0, random).translate(0.05, 0.48, -0.3)),
+    leaves(blob(0.2, 0, random).translate(-0.06, 0.88, 0.05)),
+  ]);
+}
+
+function peumoSimple() {
+  return assemble([
+    piece(new CylinderGeometry(0.06, 0.08, 0.35, 5).translate(0, 0.17, 0), FAR_TRUNK, 0),
+    piece(
+      new IcosahedronGeometry(0.45, 0).scale(1.1, 0.75, 1.1).translate(0, 0.6, 0),
+      WHITE,
+      1,
+      farShade,
+    ),
+  ]);
+}
+
+/**
  * Tipos de árbol de la maqueta, con sus dos modelos.
  */
-export const TREE_KINDS = ['native', 'pine', 'eucalyptus'];
+export const TREE_KINDS = ['native', 'coigue', 'peumo', 'pine', 'eucalyptus'];
 
 export const TREE_MODELS = {
   native: { detailed: nativeDetailed(), simple: nativeSimple() },
+  coigue: { detailed: coigueDetailed(), simple: coigueSimple() },
+  peumo: { detailed: peumoDetailed(), simple: peumoSimple() },
   pine: { detailed: pineDetailed(), simple: pineSimple() },
   eucalyptus: { detailed: eucalyptusDetailed(), simple: eucalyptusSimple() },
 };

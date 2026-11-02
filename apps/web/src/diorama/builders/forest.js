@@ -40,11 +40,35 @@ export function plantationSpecies(x, z) {
   return valueNoise(x / 0.4 + 31.7, z / 0.4 - 12.3) < 0.55 ? 'pine' : 'eucalyptus';
 }
 
-/*
- * Altura real de los árboles (m): robles y coigües de 15 a 28 m, pinos
- * radiata de 22 a 32 m y eucaliptos, los más altos, de 25 a 40 m.
+/**
+ * Especie de un árbol nativo: rodales mezclados de roble, coigüe y peumo o
+ * quillay; el bosque esclerófilo (peumo, quillay) abunda en las partes bajas.
+ *
+ * @param {number} x Posición en la maqueta (km).
+ * @param {number} z
+ * @param {number} meters Altura del terreno.
+ * @returns {'native' | 'coigue' | 'peumo'}
  */
-export const TREE_HEIGHT = { native: [15, 28], pine: [22, 32], eucalyptus: [25, 40] };
+export function nativeSpecies(x, z, meters) {
+  const stand = valueNoise(x / 0.25 - 7.1, z / 0.25 + 3.9);
+  const low = Math.min(Math.max((420 - meters) / 160, 0), 1);
+  if (stand < 0.25 + 0.25 * low) return 'peumo';
+  if (stand > 0.72) return 'coigue';
+  return 'native';
+}
+
+/*
+ * Altura real de los árboles (m): robles de 15 a 28 m, coigües de 20 a 35 m,
+ * peumos y quillayes de 8 a 15 m, pinos radiata de 22 a 32 m y eucaliptos,
+ * los más altos, de 25 a 40 m.
+ */
+export const TREE_HEIGHT = {
+  native: [15, 28],
+  coigue: [20, 35],
+  peumo: [8, 15],
+  pine: [22, 32],
+  eucalyptus: [25, 40],
+};
 
 /*
  * Probabilidad de plantar según la cobertura de suelo: bosque casi lleno,
@@ -90,8 +114,14 @@ function emitTree(target, kind, x, ground, z, meters, i, j, scale, color) {
       0.3 + cellRandom(i, j, 8) * 0.08,
       0.2 + cellRandom(i, j, 9) * 0.05,
     );
+  } else if (kind === 'coigue') {
+    /* Siempreverde, verde oscuro y brillante. */
+    color.setHSL(0.31 + r * 0.03, 0.46, 0.13 + cellRandom(i, j, 8) * 0.04);
+  } else if (kind === 'peumo') {
+    /* Esclerófilo: verde oliva oscuro, algo grisáceo. */
+    color.setHSL(0.22 + r * 0.04, 0.32, 0.16 + cellRandom(i, j, 8) * 0.04);
   } else {
-    /* Más oscuro y frío en altura (coigüe, lenga); más claro en los valles. */
+    /* Roble: verde más claro y variado; algo más oscuro en altura. */
     const altitude = Math.min(Math.max((meters - 600) / 1400, 0), 1);
     color.setHSL(
       0.25 + r * 0.08,
@@ -164,7 +194,7 @@ export function plantForest(
       const inNativeZone = isNativeLocation(lng, lat);
       const kind =
         inNativeZone || treeKind(meters, slopeDeg) === 'native'
-          ? 'native'
+          ? nativeSpecies(x, z, meters)
           : plantationSpecies(x, z);
       const edge = fade ? Math.min(Math.max((radius - distance) / (radius * 0.25), 0), 1) : 1;
       emitTree(kinds[kind], kind, x, heightAt(x, z), z, meters, i, j, 0.35 + 0.65 * edge, color);
@@ -220,7 +250,10 @@ export function plantFringe(zone, groundAt, coverAt, { band, spacing, max }) {
       const slopeDeg = (Math.atan(slope) * 180) / Math.PI;
       if (slopeDeg > 42) continue;
       const meters = (ground * 1000) / VERTICAL_EXAGGERATION;
-      const kind = treeKind(meters, slopeDeg) === 'plantation' ? plantationSpecies(x, z) : 'native';
+      const kind =
+        treeKind(meters, slopeDeg) === 'plantation'
+          ? plantationSpecies(x, z)
+          : nativeSpecies(x, z, meters);
       emitTree(kinds[kind], kind, x, ground, z, meters, i, j, 0.6 + 0.4 * fade, color);
       planted += 1;
     }
