@@ -39,13 +39,13 @@ function createPath(startCoord, endCoord, pathfinder) {
 /*
  * Qué hace Quibar en cada pausa del paseo: animación, cuánto dura (ms) y
  * hacia dónde mira ('look' recorre el paisaje, 'camera' mira al visitante,
- * 'keep' sigue igual). `still`: sin saltito al llegar (se sienta).
+ * 'keep' sigue igual).
  */
 export const PAUSES = [
   { anim: 'Look', ms: 4500, face: 'keep' },
   { anim: 'Wave', ms: 2600, face: 'camera' },
   { anim: 'Clapping', ms: 2600, face: 'camera' },
-  { anim: 'Sit', ms: 7000, face: 'keep', still: true },
+  { anim: 'Sit', ms: 7000, face: 'keep' },
 ];
 const CLAPPING = PAUSES[2];
 
@@ -444,12 +444,10 @@ export default memo(function Avatar({
       }
     }
 
-    /* Durante la pausa: un saltito al llegar y mira según la pausa. */
-    let hop = 0;
+    /* Durante la pausa mira según la pausa (sin saltito: ningún clip lo anima). */
     const look = lookRef.current;
     if (look && mode === 'patrol' && now < look.end) {
       const t = (now - look.start) / 1000;
-      if (t < 0.4 && !look.still) hop = Math.sin((t / 0.4) * Math.PI) * avatarWorldSize * 0.35;
       if (look.face === 'camera') {
         currentHeading.current = Math.atan2(
           state.camera.position.x - currentPos.current.x,
@@ -498,7 +496,7 @@ export default memo(function Avatar({
     // Apoyar siempre al personaje sobre la cota exacta del relieve o camino
     const groundY = heightAt(currentPos.current.x, currentPos.current.z) + roadOffset;
     currentPos.current.y = groundY;
-    groupRef.current.position.set(currentPos.current.x, groundY + hop, currentPos.current.z);
+    groupRef.current.position.set(currentPos.current.x, groundY, currentPos.current.z);
     groupRef.current.rotation.y = currentHeading.current;
     setPosition(currentPos.current);
 
