@@ -23,7 +23,14 @@ import {
   plantRocks,
 } from '../builders/index.js';
 import { buildTerrainChunks } from './lod.js';
-import { benchRoad, carveDamToe, cellsNear, damClearing, markWater } from './damToe.js';
+import {
+  benchRoad,
+  carveDamToe,
+  cellsNear,
+  damClearing,
+  markWater,
+  raiseCauseway,
+} from './damToe.js';
 import { SPILLWAY_SHARE } from '../models/angosturaFront.js';
 import { RESERVOIR, reservoirDrain, within } from '../utils/reservoir.js';
 import { buildContextTerrain, contextMaterial, createContextSampler } from './context.js';
@@ -54,6 +61,11 @@ import { blendShore, shoreTexture, sinkUnderWater, waterMaterial } from './water
  */
 const VISITOR_CENTER = [-71.8127746, -37.7272949];
 const SANCTUARY = [-71.8044955, -37.7171099];
+/* Eje del terraplén de la Ruta Q-61 sobre el embalse, del puente Quilaco (OSM) al sur. */
+const QUILACO_CAUSEWAY = [
+  [-71.79684, -37.73813],
+  [-71.80115, -37.74215],
+];
 const DARK_PAVILION = {
   roof: [0.2, 0.21, 0.22],
   wall: [0.08, 0.085, 0.095],
@@ -398,6 +410,8 @@ export function loadDiorama({ anisotropy }) {
     carveDamToe(meta, heights, ANGOSTURA.line, ANGOSTURA.upstream, SPILLWAY_SHARE);
     /* El camino de la Central baja por una terraza pareja, no por la ladera dentada. */
     benchRoad(meta, heights, ANGOSTURA.powerhouseRoad);
+    /* Terraplén de la Q-61 hacia el puente Quilaco: taludes en vez de muros al fondo. */
+    raiseCauseway(meta, heights, QUILACO_CAUSEWAY, { crest: 330, half: 0.008, slope: 150 });
     /* Sin árboles ni rocas al pie de la presa. */
     const clearing = damClearing(meta, ANGOSTURA.line, ANGOSTURA.upstream);
     /* El camino de la Central baja por ladera despejada (como en la foto). */

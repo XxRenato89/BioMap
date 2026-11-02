@@ -112,7 +112,7 @@ export default memo(function Avatar({
   /* Pausa del paseo: salta y mira el paisaje a un lado y otro. */
   const lookRef = useRef(null);
 
-  const { scene, actions } = useCharacterModel(groupRef);
+  const { scene, actions, mixer } = useCharacterModel(groupRef);
   /* Alto del modelo en sus unidades para normalizar la escala de la maqueta */
   const modelHeight = useMemo(() => {
     const copy = clone(scene);
@@ -134,12 +134,15 @@ export default memo(function Avatar({
   }, [scene]);
 
   useEffect(() => {
+    /* Al cambiar el juego de clips (p. ej. al recargar), las acciones viejas seguirían
+       mezclándose con las nuevas: se detienen todas antes de partir. */
+    mixer?.stopAllAction();
     const idleAction = actions?.idle || actions?.Idle;
     if (idleAction) {
       idleAction.reset().fadeIn(0.2).play();
       currentAnimRef.current = 'Idle';
     }
-  }, [actions]);
+  }, [actions, mixer]);
 
   const pathfinder = useMemo(() => {
     if (!roadsData || roadsData.length === 0) return null;

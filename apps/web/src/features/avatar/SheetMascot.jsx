@@ -136,7 +136,7 @@ export default function SheetMascot({ gestureKey }) {
       <div className="w-[340px] h-[420px]" aria-hidden="true">
         <ErrorBoundary>
           <Canvas
-            camera={{ position: [0, 0.3, 3.9], fov: 38 }}
+            camera={{ position: [0, 0, 4.3], fov: 38 }}
             dpr={[1, 1.5]}
             frameloop="demand"
             gl={{ alpha: true, powerPreference: 'low-power' }}

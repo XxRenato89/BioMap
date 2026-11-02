@@ -15,7 +15,7 @@ export default function AttractOverlay({ stopName, onExplore }) {
   return (
     <motion.button
       type="button"
-      className="absolute inset-0 z-[70] flex flex-col items-center justify-between w-full border-0 px-12 pt-12 pb-20 text-cream text-center cursor-pointer bg-[linear-gradient(180deg,rgba(11,23,16,0.78),rgba(11,23,16,0.2)_32%,rgba(11,23,16,0.2)_55%,rgba(11,23,16,0.88))]"
+      className="absolute inset-0 z-[70] flex flex-col items-center justify-between w-full border-0 px-12 pt-12 pb-20 text-cream text-center cursor-pointer bg-[linear-gradient(180deg,rgba(28,117,188,0.82),rgba(28,117,188,0.22)_32%,rgba(20,51,77,0.22)_55%,rgba(20,51,77,0.9))]"
       onClick={onExplore}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}

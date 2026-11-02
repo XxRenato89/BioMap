@@ -73,7 +73,7 @@ export default function AvatarNarrator() {
   return (
     <AnimatePresence>
       <motion.aside
-        className="fixed bottom-[140px] left-6 sm:left-10 z-40 w-[min(440px,calc(100vw-48px))] rounded-[24px] bg-[#11221b]/90 backdrop-blur-xl border border-white/20 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] text-white pointer-events-auto flex flex-col gap-3.5"
+        className="fixed bottom-[140px] left-6 sm:left-10 z-40 w-[min(440px,calc(100vw-48px))] rounded-[24px] bg-forest/90 backdrop-blur-xl border border-white/20 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.4)] text-white pointer-events-auto flex flex-col gap-3.5"
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 30, scale: 0.95 }}

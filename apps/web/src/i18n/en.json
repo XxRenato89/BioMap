@@ -140,5 +140,8 @@
   "curiosity": {
     "title": "Did you know…?",
     "source": "Source"
+  },
+  "header": {
+    "subtitle": "Living Map of the Biobío"
   }
 }

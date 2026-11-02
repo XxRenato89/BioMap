@@ -56,7 +56,7 @@ function Loading() {
 
   return (
     <motion.div
-      className="absolute inset-0 z-[5] grid place-items-center bg-[radial-gradient(circle_at_50%_40%,#2a5a3f,#13241d_70%)] text-cream pointer-events-none select-none px-6"
+      className="absolute inset-0 z-[5] grid place-items-center bg-[radial-gradient(circle_at_50%_40%,#1c75bc,#14334d_70%)] text-cream pointer-events-none select-none px-6"
       role="status"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.8 } }}

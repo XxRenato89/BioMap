@@ -231,3 +231,42 @@ export function benchRoad(meta, heights, line) {
     }
   }
 }
+
+/**
+ * Taludes de un terraplén que cruza el agua: el relieve se levanta (nunca se
+ * baja) a `crest` metros en `half` km a cada lado del eje y desde ahí baja con
+ * pendiente `slope` (m por km). Sin esto, el fondo hundido del embalse deja
+ * muros verticales junto a la calzada.
+ *
+ * @param {Uint16Array} heights Alturas en metros (se modifican).
+ * @param {number[][]} line Eje del terraplén [lng, lat].
+ * @param {{ crest: number, half?: number, slope?: number }} options
+ */
+export function raiseCauseway(meta, heights, line, { crest, half = 0.012, slope = 500 }) {
+  const { west, south, east, north } = meta.bounds;
+  const { columns, rows } = meta;
+  const kx = 111.32 * Math.cos((line[0][1] * Math.PI) / 180);
+  const ky = 110.57;
+  const pts = line.map(([lng, lat]) => ({ x: lng * kx, y: lat * ky }));
+  /* Hasta 25 m bajo la corona: más abajo el talud ya queda bajo el agua. */
+  const reach = half + 25 / slope;
+  for (let r = 0; r < rows; r += 1) {
+    const lat = north - (r / (rows - 1)) * (north - south);
+    if (Math.abs(lat - line[0][1]) > 0.02) continue;
+    for (let c = 0; c < columns; c += 1) {
+      const lng = west + (c / (columns - 1)) * (east - west);
+      if (Math.abs(lng - line[0][0]) > 0.02) continue;
+      const p = { x: lng * kx, y: lat * ky };
+      let d = Infinity;
+      for (let k = 1; k < pts.length; k += 1) {
+        const [a, b] = [pts[k - 1], pts[k]];
+        const [dx, dy] = [b.x - a.x, b.y - a.y];
+        const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+        d = Math.min(d, Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy));
+      }
+      if (d > reach) continue;
+      const i = r * columns + c;
+      heights[i] = Math.max(heights[i], Math.round(crest - Math.max(0, d - half) * slope));
+    }
+  }
+}
