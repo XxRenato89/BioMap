@@ -6,6 +6,7 @@ import { TIERS, useRenderStore } from '../utils/quality.js';
 import { loadDiorama } from '../terrain/resources.js';
 import { ROCK_MODEL, TREE_KINDS, TREE_MODELS } from '../terrain/trees.js';
 import Birds from './Birds.jsx';
+import Wildlife from './Wildlife.jsx';
 import PathPainter from './PathPainter.jsx';
 import QuibarBoat from './QuibarBoat.jsx';
 import AngosturaDam from './AngosturaDam.jsx';
@@ -309,6 +310,7 @@ export default memo(function DioramaScene({ shadows = false, forest = false }) {
       />
       <PathPainter />
       {forest && <Birds />}
+      {forest && <Wildlife />}
       <QuibarBoat />
       <AngosturaDam shadows={shadows} />
     </group>

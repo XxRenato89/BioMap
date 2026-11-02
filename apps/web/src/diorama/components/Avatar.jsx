@@ -9,6 +9,7 @@ import { useDiorama } from './DioramaScene.jsx';
 import { Pathfinder } from '../utils/pathfinder.js';
 import { useCharacterModel } from '../utils/characterModel.js';
 import { useUserStore } from '../../store/userStore.js';
+import { WILDLIFE_SPOTS } from './Wildlife.jsx';
 
 /**
  * Configuración por defecto de la mascota 3D en el diorama.
@@ -54,6 +55,9 @@ export function pickPause(actions, random = Math.random) {
   const pool = ready.length > 0 ? ready : [PAUSES[0]];
   return pool[Math.floor(random() * pool.length) % pool.length];
 }
+
+/* Quibar se gira a mirar la fauna que tenga a menos de esto (km) en una pausa. */
+const WATCH_KM = 0.6;
 
 /* Paseo: próximo destino al azar entre los lugares a menos de esto (km). */
 const WANDER_KM = 3;
@@ -143,6 +147,11 @@ export default memo(function Avatar({
       currentAnimRef.current = 'Idle';
     }
   }, [actions, mixer]);
+
+  const animalSpots = useMemo(
+    () => WILDLIFE_SPOTS.map((spot) => projection.toWorld(spot)),
+    [projection],
+  );
 
   const pathfinder = useMemo(() => {
     if (!roadsData || roadsData.length === 0) return null;
@@ -405,7 +414,19 @@ export default memo(function Avatar({
         }
       } else if (mode === 'patrol') {
         /* Sin hablar: mira el paisaje, saluda o aplaude, y sigue paseando. */
-        const pause = pickPause(actions);
+        /* Con fauna cerca, la mira (o la saluda) en vez de mirar al azar. */
+        const animal = animalSpots.find(
+          (spot) =>
+            Math.hypot(spot.x - currentPos.current.x, spot.z - currentPos.current.z) < WATCH_KM,
+        );
+        const picked = pickPause(actions);
+        const pause = animal
+          ? {
+              ...(actions?.Wave && Math.random() < 0.5 ? PAUSES[1] : PAUSES[0]),
+              face: 'target',
+              target: animal,
+            }
+          : picked;
         idleWaitUntil.current = now + pause.ms;
         lookRef.current = {
           ...pause,
@@ -433,6 +454,11 @@ export default memo(function Avatar({
         currentHeading.current = Math.atan2(
           state.camera.position.x - currentPos.current.x,
           state.camera.position.z - currentPos.current.z,
+        );
+      } else if (look.face === 'target') {
+        currentHeading.current = Math.atan2(
+          look.target.x - currentPos.current.x,
+          look.target.z - currentPos.current.z,
         );
       } else if (look.face === 'look') {
         currentHeading.current = look.heading + Math.sin(t * 1.8) * 0.9;

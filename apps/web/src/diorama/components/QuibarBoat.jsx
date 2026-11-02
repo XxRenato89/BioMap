@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, useEffect } from 'react';
-import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, MeshStandardMaterial, Vector3 } from 'three';
+import { Vector3 } from 'three';
+import { buildLaunch } from '../models/launch.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { metersToY } from '../utils/projection.js';
 import { RESERVOIR, reservoirDrain } from '../utils/reservoir.js';
@@ -22,6 +23,7 @@ export default function QuibarBoat() {
   const currentPos = useRef(new Vector3());
   const heading = useRef(0);
   const isInitialized = useRef(false);
+  const launch = useMemo(() => buildLaunch(), []);
 
   // Convertir ruta a coordenadas de mundo
   const worldWaypoints = useMemo(() => {
@@ -86,48 +88,9 @@ export default function QuibarBoat() {
   });
 
   return (
-    <group ref={groupRef} scale={[0.022, 0.022, 0.022]}>
-      {/* Casco del barco */}
-      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.1, 0.6, 2.8]} />
-        <meshStandardMaterial color="#f8fafc" roughness={0.4} />
-      </mesh>
-
-      {/* Proa afilada */}
-      <mesh position={[0, 0.35, 1.6]} rotation={[0, Math.PI, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.65, 0.9, 4]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.4} />
-      </mesh>
-
-      {/* Cubierta de madera */}
-      <mesh position={[0, 0.66, 0.1]} receiveShadow>
-        <boxGeometry args={[0.95, 0.04, 2.5]} />
-        <meshStandardMaterial color="#c29b61" roughness={0.8} />
-      </mesh>
-
-      {/* Cabina */}
-      <mesh position={[0, 1.05, -0.3]} castShadow receiveShadow>
-        <boxGeometry args={[0.8, 0.75, 1.2]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.3} />
-      </mesh>
-
-      {/* Parabrisas / Ventanas */}
-      <mesh position={[0, 1.15, 0.31]}>
-        <boxGeometry args={[0.7, 0.35, 0.05]} />
-        <meshStandardMaterial color="#38bdf8" roughness={0.1} metalness={0.8} />
-      </mesh>
-
-      {/* Mástil */}
-      <mesh position={[0, 1.9, 0.4]} castShadow>
-        <cylinderGeometry args={[0.025, 0.035, 1.6, 8]} />
-        <meshStandardMaterial color="#475569" roughness={0.5} />
-      </mesh>
-
-      {/* Banderín de Quibar */}
-      <mesh position={[0.18, 2.55, 0.4]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.15, 0.4, 3]} />
-        <meshStandardMaterial color="#d97706" roughness={0.5} />
-      </mesh>
+    /* Lancha de ~8 m dibujada a ~60 m de eslora, para que se lea en la maqueta. */
+    <group ref={groupRef} scale={[0.0077, 0.0077, 0.0077]}>
+      <primitive object={launch} />
     </group>
   );
 }
