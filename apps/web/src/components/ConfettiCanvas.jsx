@@ -1,3 +1,4 @@
+import { Trophy } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 /**
@@ -128,9 +129,12 @@ export default function ConfettiCanvas() {
           aria-live="polite"
         >
           <div className="flex items-center gap-4 px-6 py-4 rounded-3xl glass-dark border-2 border-white/30 shadow-[0_16px_40px_rgba(0,0,0,0.45)] max-w-lg pointer-events-auto">
-            <span className="text-4xl flex-none" aria-hidden="true">
-              🏆
-            </span>
+            <Trophy
+              size={40}
+              strokeWidth={2.2}
+              className="flex-none text-ochre"
+              aria-hidden="true"
+            />
             <div>
               <h3 className="m-0 text-lg font-extrabold text-white">
                 ¡Felicitaciones! Recorrido 100% completado

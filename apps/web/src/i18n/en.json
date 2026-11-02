@@ -143,5 +143,26 @@
   },
   "header": {
     "subtitle": "Living Map of the Biobío"
+  },
+  "visor": {
+    "open": "3D viewer",
+    "title": "3D viewer",
+    "ground": "On foot",
+    "drone": "Drone",
+    "spin": "Spin 360°",
+    "hint": "Drag to look around. Pinch to zoom.",
+    "droneHint": "Drag to circle the place. Pinch to zoom.",
+    "back": "Back to the card",
+    "mode": "View mode"
+  },
+  "tours": {
+    "title": "Themed tours",
+    "subtitle": "Pick a guided route and Quibar takes you to every stop.",
+    "stops": "{{count}} stops",
+    "visited": "{{done}}/{{total}} visited",
+    "active": "Active",
+    "start": "Start",
+    "resume": "Resume",
+    "close": "Close tours"
   }
 }

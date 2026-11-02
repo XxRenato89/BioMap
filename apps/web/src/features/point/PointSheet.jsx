@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Globe, Smartphone, X } from 'lucide-react';
+import { ArrowRight, Check, Globe, Rotate3d, Smartphone, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +37,8 @@ function PhotoPlaceholder({ layer, name, label }) {
  *
  * @param {{ feature: object, layer: object, onClose: () => void,
  *   onSelectNextPoint?: (id: number) => void, allPoints?: Array<object>,
- *   onChange?: () => void, ref?: import('react').Ref<HTMLElement> }} props
+ *   onChange?: () => void, onOpen3d?: () => void,
+ *   ref?: import('react').Ref<HTMLElement> }} props
  */
 export default function PointSheet({
   feature,
@@ -46,6 +47,7 @@ export default function PointSheet({
   onSelectNextPoint,
   allPoints = [],
   onChange,
+  onOpen3d,
   ref,
 }) {
   const { t } = useTranslation();
@@ -119,6 +121,16 @@ export default function PointSheet({
           <X size={22} strokeWidth={3} aria-hidden="true" />
           <span aria-hidden="true">{t('sheet.close')}</span>
         </button>
+        {onOpen3d && (
+          <button
+            type="button"
+            className="absolute bottom-4 left-4 z-20 flex items-center gap-2 min-h-14 px-5 rounded-xl bg-forest text-cream font-bold text-[length:var(--fs-body)] shadow-[0_3px_0_rgba(0,0,0,0.35)] cursor-pointer active:translate-y-px"
+            onClick={onOpen3d}
+          >
+            <Rotate3d size={24} aria-hidden="true" />
+            {t('visor.open')}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 pt-6 pb-4 flex flex-col gap-4">

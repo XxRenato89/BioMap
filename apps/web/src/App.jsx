@@ -15,6 +15,7 @@ import { config } from './config.js';
 import AttractOverlay from './features/attract/AttractOverlay.jsx';
 import { useAttractMode } from './features/attract/useAttractMode.js';
 import PointSheets from './features/point/PointSheets.jsx';
+import Visor3D from './features/point/Visor3D.jsx';
 import { useTour } from './features/tour/useTour.js';
 import { isInside } from './diorama/utils/cameraMath.js';
 import DioramaCanvas from './diorama/components/DioramaCanvas.jsx';
@@ -31,7 +32,7 @@ import { TEXT_SCALES, useViewerStore } from './store/viewerStore.js';
 import { useAvatarStore } from './store/avatarStore.js';
 import { AVAILABLE_TOURS, useUserStore } from './store/userStore.js';
 import { publishMainView } from './store/viewsStore.js';
-import TourModal from './features/tour/TourModal.jsx';
+import TourSheet from './features/tour/TourSheet.jsx';
 
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'keydown'];
 
@@ -70,6 +71,8 @@ export default function App({ mapConfig = config }) {
   const [panel, setPanel] = useState(null);
   const togglePanel = useCallback((name) => setPanel((open) => (open === name ? null : name)), []);
   const closePanel = useCallback(() => setPanel(null), []);
+  /* Visor 3D abierto sobre un lugar: { name, center, kind, spinning }. */
+  const [visor, setVisor] = useState(null);
 
   useEffect(() => {
     i18n.changeLanguage(lang);
@@ -82,6 +85,7 @@ export default function App({ mapConfig = config }) {
   const resetAll = useCallback(() => {
     mainRef.current?.resetView();
     setPanel(null);
+    setVisor(null);
     useViewerStore.getState().resetAll();
     useUserStore.getState().resetProgress();
   }, []);
@@ -110,6 +114,7 @@ export default function App({ mapConfig = config }) {
   const rest = useCallback(() => {
     useViewerStore.getState().closeAllPoints();
     setPanel(null);
+    setVisor(null);
     mainRef.current?.resetView();
   }, []);
   useRestMode({ delayMs: mapConfig.restDelayMs, onRest: rest, enabled: !attract });
@@ -174,6 +179,7 @@ export default function App({ mapConfig = config }) {
 
   const handleReset = () => {
     setPanel(null);
+    setVisor(null);
     mainRef.current?.resetView();
     useAvatarStore.getState().stopSpeaking();
     actions.resetExploration();
@@ -184,6 +190,21 @@ export default function App({ mapConfig = config }) {
     resetAll();
     useAvatarStore.getState().stopSpeaking();
     markClean();
+  };
+
+  const openVisor = (feature, kind = 'ground') => {
+    setPanel(null);
+    setVisor({
+      name: feature.properties.name,
+      center: feature.geometry.coordinates,
+      kind,
+      spinning: kind === 'drone',
+    });
+    mainRef.current?.enterVisor(feature.geometry.coordinates, kind);
+  };
+  const closeVisor = () => {
+    setVisor(null);
+    mainRef.current?.exitVisor();
   };
 
   const togglePitch = () => {
@@ -239,8 +260,8 @@ export default function App({ mapConfig = config }) {
       </DioramaView>
 
       <div
-        className={`absolute inset-0 pointer-events-none z-10 [&>*]:pointer-events-auto transition-opacity duration-700 ${attract ? 'opacity-0' : ''}`}
-        aria-hidden={attract || undefined}
+        className={`absolute inset-0 pointer-events-none z-10 [&>*]:pointer-events-auto transition-opacity duration-700 ${attract || visor ? 'opacity-0 invisible' : ''}`}
+        aria-hidden={attract || visor ? true : undefined}
       >
         <div className="absolute top-7 left-10">
           <SearchBar points={onMap} onPick={pickPoint} />
@@ -277,7 +298,7 @@ export default function App({ mapConfig = config }) {
           />
         )}
         {panel === 'tour' && (
-          <TourModal
+          <TourSheet
             onClose={closePanel}
             onSelectTour={(tourId) => {
               const activeTour = AVAILABLE_TOURS.find((t) => t.id === tourId);
@@ -313,8 +334,26 @@ export default function App({ mapConfig = config }) {
         />
       </div>
 
+      {visor && (
+        <Visor3D
+          name={visor.name}
+          kind={visor.kind}
+          spinning={visor.spinning}
+          onKind={(kind) => {
+            setVisor({ ...visor, kind, spinning: kind === 'drone' });
+            mainRef.current?.enterVisor(visor.center, kind);
+          }}
+          onSpin={() => {
+            mainRef.current?.setSpin(!visor.spinning);
+            setVisor({ ...visor, spinning: !visor.spinning });
+          }}
+          onExit={closeVisor}
+          onResetNorth={() => mainRef.current?.resetNorth()}
+        />
+      )}
       <PointSheets
-        open={openSheets}
+        open={visor ? [] : openSheets}
+        onOpen3d={openVisor}
         onClose={closePoint}
         onSelectPoint={selectPoint}
         allPoints={points.features}
@@ -335,4 +374,3 @@ export default function App({ mapConfig = config }) {
     </main>
   );
 }
-

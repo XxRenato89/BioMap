@@ -138,5 +138,26 @@
   },
   "header": {
     "subtitle": "Mapa Vivo del Bío Bío"
+  },
+  "visor": {
+    "open": "Visor 3D",
+    "title": "Visor 3D",
+    "ground": "A pie",
+    "drone": "Dron",
+    "spin": "Girar 360°",
+    "hint": "Arrastra para mirar alrededor. Pellizca para acercar.",
+    "droneHint": "Arrastra para rodear el lugar. Pellizca para acercar.",
+    "back": "Volver a la ficha",
+    "mode": "Modo de vista"
+  },
+  "tours": {
+    "title": "Recorridos temáticos",
+    "subtitle": "Elige una ruta guiada y Quibar te lleva por cada parada.",
+    "stops": "{{count}} paradas",
+    "visited": "{{done}}/{{total}} visitadas",
+    "active": "Activa",
+    "start": "Iniciar",
+    "resume": "Continuar",
+    "close": "Cerrar recorridos"
   }
 }

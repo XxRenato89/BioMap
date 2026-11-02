@@ -1,4 +1,4 @@
-import { Volume2, VolumeX, Sparkles, X } from 'lucide-react';
+import { Compass, Volume2, VolumeX, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { useAvatarStore } from '../../store/avatarStore.js';
@@ -40,7 +40,8 @@ export default function AvatarNarrator() {
         const assignVoice = () => {
           const voices = window.speechSynthesis.getVoices();
           const spanishVoice = voices.find(
-            (v) => v.lang.startsWith('es') || v.name.includes('Spanish') || v.name.includes('Sabina'),
+            (v) =>
+              v.lang.startsWith('es') || v.name.includes('Spanish') || v.name.includes('Sabina'),
           );
           if (spanishVoice) {
             utterance.voice = spanishVoice;
@@ -81,7 +82,7 @@ export default function AvatarNarrator() {
       >
         <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
           <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-white/15 border border-white/20 text-xl shadow-inner flex-none">
-            <span className="z-10">🧭</span>
+            <Compass size={22} className="z-10" aria-hidden="true" />
             <span className="absolute inset-0 rounded-2xl bg-emerald-400/30 animate-ping pointer-events-none" />
           </div>
           <div className="flex-1 min-w-0">
