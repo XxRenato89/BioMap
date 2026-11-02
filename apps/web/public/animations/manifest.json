@@ -1,19 +1,11 @@
 {
   "description": "BioMap / Quibar 3D Animations Registry",
-  "standardNames": [
-    "walk",
-    "run"
-  ],
+  "standardNames": ["walk", "run", "idle", "wave", "clapping"],
   "animations": [
-    {
-      "name": "walk",
-      "file": "walk.glb",
-      "description": "Paseo / caminata estándar por el mapa"
-    },
-    {
-      "name": "run",
-      "file": "run.glb",
-      "description": "Carrera hacia un hito seleccionado"
-    }
+    { "name": "walk", "file": "walk.glb", "description": "Paseo / caminata estándar por el mapa" },
+    { "name": "run", "file": "run.glb", "description": "Carrera hacia un hito seleccionado" },
+    { "name": "idle", "file": "idle.glb", "description": "Reposo: mira el paisaje en las pausas del paseo" },
+    { "name": "wave", "file": "wave.glb", "description": "Saluda al visitante en una pausa del paseo" },
+    { "name": "clapping", "file": "clapping.glb", "description": "Aplaude en una pausa del paseo" }
   ]
 }

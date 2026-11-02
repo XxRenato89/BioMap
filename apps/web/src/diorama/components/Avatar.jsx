@@ -35,6 +35,23 @@ function createPath(startCoord, endCoord, pathfinder) {
   return pathfinder?.findPath(startCoord, endCoord) ?? null;
 }
 
+/*
+ * Qué hace Quibar en cada pausa del paseo: animación, cuánto dura (ms) y
+ * hacia dónde mira ('look' recorre el paisaje, 'camera' mira al visitante).
+ */
+export const PAUSES = [
+  { anim: 'Idle', ms: 3200, face: 'look' },
+  { anim: 'Wave', ms: 2600, face: 'camera' },
+  { anim: 'Clapping', ms: 2600, face: 'camera' },
+];
+
+/** Una pausa al azar entre las que tienen su animación cargada. */
+export function pickPause(actions, random = Math.random) {
+  const ready = PAUSES.filter(({ anim }) => actions?.[anim]);
+  const pool = ready.length > 0 ? ready : [PAUSES[0]];
+  return pool[Math.floor(random() * pool.length) % pool.length];
+}
+
 /* Paseo: próximo destino al azar entre los lugares a menos de esto (km). */
 const WANDER_KM = 3;
 
@@ -45,9 +62,7 @@ const WANDER_KM = 3;
 export function nextWanderIndex(pois, current, from, random = Math.random) {
   const others = pois.map((_, i) => i).filter((i) => i !== current);
   if (others.length === 0) return current;
-  const near = others.filter(
-    (i) => Math.hypot(pois[i].x - from.x, pois[i].z - from.z) < WANDER_KM,
-  );
+  const near = others.filter((i) => Math.hypot(pois[i].x - from.x, pois[i].z - from.z) < WANDER_KM);
   const pool = near.length > 0 ? near : others;
   return pool[Math.floor(random() * pool.length) % pool.length];
 }
@@ -149,9 +164,8 @@ export default memo(function Avatar({
   useEffect(() => {
     if (!isInitialized.current && poiWorldPositions.length > 0) {
       const startPoi =
-        poiWorldPositions.find(
-          (p) => p.id === 12 || p.name?.toLowerCase().includes('visitante'),
-        ) || poiWorldPositions[0];
+        poiWorldPositions.find((p) => p.id === 12 || p.name?.toLowerCase().includes('visitante')) ||
+        poiWorldPositions[0];
       currentPos.current.set(startPoi.x, startPoi.y, startPoi.z);
       if (groupRef.current) {
         groupRef.current.position.copy(currentPos.current);
@@ -273,9 +287,9 @@ export default memo(function Avatar({
     // Planificar ruta si no existe o cambió el destino
     const targetChanged = Boolean(
       targetCoord &&
-        (!plannedTargetRef.current ||
-          plannedTargetRef.current[0] !== targetCoord[0] ||
-          plannedTargetRef.current[1] !== targetCoord[1]),
+      (!plannedTargetRef.current ||
+        plannedTargetRef.current[0] !== targetCoord[0] ||
+        plannedTargetRef.current[1] !== targetCoord[1]),
     );
 
     if (targetChanged) {
@@ -291,7 +305,11 @@ export default memo(function Avatar({
         pathIndex.current = 0;
       } else if (mode === 'patrol') {
         /* Paseando no se teletransporta: busca otro lugar al que se llegue caminando. */
-        patrolIndex.current = nextWanderIndex(poiWorldPositions, patrolIndex.current, currentPos.current);
+        patrolIndex.current = nextWanderIndex(
+          poiWorldPositions,
+          patrolIndex.current,
+          currentPos.current,
+        );
         plannedTargetRef.current = null;
         pathRef.current = [];
         idleWaitUntil.current = now + 300;
@@ -380,33 +398,49 @@ export default memo(function Avatar({
           };
         }
       } else if (mode === 'patrol') {
-        /* Sin hablar: una pausa corta mirando el paisaje y sigue paseando. */
-        const pause = 1800 + Math.random() * 1700;
-        idleWaitUntil.current = now + pause;
-        lookRef.current = { start: now, end: now + pause, heading: currentHeading.current };
-        patrolIndex.current = nextWanderIndex(poiWorldPositions, patrolIndex.current, currentPos.current);
+        /* Sin hablar: mira el paisaje, saluda o aplaude, y sigue paseando. */
+        const pause = pickPause(actions);
+        idleWaitUntil.current = now + pause.ms;
+        lookRef.current = {
+          ...pause,
+          start: now,
+          end: now + pause.ms,
+          heading: currentHeading.current,
+        };
+        patrolIndex.current = nextWanderIndex(
+          poiWorldPositions,
+          patrolIndex.current,
+          currentPos.current,
+        );
         pathRef.current = [];
         plannedTargetRef.current = null;
       }
     }
 
-    /* Durante la pausa: un saltito al llegar y mira a un lado y otro. */
+    /* Durante la pausa: un saltito al llegar y mira según la pausa. */
     let hop = 0;
     const look = lookRef.current;
     if (look && mode === 'patrol' && now < look.end) {
       const t = (now - look.start) / 1000;
       if (t < 0.4) hop = Math.sin((t / 0.4) * Math.PI) * avatarWorldSize * 0.35;
-      currentHeading.current = look.heading + Math.sin(t * 1.8) * 0.9;
+      if (look.face === 'camera') {
+        currentHeading.current = Math.atan2(
+          state.camera.position.x - currentPos.current.x,
+          state.camera.position.z - currentPos.current.z,
+        );
+      } else if (look.face === 'look') {
+        currentHeading.current = look.heading + Math.sin(t * 1.8) * 0.9;
+      }
     } else if (look) {
       lookRef.current = null;
     }
 
-    // Selección de animación: solo caminar al pasear / desplazarse
+    // Selección de animación: caminar o correr al desplazarse; en pausa, la de la pausa.
     let currentAnim = 'Idle';
     if (isMoving) {
-      currentAnim = (actions?.Running && mode === 'running_to_point') ? 'Running' : 'Walking';
-    } else {
-      currentAnim = 'Idle';
+      currentAnim = actions?.Running && mode === 'running_to_point' ? 'Running' : 'Walking';
+    } else if (lookRef.current && actions?.[lookRef.current.anim]) {
+      currentAnim = lookRef.current.anim;
     }
 
     // Transición suave entre animaciones y ritmo más pausado
@@ -419,8 +453,6 @@ export default memo(function Avatar({
           nextAction.setEffectiveTimeScale(runCadence);
         } else if (currentAnim === 'Walking') {
           nextAction.setEffectiveTimeScale(walkCadence);
-        } else if (currentAnim === 'Idle') {
-          nextAction.setEffectiveTimeScale(0.12);
         } else {
           nextAction.setEffectiveTimeScale(1.0);
         }
@@ -450,7 +482,12 @@ export default memo(function Avatar({
           if (mode === 'patrol') {
             setMode('patrol');
             idleWaitUntil.current = now + 3500;
-            lookRef.current = { start: now, end: now + 3500, heading: currentHeading.current };
+            lookRef.current = {
+              ...PAUSES[2],
+              start: now,
+              end: now + 3500,
+              heading: currentHeading.current,
+            };
           }
           break;
         }

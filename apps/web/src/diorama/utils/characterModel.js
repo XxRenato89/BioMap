@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useAnimations, useGLTF } from '@react-three/drei';
 
@@ -115,7 +114,7 @@ export function normalizeAnimationClips(clips = []) {
 // Preload standard model
 useGLTF.preload(QUIBAR_MODEL_PATH);
 
-export const ANIMATION_VERSION = 'v_walk_and_run_v2';
+export const ANIMATION_VERSION = 'v_wander_pauses_v3';
 
 /**
  * Hook para cargar el modelo 3D con animaciones estandarizadas.

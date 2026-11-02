@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('../utils/characterModel.js', () => ({ useCharacterModel: () => ({}) }));
 vi.mock('./DioramaScene.jsx', () => ({ useDiorama: () => ({}) }));
 
-const { nextWanderIndex } = await import('./Avatar.jsx');
+const { nextWanderIndex, pickPause, PAUSES } = await import('./Avatar.jsx');
 
 const pois = [
   { x: 0, z: 0 },
@@ -19,5 +19,17 @@ describe('nextWanderIndex', () => {
   it('sin lugares cerca, elige cualquiera menos el actual', () => {
     expect([0, 1]).toContain(nextWanderIndex(pois, 2, pois[2], () => 0.7));
     expect(nextWanderIndex(pois, 2, pois[2], () => 0.7)).not.toBe(2);
+  });
+});
+
+describe('pickPause', () => {
+  it('solo elige pausas con su animación cargada', () => {
+    const actions = { Idle: {}, Clapping: {} };
+    for (const r of [0, 0.49, 0.5, 0.99])
+      expect(['Idle', 'Clapping']).toContain(pickPause(actions, () => r).anim);
+  });
+
+  it('sin animaciones, se queda mirando el paisaje', () => {
+    expect(pickPause({}, () => 0.9)).toBe(PAUSES[0]);
   });
 });
