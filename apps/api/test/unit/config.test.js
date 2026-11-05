@@ -16,6 +16,7 @@ describe('loadConfig', () => {
       mediaBaseUrl: '/media',
       logLevel: 'info',
       passwordMaxAgeDays: 90,
+      elevenLabsVoiceId: 'tbfu7H6JPPlpF9clW89V',
       mapBounds: [
         [-71.855, -37.7672],
         [-71.75374, -37.672],

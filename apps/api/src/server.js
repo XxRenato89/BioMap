@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import path from 'node:path';
 import pino from 'pino';
 import { createAdminRepository } from './admin/admin.repository.js';
 import { createApp } from './app.js';
@@ -60,6 +61,12 @@ const app = createApp({
     sessionSecret: config.sessionSecret ?? randomBytes(32).toString('hex'),
     passwordMaxAgeDays: config.passwordMaxAgeDays,
     mapBounds: config.mapBounds,
+  },
+  /* Los audios de Quibar se guardan junto a las fotos: se generan una vez. */
+  tts: {
+    apiKey: config.elevenLabsApiKey,
+    voiceId: config.elevenLabsVoiceId,
+    cacheDir: path.join(config.mediaDir, 'tts'),
   },
 });
 

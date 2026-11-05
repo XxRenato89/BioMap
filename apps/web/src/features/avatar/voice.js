@@ -1,6 +1,7 @@
 /*
- * Voz de Quibar: infantil y alegre. La Web Speech API no clona voces, así que
- * se logra con una voz femenina/ligera en español, tono alto y algo rápida.
+ * Voz de Quibar: la de ElevenLabs, que la API sintetiza y guarda en caché
+ * (POST /api/tts). Sin ella (sin clave o sin red) se usa la del navegador:
+ * una voz femenina/ligera en español, tono alto y algo rápida.
  */
 export const QUIBAR_PITCH = 1.7;
 export const QUIBAR_RATE = 1.1;
@@ -29,8 +30,8 @@ export function pickQuibarVoice(voices) {
   return spanish[0] ?? null;
 }
 
-/** Dice el texto con la voz de Quibar. Espera a que el navegador cargue sus voces. */
-export function speakAsQuibar(text, synth = window.speechSynthesis) {
+/** Dice el texto con la voz del navegador. Espera a que el navegador cargue sus voces. */
+export function speakWithBrowser(text, synth = window.speechSynthesis) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'es-CL';
   utterance.pitch = QUIBAR_PITCH;
@@ -48,4 +49,53 @@ export function speakAsQuibar(text, synth = window.speechSynthesis) {
   if (synth.getVoices().length) speak();
   else synth.addEventListener('voiceschanged', speak, { once: true });
   return () => synth.removeEventListener('voiceschanged', speak);
+}
+
+/* Se apaga si la API avisa que no tiene la voz configurada: no se vuelve a pedir. */
+let serverVoice = true;
+
+/**
+ * Dice el texto con la voz de Quibar: el audio de ElevenLabs si la API lo da;
+ * si no, la voz del navegador. Devuelve cómo callarlo.
+ *
+ * @param {string} text
+ * @param {{ synth?: SpeechSynthesis, fetchImpl?: typeof fetch, createAudio?: (url: string) => HTMLAudioElement }} [options]
+ * @returns {() => void}
+ */
+export function speakAsQuibar(
+  text,
+  { synth = window.speechSynthesis, fetchImpl = fetch, createAudio = (url) => new Audio(url) } = {},
+) {
+  let stopped = false;
+  let audio = null;
+  let url = null;
+  let stopBrowser = () => {};
+  const browser = () => {
+    if (!stopped && synth) stopBrowser = speakWithBrowser(text, synth);
+  };
+  if (!serverVoice) {
+    browser();
+  } else {
+    fetchImpl('/api/tts', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text }),
+    })
+      .then(async (response) => {
+        if (response.status === 503) serverVoice = false;
+        if (!response.ok) throw new Error(`tts ${response.status}`);
+        const blob = await response.blob();
+        if (stopped) return;
+        url = URL.createObjectURL(blob);
+        audio = createAudio(url);
+        await audio.play();
+      })
+      .catch(browser);
+  }
+  return () => {
+    stopped = true;
+    audio?.pause();
+    if (url) URL.revokeObjectURL(url);
+    stopBrowser();
+  };
 }

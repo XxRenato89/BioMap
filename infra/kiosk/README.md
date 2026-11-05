@@ -47,3 +47,29 @@ En el navegador: `http://<kiosco>:3000/admin`. Hay un solo administrador.
   mapa, parada del recorrido, secreto), sus fotos y las capas; se descargan las
   estadísticas de visitas en CSV y se ve el historial de cambios. El kiosco toma
   los cambios en menos de un minuto.
+
+## Voz de Quibar (ElevenLabs)
+
+Quibar habla con la voz de ElevenLabs `tbfu7H6JPPlpF9clW89V`. **Hoy no está activa:
+falta la clave**, y Quibar usa la voz del navegador. Para activarla:
+
+1. En ElevenLabs: perfil → API Keys → crear una clave. Revisar que el plan permita
+   usar esa voz de la biblioteca por API (algunas tienen restricciones o recargo).
+2. Agregar la clave al `.env` de la raíz del proyecto (ver abajo).
+3. Reiniciar la API (en desarrollo, `npm run dev` en `apps/api`: `--watch` vigila el
+   código, no el `.env`; en el kiosco, reiniciar `start-kiosk.ps1`).
+4. Recargar el visor. Para comprobar: `POST /api/tts` con `{"text":"hola"}` debe
+   responder audio (sin clave responde 503 `TTS_UNAVAILABLE`).
+
+En `.env`:
+
+```
+ELEVENLABS_API_KEY=<clave de la cuenta de ElevenLabs>
+```
+
+- La clave solo vive en el mini PC: el navegador pide el audio a la API (`POST /api/tts`).
+- Cada frase se genera una sola vez y queda en `MEDIA_DIR/tts`: las que se repiten
+  no gastan créditos y suenan aunque se corte internet. Para regenerarlas (por
+  ejemplo, al cambiar de voz), borrar esa carpeta.
+- Como máximo 20 frases nuevas por minuto, para cuidar los créditos.
+- Sin clave, sin internet o sin créditos, Quibar usa la voz del navegador.

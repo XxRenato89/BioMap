@@ -3,6 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { createAdminRouter, createEventsRouter } from './admin/admin.routes.js';
+import { createTtsRouter } from './tts/tts.routes.js';
 import { createHealthRouter } from './health/health.routes.js';
 import { createErrorHandler, notFoundHandler } from './http/error-handlers.js';
 import { createLayersRouter } from './layers/layers.routes.js';
@@ -32,6 +33,7 @@ function noCache(_req, res, next) {
  * @param {boolean} [deps.exposeStack]
  * @param {object} [deps.admin] Panel de administración: { adminRepository, sessionSecret,
  *   passwordMaxAgeDays, mapBounds }. Sin él (modo de prueba sin base) responde 503.
+ * @param {object} [deps.tts] Voz de Quibar: { apiKey, voiceId, cacheDir } (ver createTtsRouter).
  */
 export function createApp({
   db,
@@ -43,6 +45,7 @@ export function createApp({
   webDir,
   exposeStack = false,
   admin,
+  tts,
 }) {
   const app = express();
   app.disable('x-powered-by');
@@ -54,7 +57,12 @@ export function createApp({
          * teléfonos entran por http en el Wi‑Fi del kiosco, sin certificado:
          * forzar https dejaría el visor en blanco.
          */
-        directives: { 'img-src': ["'self'", 'data:', 'blob:'], 'upgrade-insecure-requests': null },
+        directives: {
+          'img-src': ["'self'", 'data:', 'blob:'],
+          /* La voz de Quibar llega como audio y se reproduce desde un blob:. */
+          'media-src': ["'self'", 'blob:'],
+          'upgrade-insecure-requests': null,
+        },
       },
     }),
   );
@@ -75,6 +83,7 @@ export function createApp({
       mediaBaseUrl,
     }),
   );
+  if (tts) api.use('/tts', createTtsRouter(tts));
   if (admin) {
     api.use('/events', createEventsRouter(admin));
     api.use('/admin', createAdminRouter({ db, cache, mediaDir, mediaBaseUrl, ...admin }));

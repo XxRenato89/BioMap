@@ -32,6 +32,9 @@ const envSchema = z
     SESSION_SECRET: z.string().min(32, 'must have at least 32 characters').optional(),
     PASSWORD_MAX_AGE_DAYS: z.coerce.number().int().min(1).max(365).default(90),
     /* Límites de la maqueta (oeste,sur,este,norte): los puntos nuevos deben caer adentro. */
+    /* Voz de Quibar (ElevenLabs). Sin clave, el visor usa la voz del navegador. */
+    ELEVENLABS_API_KEY: z.string().optional(),
+    ELEVENLABS_VOICE_ID: z.string().default('tbfu7H6JPPlpF9clW89V'),
     MAP_BOUNDS: z
       .string()
       .regex(/^-?[\d.]+(,-?[\d.]+){3}$/, 'must be "west,south,east,north"')
@@ -63,7 +66,7 @@ const envSchema = z
  * @returns {{ nodeEnv: string, port: number, databaseUrl: string, dbPoolMax: number,
  *   dbStatementTimeoutMs: number, cacheTtlSeconds: number, mediaDir: string, webDir?: string,
  *   mediaBaseUrl: string, logLevel: string, useMocks?: boolean, sessionSecret?: string,
- *   passwordMaxAgeDays: number, mapBounds: [[number, number], [number, number]] }}
+ *   passwordMaxAgeDays: number, elevenLabsApiKey?: string, elevenLabsVoiceId: string, mapBounds: [[number, number], [number, number]] }}
  */
 export function loadConfig(env = process.env) {
   const cleaned = Object.fromEntries(Object.entries(env).filter(([, value]) => value !== ''));
@@ -88,6 +91,8 @@ export function loadConfig(env = process.env) {
     logLevel: c.LOG_LEVEL,
     sessionSecret: c.SESSION_SECRET,
     passwordMaxAgeDays: c.PASSWORD_MAX_AGE_DAYS,
+    elevenLabsApiKey: c.ELEVENLABS_API_KEY,
+    elevenLabsVoiceId: c.ELEVENLABS_VOICE_ID,
     mapBounds: (([w, s, e, n]) => [
       [w, s],
       [e, n],
