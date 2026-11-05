@@ -228,7 +228,8 @@ export default memo(function Avatar({
         plannedTargetRef.current = null;
         idleWaitUntil.current = performance.now() + 1500;
       }
-      setMode('patrol');
+      /* Si la ficha se cerró porque el visitante eligió otro lugar, va hacia ese lugar. */
+      if (useAvatarStore.getState().mode !== 'running_to_point') setMode('patrol');
       groupRef.current.visible = true;
     }
 
