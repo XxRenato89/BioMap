@@ -1,62 +1,72 @@
-import { Group, SphereGeometry } from 'three';
-import { box, cone, cyl, mat, part, sand, stone, white, wood } from './materials.js';
+import { CylinderGeometry, Group } from 'three';
+import { box, cone, cyl, mat, part, stone, white, wood } from './materials.js';
 
 /**
- * Playa como las del embalse (foto de Trompelhueno, Wikimedia Commons):
- * arena con quinchos de paja sobre bases de piedra, reposeras de madera en el
- * pasto, una torre de salvavidas, un bote y la línea de boyas rojas.
+ * Playa del embalse según las fotos de Google Maps de Playa Quilaco y Santa
+ * Bárbara: arena volcánica gris en media luna, una fila de quitasoles de paja
+ * sobre bases de piedra, una cerca de troncos hacia el estacionamiento, un
+ * muelle flotante de módulos blancos, kayaks y la línea curva de boyas
+ * naranjas y blancas que marca la zona de baño. El agua queda hacia +z.
  *
  * @returns {Group}
  */
 export function buildBeach() {
   const g = new Group();
-  g.add(box(9, 0.14, 4.5, sand(), 0, 0.07, 0));
-  g.add(box(9, 0.1, 1.4, mat('beachGrass', 0x7d9a4f), 0, 0.06, -2.9));
+  const graySand = mat('graySand', 0x8f877b);
+  const wetSand = mat('wetSand', 0x6d675e);
+
+  /* Media luna de arena: medio disco hacia tierra; el borde recto es la orilla mojada. */
+  const half = () => new CylinderGeometry(5, 5, 0.14, 24, 1, false, Math.PI / 2, Math.PI);
+  const crescent = part(half(), graySand, 0, 0.07, 0);
+  crescent.scale.z = 0.8;
+  g.add(crescent);
+  g.add(box(10, 0.1, 0.8, wetSand, 0, 0.04, 0.3));
+  g.add(box(11, 0.1, 1.6, mat('beachGrass', 0x7d9a4f), 0, 0.05, -4.6));
+
+  /* Quitasoles de paja en fila, al fondo de la arena. */
   const thatch = mat('thatch2', 0xc9a45c, { flatShading: true });
-  [-3.3, -1.1, 1.1, 3.3].forEach((x, k) => {
-    const z = k % 2 ? -0.9 : -0.5;
-    g.add(box(0.7, 0.35, 0.7, stone(), x, 0.3, z));
-    g.add(cyl(0.06, 0.06, 1.9, 6, wood(), x, 1.3, z));
-    g.add(cone(1.1, 0.5, 12, thatch, x, 2.45, z));
+  [-3.6, -2.2, -0.8, 0.6, 2, 3.4].forEach((x, k) => {
+    const z = -2.6 + (k % 2) * 0.3 + Math.abs(x) * 0.12;
+    g.add(box(0.5, 0.3, 0.5, stone(), x, 0.25, z));
+    g.add(cyl(0.05, 0.05, 1.6, 6, wood(), x, 1.1, z));
+    g.add(cone(0.85, 0.4, 12, thatch, x, 2.05, z));
   });
-  /* Reposeras de madera en el pasto, de cara al agua. */
-  [-3.6, -2.6, -1.6, -0.4, 0.6, 2.2].forEach((x) => {
-    const chair = box(0.45, 0.08, 1.1, wood(), x, 0.38, -2.7);
-    chair.rotation.x = -0.25;
-    g.add(chair);
-  });
-  /* Torre de salvavidas: patas, plataforma, baranda y techo. */
-  const tower = new Group();
+
+  /* Cerca de troncos hacia el estacionamiento. */
+  for (let k = 0; k <= 10; k += 1) g.add(cyl(0.06, 0.07, 0.6, 5, wood(), -5 + k, 0.3, -4.2));
+  [0.25, 0.5].forEach((y) => g.add(box(10, 0.06, 0.06, wood(), 0, y, -4.2)));
+
+  /* Muelle flotante de módulos blancos, adentro del agua. */
+  for (let k = 0; k < 4; k += 1) g.add(box(0.9, 0.12, 0.9, white(), 2.6, 0.06, 1 + k * 0.95));
+
+  /* Kayaks en la orilla. */
   [
-    [-0.45, -0.45],
-    [0.45, -0.45],
-    [-0.45, 0.45],
-    [0.45, 0.45],
-  ].forEach(([x, z]) => tower.add(cyl(0.05, 0.06, 2, 5, wood(), x, 1, z)));
-  tower.add(box(1.2, 0.1, 1.2, white(), 0, 2.05, 0));
-  tower.add(box(1.2, 0.4, 0.05, mat('lifeguard', 0xd94b3b), 0, 2.3, 0.6));
-  tower.add(box(1.4, 0.06, 1.4, mat('lifeguard', 0xd94b3b), 0, 3.0, 0));
-  [-0.55, 0.55].forEach((x) => tower.add(cyl(0.03, 0.03, 0.9, 4, white(), x, 2.5, -0.55)));
-  tower.position.set(3.4, 0.14, 0.4);
-  g.add(tower);
-  /* Bote: medio casco con bancada. */
-  const hull = part(
-    new SphereGeometry(0.6, 10, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
-    mat('boat', 0x3b6e8f),
-    0,
-    0.5,
-    0,
-  );
-  hull.scale.set(2.2, 0.7, 1);
-  const boat = new Group();
-  boat.add(hull);
-  boat.add(box(0.12, 0.05, 1.1, wood(), 0, 0.48, 0));
-  boat.position.set(-1.5, 0.1, 1.9);
-  boat.rotation.y = 0.3;
-  g.add(boat);
-  /* Línea de boyas que marca la zona de baño. */
-  for (let k = 0; k < 9; k += 1) {
-    g.add(cyl(0.16, 0.16, 0.22, 8, mat('buoy', 0xe4572e), -4 + k, 0.05, 3.6));
+    [-2.6, 0x2e9e5b],
+    [-2, 0xe8b923],
+    [-1.4, 0xd94b3b],
+  ].forEach(([x, color]) => {
+    const kayak = cyl(0.12, 0.12, 1.4, 6, mat(`kayak${color}`, color), x, 0.2, -0.8);
+    kayak.rotation.x = Math.PI / 2;
+    kayak.scale.set(1, 1, 0.5);
+    g.add(kayak);
+  });
+
+  /* Línea de boyas en arco, naranjas y blancas alternadas. */
+  const orange = mat('buoy', 0xe4572e);
+  for (let k = 0; k <= 16; k += 1) {
+    const angle = Math.PI * (0.15 + (0.7 * k) / 16);
+    g.add(
+      cyl(
+        0.15,
+        0.15,
+        0.2,
+        8,
+        k % 2 ? white() : orange,
+        Math.cos(angle) * 5.5,
+        0.05,
+        1 + Math.sin(angle) * 4.5,
+      ),
+    );
   }
   return g;
 }

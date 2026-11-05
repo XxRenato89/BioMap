@@ -1,14 +1,17 @@
+import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
-import { DoubleSide, MeshStandardMaterial } from 'three';
+import { DoubleSide, InstancedMesh, MeshStandardMaterial, Object3D, SphereGeometry } from 'three';
 import {
   EMBANKMENT_FROM,
   FRONT_BOX,
+  FRONT_LENGTH,
   FRONT_ROAD,
   buildAngosturaFront,
 } from '../models/angosturaFront.js';
 import { buildEmbankment } from '../builders/dam.js';
 import { ROAD_WIDTHS } from '../utils/osm.js';
 import { metersToY } from '../utils/projection.js';
+import { RESERVOIR, reservoirDrain } from '../utils/reservoir.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { PRESA_ANGOSTURA_COORDINATES as ANGOSTURA } from '../../data/damCoordinates.js';
 
@@ -18,6 +21,11 @@ const embankmentMaterial = new MeshStandardMaterial({
   roughness: 0.95,
   side: DoubleSide,
 });
+
+/* Boyas de la barrera flotante: ~2 m, exageradas para verse desde lejos (km). */
+const BOOM_FLOATS = 60;
+const boomGeometry = new SphereGeometry(0.0022, 8, 5);
+const boomMaterial = new MeshStandardMaterial({ color: 0xe8662e, roughness: 0.6 });
 
 /* Holgura entre el pie del talud y el borde de un camino (km). */
 const ROAD_MARGIN = 0.003;
@@ -122,16 +130,54 @@ export default function AngosturaDam({ shadows = false }) {
    * Presa de enrocado: corre por el frente desde el vertedero y curva hasta la
    * planta del muro lateral.
    */
+  const toWorld = useMemo(() => {
+    const [h] = fit.scale;
+    const [cos, sin] = [Math.cos(fit.rotationY), Math.sin(fit.rotationY)];
+    return {
+      /* Del modelo (x, z) al mundo: giro θ en y, desde la posición del frente. */
+      world: (x, z) => ({
+        x: fit.position[0] + (x * cos + z * sin) * h,
+        z: fit.position[2] + (-x * sin + z * cos) * h,
+      }),
+      /* z de diseño (vertedero en z negativo) a z del modelo armado. */
+      modelZ: (z) => (fit.startEnd < 0 ? z : -z),
+    };
+  }, [fit]);
+
+  /*
+   * Barrera flotante naranja (fotos aéreas): de la torre de toma cruza el
+   * embalse en curva hasta el cerro del norte. Las boyas que caen en tierra
+   * quedan bajo el terreno y no se ven.
+   */
+  const boom = useMemo(() => {
+    const { world, modelZ } = toWorld;
+    const y = metersToY(RESERVOIR.level) + 0.0004;
+    const [a, c, b] = [
+      [40, EMBANKMENT_FROM + 10],
+      [150, EMBANKMENT_FROM - 40],
+      [170, -FRONT_LENGTH / 2 - 120],
+    ];
+    const mesh = new InstancedMesh(boomGeometry, boomMaterial, BOOM_FLOATS);
+    const dummy = new Object3D();
+    for (let k = 0; k < BOOM_FLOATS; k += 1) {
+      const t = k / (BOOM_FLOATS - 1);
+      const bez = (i) => (1 - t) ** 2 * a[i] + 2 * (1 - t) * t * c[i] + t ** 2 * b[i];
+      const p = world(bez(0), modelZ(bez(1)));
+      dummy.position.set(p.x, y, p.z);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(k, dummy.matrix);
+    }
+    return mesh;
+  }, [toWorld]);
+  /* Sin agua no hay barrera: con el embalse vaciado quedaría flotando en el aire. */
+  useFrame(() => {
+    boom.visible = reservoirDrain.value < 0.05;
+  });
+
   const lateral = useMemo(() => {
     const [h] = fit.scale;
     const [cos, sin] = [Math.cos(fit.rotationY), Math.sin(fit.rotationY)];
-    /* Del modelo (x, z) al mundo: giro θ en y, desde la posición del frente. */
-    const world = (x, z) => ({
-      x: fit.position[0] + (x * cos + z * sin) * h,
-      z: fit.position[2] + (-x * sin + z * cos) * h,
-    });
-    /* z de diseño (vertedero en z negativo) a z del modelo armado. */
-    const modelZ = (z) => (fit.startEnd < 0 ? z : -z);
+    const { world, modelZ } = toWorld;
     const endZ = modelZ(FRONT_BOX.max.z);
     const start = world(-FRONT_ROAD / 2, modelZ(EMBANKMENT_FROM));
     const end = world(-FRONT_ROAD / 2, endZ);
@@ -151,7 +197,7 @@ export default function AngosturaDam({ shadows = false }) {
       },
       roadTest(roadsData, ANGOSTURA.lateral, projection),
     );
-  }, [fit, heightAt, projection, roadsData]);
+  }, [fit, toWorld, heightAt, projection, roadsData]);
   useEffect(() => {
     front.traverse((object) => {
       if (object.isMesh) object.castShadow = shadows;
@@ -164,6 +210,7 @@ export default function AngosturaDam({ shadows = false }) {
         <primitive object={front} position={fit.offset} scale={fit.scale} />
       </group>
       <mesh geometry={lateral} material={embankmentMaterial} castShadow={shadows} receiveShadow />
+      <primitive object={boom} />
     </group>
   );
 }

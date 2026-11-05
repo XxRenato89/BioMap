@@ -206,6 +206,13 @@ export function buildAngosturaFront({ spillwayEnd = -1 } = {}) {
   );
   add(box(12, 0.4, ABUTMENT, colors.asphalt(), -7, H + 2.7, spillFrom - ABUTMENT / 2));
   add(box(0.8, 1.6, ABUTMENT, colors.curb(), 0.4, H + 3.3, spillFrom - ABUTMENT / 2));
+  /* Pórtico grúa amarillo sobre la pasarela, junto al estribo (fotos aéreas). */
+  const craneZ = spillFrom + 10;
+  for (const x of [-8.5, 2.5])
+    for (const side of [-1, 1]) add(box(1, 13, 1, colors.arm(), x, H + 9.4, craneZ + side * 3));
+  for (const side of [-1, 1]) add(box(13, 1.4, 1.2, colors.arm(), -3, H + 16.2, craneZ + side * 3));
+  add(box(4, 3, 5, colors.hoist(), -3, H + 15, craneZ));
+
   /* Casa de control de techo celeste, en el estribo del cerro. */
   add(box(18, 8, 14, colors.wall(), -6, H + 4, spillFrom - 9));
   add(box(19.5, 1.4, 15.5, colors.roof(), -6, H + 8.7, spillFrom - 9));
