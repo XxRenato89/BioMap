@@ -28,6 +28,14 @@ const envSchema = z
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
+    /* Firma de las sesiones del panel. Sin ella (solo en desarrollo) se genera una por proceso. */
+    SESSION_SECRET: z.string().min(32, 'must have at least 32 characters').optional(),
+    PASSWORD_MAX_AGE_DAYS: z.coerce.number().int().min(1).max(365).default(90),
+    /* Límites de la maqueta (oeste,sur,este,norte): los puntos nuevos deben caer adentro. */
+    MAP_BOUNDS: z
+      .string()
+      .regex(/^-?[\d.]+(,-?[\d.]+){3}$/, 'must be "west,south,east,north"')
+      .default('-71.855,-37.7672,-71.75374,-37.672'),
   })
   .superRefine((data, ctx) => {
     if (!data.USE_MOCKS && !data.DATABASE_URL) {
@@ -35,6 +43,13 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         message: 'DATABASE_URL is required',
         path: ['DATABASE_URL'],
+      });
+    }
+    if (data.NODE_ENV === 'production' && !data.USE_MOCKS && !data.SESSION_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'SESSION_SECRET is required in production',
+        path: ['SESSION_SECRET'],
       });
     }
   });
@@ -47,7 +62,8 @@ const envSchema = z
  * @param {Record<string, string | undefined>} [env]
  * @returns {{ nodeEnv: string, port: number, databaseUrl: string, dbPoolMax: number,
  *   dbStatementTimeoutMs: number, cacheTtlSeconds: number, mediaDir: string, webDir?: string,
- *   mediaBaseUrl: string, logLevel: string, useMocks?: boolean }}
+ *   mediaBaseUrl: string, logLevel: string, useMocks?: boolean, sessionSecret?: string,
+ *   passwordMaxAgeDays: number, mapBounds: [[number, number], [number, number]] }}
  */
 export function loadConfig(env = process.env) {
   const cleaned = Object.fromEntries(Object.entries(env).filter(([, value]) => value !== ''));
@@ -70,6 +86,12 @@ export function loadConfig(env = process.env) {
     webDir: c.WEB_DIR,
     mediaBaseUrl: c.MEDIA_BASE_URL,
     logLevel: c.LOG_LEVEL,
+    sessionSecret: c.SESSION_SECRET,
+    passwordMaxAgeDays: c.PASSWORD_MAX_AGE_DAYS,
+    mapBounds: (([w, s, e, n]) => [
+      [w, s],
+      [e, n],
+    ])(c.MAP_BOUNDS.split(',').map(Number)),
   };
   if (c.USE_MOCKS) {
     config.useMocks = true;

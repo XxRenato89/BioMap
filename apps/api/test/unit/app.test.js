@@ -33,6 +33,11 @@ describe('app shell', () => {
     expect(res.headers['x-content-type-options']).toBe('nosniff');
   });
 
+  it('does not force https: phones reach the kiosk over plain http on its Wi-Fi', async () => {
+    const res = await request(buildTestApp()).get('/api/health');
+    expect(res.headers['content-security-policy']).not.toContain('upgrade-insecure-requests');
+  });
+
   it('rejects malformed JSON with 400 INVALID_BODY', async () => {
     const res = await request(buildTestApp())
       .post('/api/health')

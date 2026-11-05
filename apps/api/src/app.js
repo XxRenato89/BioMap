@@ -2,6 +2,7 @@ import compression from 'compression';
 import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
+import { createAdminRouter, createEventsRouter } from './admin/admin.routes.js';
 import { createHealthRouter } from './health/health.routes.js';
 import { createErrorHandler, notFoundHandler } from './http/error-handlers.js';
 import { createLayersRouter } from './layers/layers.routes.js';
@@ -29,6 +30,8 @@ function noCache(_req, res, next) {
  * @param {string} [deps.mediaBaseUrl]
  * @param {string} [deps.webDir] Build del visor que se sirve en la raíz (kiosco).
  * @param {boolean} [deps.exposeStack]
+ * @param {object} [deps.admin] Panel de administración: { adminRepository, sessionSecret,
+ *   passwordMaxAgeDays, mapBounds }. Sin él (modo de prueba sin base) responde 503.
  */
 export function createApp({
   db,
@@ -39,14 +42,19 @@ export function createApp({
   mediaBaseUrl = '/media',
   webDir,
   exposeStack = false,
+  admin,
 }) {
   const app = express();
   app.disable('x-powered-by');
   app.use(
     helmet({
       contentSecurityPolicy: {
-        /* El visor usa imágenes blob: (visor 360°) y data: (código QR). */
-        directives: { 'img-src': ["'self'", 'data:', 'blob:'] },
+        /*
+         * El visor usa imágenes blob: (visor 360°) y data: (código QR). Los
+         * teléfonos entran por http en el Wi‑Fi del kiosco, sin certificado:
+         * forzar https dejaría el visor en blanco.
+         */
+        directives: { 'img-src': ["'self'", 'data:', 'blob:'], 'upgrade-insecure-requests': null },
       },
     }),
   );
@@ -67,6 +75,16 @@ export function createApp({
       mediaBaseUrl,
     }),
   );
+  if (admin) {
+    api.use('/events', createEventsRouter(admin));
+    api.use('/admin', createAdminRouter({ db, cache, mediaDir, mediaBaseUrl, ...admin }));
+  } else {
+    api.use(['/events', '/admin'], (_req, res) =>
+      res.status(503).json({
+        error: { code: 'ADMIN_UNAVAILABLE', message: 'El panel necesita la base de datos' },
+      }),
+    );
+  }
   app.use('/api', api);
 
   /*

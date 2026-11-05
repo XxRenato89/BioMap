@@ -36,7 +36,7 @@ export async function resetDatabase(pool) {
  */
 export async function truncateAll(pool) {
   await pool.query(
-    'TRUNCATE audit_log, login_attempts, images, points_of_interest, layers, admin_users RESTART IDENTITY CASCADE',
+    'TRUNCATE visit_events, audit_log, login_attempts, images, points_of_interest, layers, admin_users RESTART IDENTITY CASCADE',
   );
 }
 

@@ -16,7 +16,8 @@
     "db:migrate": "npm run db:migrate -w apps/api",
     "db:seed": "npm run db:seed -w apps/api",
     "media:fetch": "npm run media:fetch -w apps/api",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "admin:password": "npm run admin:password -w apps/api --"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

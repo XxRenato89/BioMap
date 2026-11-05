@@ -10,7 +10,10 @@ Puesta en marcha del mini PC del Centro de Visitantes.
    npm ci
    npm run db:migrate
    npm run build -w apps/web
+   npm run admin:password     # crea el administrador con una contraseña temporal
    ```
+
+   En `.env` va también `SESSION_SECRET` (32+ caracteres al azar; ver `.env.example`).
 
 3. Probar: `powershell -ExecutionPolicy Bypass -File infra\kiosk\start-kiosk.ps1`
 4. Arranque automático: `powershell -ExecutionPolicy Bypass -File infra\kiosk\install-autostart.ps1`
@@ -30,3 +33,17 @@ Recomendado en Windows:
 - Desactivar notificaciones y actualizaciones automáticas en horario de atención.
 - Gestos de borde de la pantalla táctil desactivados (directiva de grupo
   "Allow edge swipe" = deshabilitado).
+
+## Panel de administración
+
+En el navegador: `http://<kiosco>:3000/admin`. Hay un solo administrador.
+
+- La primera vez, y cada `PASSWORD_MAX_AGE_DAYS` días (90 por defecto), el panel
+  obliga a cambiar la contraseña: al menos 12 caracteres, con letras y números.
+- Tras 5 intentos fallidos el ingreso se bloquea 15 minutos.
+- Si se olvida la contraseña o queda bloqueado: `npm run admin:password` en el
+  mini PC pone una temporal y desbloquea.
+- Desde el panel se editan los lugares (texto, capa, ubicación con un clic en el
+  mapa, parada del recorrido, secreto), sus fotos y las capas; se descargan las
+  estadísticas de visitas en CSV y se ve el historial de cambios. El kiosco toma
+  los cambios en menos de un minuto.

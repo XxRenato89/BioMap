@@ -1,4 +1,6 @@
+import { randomBytes } from 'node:crypto';
 import pino from 'pino';
+import { createAdminRepository } from './admin/admin.repository.js';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createPool } from './db/pool.js';
@@ -52,6 +54,13 @@ const app = createApp({
   webDir: config.webDir,
   mediaBaseUrl: config.mediaBaseUrl,
   exposeStack: config.nodeEnv === 'development',
+  admin: pool && {
+    adminRepository: createAdminRepository(pool),
+    /* Sin SESSION_SECRET (desarrollo): una por proceso, las sesiones mueren al reiniciar. */
+    sessionSecret: config.sessionSecret ?? randomBytes(32).toString('hex'),
+    passwordMaxAgeDays: config.passwordMaxAgeDays,
+    mapBounds: config.mapBounds,
+  },
 });
 
 const server = app.listen(config.port, () => {

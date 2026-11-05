@@ -15,7 +15,20 @@ describe('loadConfig', () => {
       mediaDir: './media',
       mediaBaseUrl: '/media',
       logLevel: 'info',
+      passwordMaxAgeDays: 90,
+      mapBounds: [
+        [-71.855, -37.7672],
+        [-71.75374, -37.672],
+      ],
     });
+  });
+
+  it('requires SESSION_SECRET in production, for the admin panel', () => {
+    expect(() => loadConfig({ DATABASE_URL, NODE_ENV: 'production' })).toThrow(/SESSION_SECRET/);
+    const secret = 'x'.repeat(32);
+    expect(
+      loadConfig({ DATABASE_URL, NODE_ENV: 'production', SESSION_SECRET: secret }).sessionSecret,
+    ).toBe(secret);
   });
 
   it('coerces numeric strings', () => {

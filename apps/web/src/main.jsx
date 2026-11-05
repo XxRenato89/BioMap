@@ -23,12 +23,20 @@ const queryClient = new QueryClient({
 const isPhone =
   window.matchMedia('(max-width: 820px)').matches ||
   new URLSearchParams(window.location.search).has('movil');
-const Viewer = lazy(() => (isPhone ? import('./mobile/MobileApp.jsx') : import('./App.jsx')));
+/* /admin: el panel de administración (no carga la maqueta). */
+const isAdmin = window.location.pathname.startsWith('/admin');
+const Viewer = lazy(() =>
+  isAdmin
+    ? import('./admin/AdminApp.jsx')
+    : isPhone
+      ? import('./mobile/MobileApp.jsx')
+      : import('./App.jsx'),
+);
 
 /*
  * Kiosco táctil: mantener el dedo presionado no abre el menú del navegador.
  */
-if (!isPhone) window.addEventListener('contextmenu', (event) => event.preventDefault());
+if (!isPhone && !isAdmin) window.addEventListener('contextmenu', (event) => event.preventDefault());
 
 /**
  * Monta el visor en el elemento #root de index.html. Fuentes, íconos y el
