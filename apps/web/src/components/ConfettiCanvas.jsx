@@ -124,22 +124,21 @@ export default function ConfettiCanvas() {
       />
       {congrats && (
         <div
-          className="fixed top-8 left-1/2 -translate-x-1/2 z-[105] pointer-events-none"
+          className="fixed top-3 inset-x-3 sm:top-8 flex justify-center z-[105] pointer-events-none"
           role="status"
           aria-live="polite"
         >
-          <div className="flex items-center gap-4 px-6 py-4 rounded-3xl glass-dark border-2 border-white/30 shadow-[0_16px_40px_rgba(0,0,0,0.45)] max-w-lg pointer-events-auto">
+          <div className="flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 rounded-3xl glass-dark border-2 border-white/30 shadow-[0_16px_40px_rgba(0,0,0,0.45)] w-full max-w-lg pointer-events-auto">
             <Trophy
-              size={40}
               strokeWidth={2.2}
-              className="flex-none text-ochre"
+              className="flex-none text-ochre size-8 sm:size-10"
               aria-hidden="true"
             />
             <div>
-              <h3 className="m-0 text-lg font-extrabold text-white">
+              <h3 className="m-0 text-base sm:text-lg font-extrabold text-white leading-tight">
                 ¡Felicitaciones! Recorrido 100% completado
               </h3>
-              <p className="mt-1 text-sm text-mint leading-snug">
+              <p className="mt-1 text-xs sm:text-sm text-mint leading-snug">
                 Has visitado todos los hitos de la cuenca. Abre el Bio-Book para llevarte tu guía
                 digital.
               </p>
