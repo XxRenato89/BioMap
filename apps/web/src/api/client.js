@@ -24,6 +24,16 @@ async function getJson(path, fetchImpl = fetch, fallbackData = null) {
     }
     throw err;
   }
+  /*
+   * Un 5xx sin JSON no viene de la API (que siempre responde JSON) sino del
+   * proxy delante (Vite, nginx) porque la API está caída: cuenta como sin red.
+   */
+  const fromProxy =
+    response.status >= 500 && !response.headers?.get('content-type')?.includes('json');
+  if (fromProxy && fallbackData !== null) {
+    console.warn(`[BioMap] API caída (${response.status} en ${path}). Usando datos estáticos.`);
+    return fallbackData;
+  }
   if (!response.ok) throw new Error(`GET ${path} failed with ${response.status}`);
   return response.json();
 }

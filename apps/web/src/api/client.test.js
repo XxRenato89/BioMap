@@ -4,8 +4,13 @@ import { fetchLayers, fetchPoint, fetchPoints, recordEvent } from './client.js';
 /**
  * fetch falso que responde con el estado y el cuerpo indicados.
  */
-function fakeFetch(status, body) {
-  return vi.fn(async () => ({ ok: status >= 200 && status < 300, status, json: async () => body }));
+function fakeFetch(status, body, contentType = 'application/json') {
+  return vi.fn(async () => ({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers({ 'content-type': contentType }),
+    json: async () => body,
+  }));
 }
 
 describe('api client', () => {
@@ -38,6 +43,12 @@ describe('api client', () => {
 
   it('a deleted point (404) is an error, never the old bundled copy', async () => {
     await expect(fetchPoint(1, fakeFetch(404, {}))).rejects.toThrow('failed with 404');
+  });
+
+  it('a proxy error with the API down (5xx without JSON) uses the bundled data', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const points = await fetchPoints(fakeFetch(500, null, 'text/plain'));
+    expect(points.features.length).toBeGreaterThan(0);
   });
 
   it('with no network it falls back to the bundled data', async () => {
