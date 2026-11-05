@@ -19,12 +19,12 @@ describe('diorama/models', () => {
     });
 
     it('detects the real Angostura places', () => {
-      expect(modelKindFor('Playa Pública Quilaco')).toBe('beach');
+      expect(modelKindFor('Playa Pública Quilaco')).toBeNull();
       expect(modelKindFor('Mirador del Embalse y Presa')).toBe('lookout');
       expect(modelKindFor('Informaciones Turísticas')).toBe('info');
       expect(modelKindFor('Arboretum')).toBe('arboretum');
       expect(modelKindFor('Puente Colgante Huequecura')).toBe('bridge');
-      expect(modelKindFor('Playa Santa Bárbara')).toBe('beach');
+      expect(modelKindFor('Playa Santa Bárbara')).toBeNull();
       expect(modelKindFor('Centro de Visitantes Angostura')).toBe('visitors');
       expect(modelKindFor('Mirador Central Angostura')).toBe('meshDeck');
       expect(modelKindFor('Cerro el Calvario')).toBe('sanctuary');
@@ -32,6 +32,8 @@ describe('diorama/models', () => {
       expect(modelKindFor('Parque Angostura')).toBe('forestTrail');
       expect(modelKindFor('Sendero Huequecura')).toBe('trailhead');
       expect(modelKindFor('Camping Los Notros')).toBe('camping');
+      expect(modelKindFor('Camping Trompelhueno de Quilaco')).toBeNull();
+      expect(modelKindFor('Camping La Patagua de Lo Nieve')).toBeNull();
     });
 
     it('detects cultural and nature landmarks', () => {

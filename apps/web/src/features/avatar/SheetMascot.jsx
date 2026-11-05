@@ -4,7 +4,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box3, MathUtils, Vector3 } from 'three';
+import { Box3, MathUtils, Quaternion, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useAvatarStore } from '../../store/avatarStore.js';
 import { useCharacterModel } from '../../diorama/utils/characterModel.js';
@@ -14,6 +14,22 @@ import { ErrorBoundary } from '../../components/ErrorBoundary.jsx';
 const GESTURE_S = 1.2;
 const MASCOT_HEIGHT = 2.3;
 const MASCOT_FPS = 30;
+
+/**
+ * Saludo en el instante t (s), como direcciones en el espacio del personaje
+ * (y arriba, z al frente, `side` el lado del brazo en x): el brazo se abre
+ * hacia el costado y arriba, y el antebrazo apunta arriba yendo de lado a lado.
+ * `blend` sube de 0 a 1 para que el brazo se levante de a poco.
+ */
+export function waveTargets(t, side) {
+  return {
+    blend: Math.min(1, t / 0.5),
+    upper: new Vector3(side * 0.9, 0.35, 0.15),
+    fore: new Vector3(side * (0.3 + Math.sin(t * 8) * 0.4), 1, 0.2),
+  };
+}
+const tmpQ = new Quaternion();
+const tmpV = new Vector3();
 
 /**
  * La mascota en primer plano: saluda al llegar y, con cada cambio en la
@@ -42,17 +58,53 @@ export function Mascot({ gestureKey, facing = 0.35 }) {
   }, [scene]);
   const gestureAt = useRef(-Infinity);
 
+  /* De pie (primer cuadro de la caminata congelado): el saludo lo pone el brazo, abajo. */
   useEffect(() => {
-    const wave =
-      actions?.dance ??
-      actions?.Dance ??
-      actions?.wave ??
-      actions?.Wave ??
-      actions?.idle ??
-      actions?.Idle;
-    wave?.reset().fadeIn(0.3).play();
-    return () => wave?.fadeOut(0.3);
+    const stand = actions?.Wave ?? actions?.Idle;
+    if (!stand) return undefined;
+    stand
+      .reset()
+      .setEffectiveTimeScale(actions?.Wave ? 1 : 0)
+      .fadeIn(0.3)
+      .play();
+    return () => stand.fadeOut(0.3);
   }, [actions]);
+
+  /*
+   * Huesos del brazo derecho para saludar (no hay clip de saludo; ver
+   * waveTargets), con su giro en la pose de pie. Se fija el giro entero en cada
+   * cuadro: el mezclador no repone un hueso cuya pose no cambió, así que
+   * sumar un giro encima lo acumularía.
+   */
+  const idleClip = actions?.Idle?.getClip();
+  const arm = useMemo(() => {
+    const bone = (name, childName) => {
+      const node = model.getObjectByName(name);
+      const child = model.getObjectByName(childName);
+      const track = idleClip?.tracks.find((t) => t.name === `${name}.quaternion`);
+      const pose = track ? new Quaternion().fromArray(track.values, 0) : node?.quaternion.clone();
+      /* El hueso apunta hacia su hijo: ese es el eje que se orienta. */
+      return node && child && { node, pose, axis: child.position.clone().normalize() };
+    };
+    return {
+      upper: bone('mixamorigRightArm', 'mixamorigRightForeArm'),
+      fore: bone('mixamorigRightForeArm', 'mixamorigRightHand'),
+    };
+  }, [model, idleClip]);
+
+  /** Gira `bone` para que apunte hacia `dir` (espacio del personaje), mezclado con su pose. */
+  const aim = (bone, dir, blend) => {
+    const parent = bone.node.parent;
+    parent.updateWorldMatrix(true, false);
+    const toParent = parent.getWorldQuaternion(tmpQ).invert();
+    const target = tmpV
+      .copy(dir)
+      .normalize()
+      .applyQuaternion(model.getWorldQuaternion(new Quaternion()))
+      .applyQuaternion(toParent);
+    const aimed = new Quaternion().setFromUnitVectors(bone.axis, target);
+    bone.node.quaternion.copy(bone.pose).slerp(aimed, blend);
+  };
 
   useEffect(() => {
     gestureAt.current = performance.now() / 1000;
@@ -74,6 +126,15 @@ export function Mascot({ gestureKey, facing = 0.35 }) {
     const turn = since < GESTURE_S ? Math.sin((since / GESTURE_S) * Math.PI) * 0.7 : 0;
     const sway = Math.sin(clock.elapsedTime * 0.8) * 0.08;
     group.current.rotation.y = MathUtils.lerp(group.current.rotation.y, facing + turn + sway, 0.12);
+    /* Corre después del mezclador de animaciones: el saludo se suma a la pose de pie. */
+    if (!actions?.Wave && arm.upper && arm.fore) {
+      /* Lado del brazo: dónde queda el hombro respecto del centro del personaje. */
+      const shoulder = model.worldToLocal(arm.upper.node.getWorldPosition(new Vector3()));
+      const { blend, upper, fore } = waveTargets(clock.elapsedTime, Math.sign(shoulder.x) || -1);
+      aim(arm.upper, upper, blend);
+      arm.upper.node.updateWorldMatrix(false, false);
+      aim(arm.fore, fore, blend);
+    }
   });
 
   return (

@@ -87,8 +87,9 @@ export const SAMPLE_POINTS = [
     description: draft(
       'Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse.',
     ),
-    lng: -71.7935471,
-    lat: -37.7427509,
+    /* El pin de Google cae en el letrero de la entrada; el sendero va por el bosque al poniente. */
+    lng: -71.79434,
+    lat: -37.74261,
   },
   {
     layerSlug: 'ecology',

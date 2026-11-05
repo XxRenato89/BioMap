@@ -1,14 +1,21 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Quaternion, Vector3 } from 'three';
 import { publishAnchors } from '../../store/anchorStore.js';
+import { useClearingStore } from '../../store/clearingStore.js';
 import { useUserStore } from '../../store/userStore.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { PoiModel } from './PoiModel.jsx';
 import { PoiPin } from './PoiPin.jsx';
-import { declutter, liftBadges } from '../utils/labels.js';
-import { modelKindFor, modelRadius } from '../models/index.js';
-import { cliffEdge, placeModels, shoreSpot } from '../utils/placement.js';
+import { clusterPins, declutter, fanOffsets } from '../utils/labels.js';
+import {
+  BRIDGE_DECK,
+  BRIDGE_SPAN,
+  modelKindFor,
+  modelRadius,
+  modelScale,
+} from '../models/index.js';
+import { cliffEdge, placeModels, riverCrossing, shoreSpot } from '../utils/placement.js';
 import { RESERVOIR, within } from '../utils/reservoir.js';
 import { isOccluded } from '../utils/occlusion.js';
 import { waterTest } from '../utils/pathfinder.js';
@@ -23,7 +30,7 @@ import { waterTest } from '../utils/pathfinder.js';
 /* Modelos que van al borde del barranco más cercano, mirando al agua. */
 const EDGE_KINDS = new Set(['forestTrail', 'meshDeck']);
 /* Modelos que van en la orilla, con la playa tocando el agua. */
-const SHORE_KINDS = new Set(['camping', 'beach']);
+const SHORE_KINDS = new Set(['camping']);
 /* Separación mínima entre dos miradores al borde (km). */
 const EDGE_SPACING_KM = 0.04;
 
@@ -53,10 +60,11 @@ const DOT = 52;
 /* La insignia queda justo sobre su ancla (la punta del poste). */
 const STEM = 0;
 const LABEL_GAP = 0;
-/* Lo que sube una insignia por escalón (px) cuando pisa a otra. */
-const LIFT_PX = 48;
-/* Solo se escalonan las insignias con la cámara a menos de esto (km). */
-const LIFT_RANGE_KM = 3;
+/* Pines a menos de esto (px) en pantalla se juntan en uno con el número de lugares. */
+const CLUSTER_PX = 58;
+/* Al tocar un grupo, la cámara se acerca hasta verlo así de grande (km por km de ancho del grupo). */
+const CLUSTER_ZOOM = 3.5;
+const MIN_CLUSTER_RANGE_KM = 0.35;
 const CHAR_WIDTH = 9.5;
 const LABEL_PADDING = 30;
 const projected = new Vector3();
@@ -87,6 +95,8 @@ export function PoiMarkers({
   const getPoiState = useUserStore((state) => state.getPoiState);
   /* Suscripciones para redibujar los candados al avanzar el recorrido. */
   useUserStore((state) => state.visitedPoints);
+  /* Y para mostrar el lugar secreto apenas Quibar lo descubre. */
+  useUserStore((state) => state.discoveredSecrets);
   const tour = useUserStore((state) => state.tour);
   const size = useThree((state) => state.size);
   const layerById = useMemo(() => new Map(layers.map((layer) => [layer.id, layer])), [layers]);
@@ -114,15 +124,52 @@ export function PoiMarkers({
       return [{ id: feature.properties.id, kind, x, z, radius: modelRadius(kind) }];
     });
     const ground = { heightAt, isWater: (x, z) => inWater(projection.toLngLat(x, z)) };
-    const spots = placeModels(
-      items.filter((item) => !EDGE_KINDS.has(item.kind) && !SHORE_KINDS.has(item.kind)),
-      ground,
-    );
+    /* Primero los de la orilla (su lugar es fijo); el resto se reparte sin pisarlos. */
+    const shoreSpots = new Map();
+    const taken = [];
     for (const item of items.filter((i) => SHORE_KINDS.has(i.kind))) {
       const shore = shoreSpot(item.x, item.z, item.radius, ground);
-      const spot = shore ? { ...shore, scale: 1 } : placeModels([item], ground).get(item.id);
-      if (spot) spots.set(item.id, spot);
+      const spot = shore ? { ...shore, scale: 1 } : placeModels([item], ground, taken).get(item.id);
+      if (!spot) continue;
+      shoreSpots.set(item.id, spot);
+      taken.push({ x: spot.x, z: spot.z, r: item.radius * spot.scale });
     }
+    /*
+     * Puente colgante: tendido de orilla a orilla en el cruce más angosto del
+     * río junto a su punto, con el largo justo y el tablero a la altura de la
+     * orilla más baja.
+     */
+    for (const item of items.filter((i) => i.kind === 'bridge')) {
+      const crossing = riverCrossing(item.x, item.z, ground.isWater);
+      if (!crossing) continue;
+      const { a, b } = crossing;
+      const [dx, dz] = [b.x - a.x, b.z - a.z];
+      const length = Math.hypot(dx, dz);
+      const unit = modelScale('bridge');
+      const scale = length / (BRIDGE_SPAN * unit);
+      const bank = Math.min(heightAt(a.x, a.z), heightAt(b.x, b.z));
+      const spot = {
+        x: (a.x + b.x) / 2,
+        z: (a.z + b.z) / 2,
+        /* El tablero queda ~2 m sobre la orilla. */
+        y: bank - BRIDGE_DECK * unit * scale + 0.002,
+        scale,
+        /* El largo del modelo va en x: se gira para que siga la recta entre orillas. */
+        angle: Math.atan2(-dz, dx),
+        span: true,
+      };
+      shoreSpots.set(item.id, spot);
+      taken.push({ x: spot.x, z: spot.z, r: length / 2 });
+    }
+    const spots = placeModels(
+      items.filter(
+        (item) =>
+          !EDGE_KINDS.has(item.kind) && !SHORE_KINDS.has(item.kind) && item.kind !== 'bridge',
+      ),
+      ground,
+      taken,
+    );
+    for (const [id, spot] of shoreSpots) spots.set(id, spot);
     /* Miradores: al borde del barranco, mirando al embalse (como en sus fotos). */
     for (const feature of points.features) {
       if (!EDGE_KINDS.has(kindOf(feature))) continue;
@@ -145,16 +192,49 @@ export function PoiMarkers({
     return spots;
     // kindOf solo depende de layerById y dams.
   }, [points, layerById, dams, projection, heightAt, inWater]);
+  /* El bosque se despeja donde va cada modelo (con un poco de holgura). */
+  useEffect(() => {
+    const kinds = new Map(points.features.map((f) => [f.properties.id, kindOf(f)]));
+    const clearings = [...spots].map(([id, spot]) => ({
+      x: spot.x,
+      z: spot.z,
+      r: modelRadius(kinds.get(id)) * (spot.scale ?? 1) * 1.15,
+    }));
+    useClearingStore.setState({ clearings });
+    // kindOf solo depende de layerById y dams, ya incluidos en spots.
+  }, [spots, points]);
   const registry = useRef(new Map()).current;
   const lastUpdate = useRef(-Infinity);
-  /* Escalón de cada insignia (por id): estable entre renders, lo lee cada PoiPin. */
-  const lifts = useRef(new Map()).current;
+  /* Grupos del último reparto: id del líder → ids del grupo. */
+  const clusters = useRef(new Map());
+  /* Grupo abierto en abanico (al tocarlo) y a qué distancia de cámara se abrió. */
+  const fanned = useRef(null);
   const controls = useThree((state) => state.controls);
+  const invalidate = useThree((state) => state.invalidate);
   const lastView = useRef({
     position: new Vector3(Infinity, 0, 0),
     quaternion: new Quaternion(),
     still: 0,
   });
+
+  /** Acerca la cámara al centro de un grupo, lo justo para que sus pines se separen. */
+  const openCluster = (ids) => {
+    const spotsOf = ids
+      .map((member) => points.features.find((f) => f.properties.id === member))
+      .filter(Boolean)
+      .map((feature) => projection.toWorld(feature.geometry.coordinates));
+    if (!controls || spotsOf.length === 0) return;
+    const cx = spotsOf.reduce((sum, p) => sum + p.x, 0) / spotsOf.length;
+    const cz = spotsOf.reduce((sum, p) => sum + p.z, 0) / spotsOf.length;
+    const spread = Math.max(...spotsOf.map((p) => Math.hypot(p.x - cx, p.z - cz)));
+    const range = Math.max(MIN_CLUSTER_RANGE_KM, spread * 2 * CLUSTER_ZOOM);
+    const distance = Math.min(range, controls.distance * 0.6);
+    controls.moveTo(cx, surfaceAt(cx, cz), cz, true);
+    controls.dollyTo(distance, true);
+    /* Si al llegar siguen juntos, se abren en abanico para tocar cada uno. */
+    fanned.current = { ids: new Set(ids), distance };
+    invalidate();
+  };
 
   useFrame(({ camera }) => {
     /*
@@ -208,6 +288,9 @@ export function PoiMarkers({
           const tourRank = tour.includes(Number(id)) ? 1_000 : 0;
           items.push({
             id,
+            x,
+            y,
+            solo: entry.selected,
             rank: entry.selected ? 1_000_000 : tourRank - order,
             rect: {
               x: x - DOT / 2,
@@ -222,34 +305,78 @@ export function PoiMarkers({
 
     if (isUpdateFrame && items.length > 0) {
       /*
-       * De cerca, los letreros (insignia y nombre) que se pisan suben su poste
-       * un escalón (o más) hasta quedar libres. De lejos no se escalona: el que
-       * se pisa con otro queda como un punto hasta que uno se acerque.
+       * Los pines que se pisan en pantalla se juntan en uno solo con el número
+       * de lugares (se ve limpio); al acercarse se separan solos.
        */
-      const close = (controls?.distance ?? Infinity) < LIFT_RANGE_KM;
-      const placed = close
-        ? liftBadges(items, { step: LIFT_PX })
-        : new Map(
-            [
-              ...declutter(
-                items.map(({ id, rank, rect }) => ({ id, rank, rect: { ...rect, width: DOT } })),
-              ),
-            ].map((id) => [id, 0]),
-          );
+      /* El abanico se cierra si el visitante aleja o acerca la cámara. */
+      const fan = fanned.current;
+      if (fan && Math.abs(controls.distance - fan.distance) > fan.distance * 0.35) {
+        fanned.current = null;
+      }
+      const inFan = fanned.current
+        ? items.filter(({ id }) => fanned.current.ids.has(id) && !registry.get(id)?.selected)
+        : [];
+      const offsets = new Map();
+      if (inFan.length > 1) {
+        const cx = inFan.reduce((sum, item) => sum + item.x, 0) / inFan.length;
+        const cy = inFan.reduce((sum, item) => sum + item.y, 0) / inFan.length;
+        const crowded = inFan.some((a) =>
+          inFan.some((b) => a !== b && Math.hypot(a.x - b.x, a.y - b.y) < CLUSTER_PX),
+        );
+        if (crowded) {
+          fanOffsets(inFan.length, CLUSTER_PX).forEach(({ dx, dy }, k) => {
+            const item = inFan[k];
+            offsets.set(item.id, { dx: cx + dx - item.x, dy: cy + dy - item.y });
+          });
+        }
+      }
+      const groups = clusterPins(
+        items.filter(({ id }) => !offsets.has(id)),
+        CLUSTER_PX,
+      );
+      for (const id of offsets.keys()) groups.set(id, [id]);
+      clusters.current = groups;
+      const leaderOf = new Map();
+      for (const [leader, ids] of groups) for (const member of ids) leaderOf.set(member, leader);
       const withLabel = declutter(
         items
-          .filter(({ id }) => placed.has(id))
-          .map((item) => ({
-            ...item,
-            rect: { ...item.rect, y: item.rect.y - placed.get(item.id) * LIFT_PX },
-          })),
+          .filter(({ id }) => groups.get(id)?.length === 1)
+          .map((item) => {
+            const off = offsets.get(item.id);
+            return off
+              ? {
+                  ...item,
+                  rect: { ...item.rect, x: item.rect.x + off.dx, y: item.rect.y + off.dy },
+                }
+              : item;
+          }),
       );
       for (const [id, entry] of registry) {
         const { element } = entry;
-        lifts.set(id, placed.get(id) ?? 0);
-        const mini = String(!placed.has(id));
+        /* Desplazado en el abanico (o en su lugar). */
+        const off = offsets.get(id);
+        const left = off ? `${off.dx}px` : '';
+        const top = off ? `${off.dy}px` : '';
+        if (element.style.left !== left) element.style.left = left;
+        if (element.style.top !== top) element.style.top = top;
+        const ids = groups.get(id);
+        const hidden = String(!ids && leaderOf.has(id));
+        const count = ids && ids.length > 1 ? String(ids.length) : '';
         const compact = String(!withLabel.has(id));
-        if (element.dataset.mini !== mini) element.dataset.mini = mini;
+        if (element.dataset.hidden !== hidden) element.dataset.hidden = hidden;
+        /* React puede volver a dibujar el pin y vaciar el número: se reescribe siempre. */
+        const badge = element.querySelector('.poi-pin__count');
+        if (badge && badge.textContent !== count) badge.textContent = count;
+        if ((element.dataset.count ?? '') !== count) {
+          if (count) element.dataset.count = count;
+          else delete element.dataset.count;
+          /* Para lectores de pantalla: el grupo se anuncia como tal, no como su líder. */
+          element.dataset.label ??= element.getAttribute('aria-label') ?? '';
+          element.setAttribute(
+            'aria-label',
+            count ? `${count} lugares juntos: acercar` : element.dataset.label,
+          );
+        }
         if (element.dataset.compact !== compact) element.dataset.compact = compact;
       }
     }
@@ -278,6 +405,14 @@ export function PoiMarkers({
         const fromScene = Boolean(event.intersections);
         if (fromScene && native.target.closest?.('[data-view]')?.dataset.view !== viewId) return;
         event.stopPropagation();
+        /* Un pin que agrupa varios lugares acerca la cámara hasta separarlos. */
+        const members = clusters.current.get(id);
+        if (!fromScene && members?.length > 1) {
+          openCluster(members);
+          return;
+        }
+        /* Parada del recorrido aún bloqueada: no se abre. */
+        if (getPoiState(id) === 'bloqueado') return;
         onSelectPoint(id, { x: native.clientX, y: native.clientY });
       };
 
@@ -289,7 +424,7 @@ export function PoiMarkers({
           {!isSecret && kind && spot && (
             <PoiModel
               kind={kind}
-              position={[spot.x, spot.y - (spot.edge ? 0 : 0.002), spot.z]}
+              position={[spot.x, spot.y - (spot.edge || spot.span ? 0 : 0.002), spot.z]}
               size={spot.scale}
               rotationY={spot.angle ?? facingWater(spot.x, spot.z, inWater, projection)}
               onSelect={onSelect}
@@ -301,7 +436,6 @@ export function PoiMarkers({
             id={id}
             name={feature.properties.name}
             registry={registry}
-            lifts={lifts}
             selected={selected.has(id)}
             onSelect={onSelect}
             state={getPoiState(id)}

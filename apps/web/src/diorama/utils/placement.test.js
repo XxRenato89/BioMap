@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cliffEdge, placeModels, shoreSpot } from './placement.js';
+import { cliffEdge, placeModels, riverCrossing, shoreSpot, withoutTreesIn } from './placement.js';
 
 const flat = { heightAt: () => 0, isWater: () => false };
 
@@ -32,6 +32,13 @@ describe('placeModels', () => {
         expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThanOrEqual(ra + rb - 1e-9);
       }
     }
+  });
+
+  it('keeps clear of footprints already taken (models on the shore)', () => {
+    const taken = [{ x: -0.15, z: 0, r: 0.1 }];
+    const spot = placeModels([{ id: 1, x: 0, z: 0, radius: 0.1 }], flat, taken).get(1);
+    expect(spot.x).not.toBe(0);
+    expect(Math.hypot(spot.x + 0.15, spot.z)).toBeGreaterThanOrEqual(0.1 + 0.1 * spot.scale - 1e-9);
   });
 
   it('leaves out a model with nowhere to stand', () => {
@@ -67,5 +74,50 @@ describe('shoreSpot', () => {
 
   it('returns null with no water nearby', () => {
     expect(shoreSpot(0, 0, 0.1, { heightAt: () => 0, isWater: () => false })).toBeNull();
+  });
+});
+
+describe('withoutTreesIn', () => {
+  const trees = (...xs) => {
+    const matrices = new Float32Array(xs.length * 16);
+    xs.forEach((x, k) => {
+      matrices[k * 16 + 12] = x;
+      matrices[k * 16 + 14] = 0;
+    });
+    return {
+      matrices,
+      colors: new Float32Array(xs.map((x) => [x, x, x]).flat()),
+      count: xs.length,
+    };
+  };
+
+  it('removes the trees inside a model footprint and keeps their colors in step', () => {
+    const out = withoutTreesIn(trees(0, 0.05, 0.5), [{ x: 0, z: 0, r: 0.1 }]);
+    expect(out.count).toBe(1);
+    expect(out.matrices[12]).toBe(0.5);
+    expect(out.colors[0]).toBe(0.5);
+  });
+
+  it('returns the same trees when nothing is cleared', () => {
+    const set = trees(1, 2);
+    expect(withoutTreesIn(set, [])).toBe(set);
+    expect(withoutTreesIn(set, [{ x: 9, z: 9, r: 0.1 }])).toBe(set);
+  });
+});
+
+describe('riverCrossing', () => {
+  /* Río de 60 m de ancho que corre a lo largo de x, entre z = 0,02 y z = 0,08. */
+  const river = (x, z) => z > 0.02 && z < 0.08;
+
+  it('spans the river straight across, from bank to bank, next to a point on the shore', () => {
+    const { a, b } = riverCrossing(0, 0, river);
+    expect(Math.abs(a.x - b.x)).toBeLessThan(0.005);
+    expect(Math.min(a.z, b.z)).toBeLessThanOrEqual(0.02);
+    expect(Math.max(a.z, b.z)).toBeGreaterThanOrEqual(0.08);
+    expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeLessThan(0.07);
+  });
+
+  it('returns null with no water in reach', () => {
+    expect(riverCrossing(0, 0, () => false)).toBeNull();
   });
 });

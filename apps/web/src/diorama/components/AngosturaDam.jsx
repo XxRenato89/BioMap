@@ -1,6 +1,15 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
-import { DoubleSide, InstancedMesh, MeshStandardMaterial, Object3D, SphereGeometry } from 'three';
+import {
+  DoubleSide,
+  InstancedMesh,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  Raycaster,
+  SphereGeometry,
+  Vector3,
+} from 'three';
 import {
   EMBANKMENT_FROM,
   FRONT_BOX,
@@ -112,7 +121,7 @@ export function fitDamFront(points, upstream, box, { base, crest }) {
  * @param {{ shadows?: boolean }} props
  */
 export default function AngosturaDam({ shadows = false }) {
-  const { angosturaFront, heightAt, projection, roadsData } = useDiorama();
+  const { angosturaFront, heightAt, projection, roadsData, water } = useDiorama();
   const fit = useMemo(
     () =>
       fitDamFront(
@@ -151,7 +160,18 @@ export default function AngosturaDam({ shadows = false }) {
    */
   const boom = useMemo(() => {
     const { world, modelZ } = toWorld;
-    const y = metersToY(RESERVOIR.level) + 0.0004;
+    /*
+     * Cada boya a la altura del agua que se dibuja bajo ella: junto a la presa
+     * los polígonos del agua tienen su propio nivel, no el del embalse.
+     */
+    const surface = water && new Mesh(water);
+    const ray = new Raycaster();
+    const down = new Vector3(0, -1, 0);
+    const waterY = (x, z) => {
+      if (!surface) return metersToY(RESERVOIR.level);
+      ray.set(new Vector3(x, 10, z), down);
+      return ray.intersectObject(surface)[0]?.point.y ?? metersToY(RESERVOIR.level);
+    };
     const [a, c, b] = [
       [40, EMBANKMENT_FROM + 10],
       [150, EMBANKMENT_FROM - 40],
@@ -163,12 +183,12 @@ export default function AngosturaDam({ shadows = false }) {
       const t = k / (BOOM_FLOATS - 1);
       const bez = (i) => (1 - t) ** 2 * a[i] + 2 * (1 - t) * t * c[i] + t ** 2 * b[i];
       const p = world(bez(0), modelZ(bez(1)));
-      dummy.position.set(p.x, y, p.z);
+      dummy.position.set(p.x, waterY(p.x, p.z), p.z);
       dummy.updateMatrix();
       mesh.setMatrixAt(k, dummy.matrix);
     }
     return mesh;
-  }, [toWorld]);
+  }, [toWorld, water]);
   /* Sin agua no hay barrera: con el embalse vaciado quedaría flotando en el aire. */
   useFrame(() => {
     boom.visible = reservoirDrain.value < 0.05;

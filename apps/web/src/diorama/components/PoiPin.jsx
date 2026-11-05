@@ -72,39 +72,37 @@ export function PoiPin({
   selected,
   onSelect,
   registry,
-  lifts,
   state = 'disponible',
   stop = 0,
   isSecret = false,
 }) {
   const group = useRef(null);
-  const lift = useRef(0);
-  const foot = useRef(null);
+  const button = useRef(null);
   const anchor = useMemo(() => new Vector3(...position), [position]);
   /* Punta del poste sin escalón: desde ahí se reparten las insignias. */
   const base = useMemo(() => new Vector3(...position), [position]);
   const locked = state === 'bloqueado';
   const material = STEM_MATERIAL;
 
-  useFrame(({ camera, invalidate }) => {
+  useFrame(({ camera }) => {
     const stem = group.current;
     if (!stem) return;
-    /* El poste mide lo mismo en pantalla; solo crece si PoiMarkers le dio un escalón. */
-    const goal = lifts?.get(id) ?? 0;
-    lift.current += (goal - lift.current) * 0.25;
-    if (Math.abs(goal - lift.current) > 0.01) invalidate();
-    else lift.current = goal;
-    const baseSize = camera.position.distanceTo(stem.position) * STEM_PX;
-    const size = baseSize * (1 + lift.current);
-    stem.scale.set(baseSize, size, baseSize);
-    /* El remache no se estira con el escalón. */
-    if (foot.current) foot.current.scale.y = baseSize / size;
-    base.set(position[0], position[1] + baseSize, position[2]);
+    /* El poste mide lo mismo en pantalla. Si el pin quedó dentro de un grupo, no se ve. */
+    stem.visible = button.current?.dataset.hidden !== 'true';
+    const size = camera.position.distanceTo(stem.position) * STEM_PX;
+    stem.scale.setScalar(size);
+    base.set(position[0], position[1] + size, position[2]);
     /* El marcador va en la punta del poste: de ahí se proyecta y se tapa. */
     anchor.set(position[0], position[1] + size, position[2]);
-  });
+    /*
+     * Prioridad −1: corre antes que el <Html> del marcador, que se ubica con la
+     * escala del poste. Si no, en el último cuadro de un zoom (el mapa solo
+     * dibuja cuando algo cambia) el marcador quedaba despegado de la punta.
+     */
+  }, -1);
 
   const register = (element) => {
+    button.current = element;
     if (element) registry.set(id, { element, anchor, base, name, selected });
     else registry.delete(id);
   };
@@ -112,23 +110,23 @@ export function PoiPin({
   return (
     <group ref={group} position={position}>
       <mesh geometry={STEM} material={material} />
-      <mesh ref={foot} geometry={FOOT} material={material} />
+      <mesh geometry={FOOT} material={material} />
       {/* En la punta del poste (el grupo se escala con la distancia). */}
       {/* Bajo los paneles de la interfaz (z-10): un pin nunca tapa la cabecera ni los paneles. */}
       <Html position={[0, 1, 0]} zIndexRange={selected ? [9, 8] : [7, 3]}>
         <button
           ref={register}
           type="button"
-          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale disabled:cursor-default"
+          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale data-[hidden=true]:!opacity-0 data-[hidden=true]:!pointer-events-none aria-disabled:cursor-default data-[count]:cursor-pointer"
           data-selected={selected || undefined}
           data-state={state}
           data-name={name}
-          onClick={locked ? undefined : onSelect}
-          disabled={locked}
+          onClick={onSelect}
+          aria-disabled={locked || undefined}
           aria-label={isSecret ? 'Lugar secreto por descubrir' : stop ? `${stop}. ${name}` : name}
         >
           {/* Marcador: círculo blanco con punta hacia el poste y el icono gris del lugar. */}
-          <span className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[mini=true]:scale-[0.36] group-data-[mini=true]:[&>*]:opacity-0 group-data-[state=bloqueado]:opacity-70">
+          <span className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[count]:scale-125 group-data-[count]:bg-forest group-data-[count]:border-white group-data-[count]:[&>svg]:hidden group-data-[state=bloqueado]:opacity-70 group-data-[count]:!opacity-100">
             {isSecret ? (
               <HelpCircle
                 size={22}
@@ -145,9 +143,14 @@ export function PoiPin({
               className="absolute left-1/2 top-full -mt-px -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-white group-data-[selected=true]:border-t-neutral-800 !opacity-100"
               aria-hidden="true"
             />
+            {/* Número de lugares cuando el pin agrupa varios (lo escribe PoiMarkers). */}
+            <span
+              className="poi-pin__count hidden group-data-[count]:block text-cream text-lg font-extrabold leading-none"
+              aria-hidden="true"
+            />
             {stop > 0 && !isSecret && (
               <span
-                className="absolute -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-neutral-800 text-white text-[13px] font-extrabold ring-2 ring-white"
+                className="absolute group-data-[count]:hidden -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-neutral-800 text-white text-[13px] font-extrabold ring-2 ring-white"
                 aria-hidden="true"
               >
                 {stop}
@@ -155,7 +158,7 @@ export function PoiPin({
             )}
             {(state === 'visitado' || locked) && !isSecret && (
               <span
-                className={`absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-white ${locked ? 'bg-neutral-400' : 'bg-neutral-600'}`}
+                className={`absolute group-data-[count]:hidden -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-white ${locked ? 'bg-neutral-400' : 'bg-neutral-600'}`}
                 aria-hidden="true"
               >
                 {locked ? (

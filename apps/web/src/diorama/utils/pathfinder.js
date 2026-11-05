@@ -216,8 +216,16 @@ export class Pathfinder {
    * @returns {number[][] | null}
    */
   findPath(startCoord, endCoord) {
+    /*
+     * Partiendo sobre el agua (parado en un puente), solo desde la orilla más
+     * cercana: si no, una orilla lejana con un camino más corto ganaba y el
+     * primer tramo cruzaba el embalse en línea recta.
+     */
     const startOnWater = this.inWater(startCoord);
-    const starts = this.snapCandidates(startCoord, { overWater: startOnWater });
+    const starts = this.snapCandidates(startCoord, { overWater: startOnWater }).slice(
+      0,
+      startOnWater ? 1 : undefined,
+    );
     /*
      * Un destino en el agua (el embalse) no se pisa: la ruta llega al camino
      * de la orilla más cercano y termina ahí.

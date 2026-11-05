@@ -6,7 +6,6 @@ import { buildAraucarias, buildLengas } from './trees.js';
 import { buildWetland } from './wetland.js';
 import { buildLookout } from './lookout.js';
 import { buildCamping } from './camping.js';
-import { buildBeach } from './beach.js';
 import { buildInfo } from './info.js';
 import { buildArboretum } from './arboretum.js';
 import { buildPowerhouse } from './powerhouse.js';
@@ -42,7 +41,6 @@ export const METERS_PER_UNIT = {
   sanctuary: MODEL_SCALE_MULTIPLIER,
   lookout: 2.1 * MODEL_SCALE_MULTIPLIER,
   camping: 6.6 * MODEL_SCALE_MULTIPLIER,
-  beach: 5 * MODEL_SCALE_MULTIPLIER,
   info: 3.5 * MODEL_SCALE_MULTIPLIER,
   arboretum: 6 * MODEL_SCALE_MULTIPLIER,
   powerhouse: 4 * MODEL_SCALE_MULTIPLIER,
@@ -72,7 +70,6 @@ export const BUILDERS = {
   sanctuary: buildSanctuary,
   lookout: buildLookout,
   camping: buildCamping,
-  beach: buildBeach,
   info: buildInfo,
   arboretum: buildArboretum,
   powerhouse: buildPowerhouse,
@@ -88,7 +85,13 @@ export const KEYWORDS = [
   [/parque angostura/i, 'forestTrail'],
   [/mirador central angostura/i, 'meshDeck'],
   [/calvario|san sebasti[aá]n/i, 'sanctuary'],
-  [/playa|balneario/i, 'beach'],
+  /* Playas: solo pin, sin modelo. */
+  [/playa|balneario/i, null],
+  /*
+   * Solo pin, sin modelo: el de Los Notros (playa y muelle) no calza con estos
+   * campings y todavía no tienen uno propio.
+   */
+  [/trompelhueno|patagua/i, null],
   [/camping|camp|acampar/i, 'camping'],
   [/mirador|vista/i, 'lookout'],
   [/central|hidroel[eé]ctrica/i, 'powerhouse'],

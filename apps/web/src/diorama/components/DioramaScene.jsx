@@ -1,7 +1,9 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { memo, use, useEffect, useMemo, useRef } from 'react';
 import { InstancedBufferAttribute, InstancedMesh, Vector3 } from 'three';
+import { useClearingStore } from '../../store/clearingStore.js';
 import { useViewerStore } from '../../store/viewerStore.js';
+import { withoutTreesIn } from '../utils/placement.js';
 import { TIERS, useRenderStore } from '../utils/quality.js';
 import { loadDiorama } from '../terrain/resources.js';
 import { ROCK_MODEL, TREE_KINDS, TREE_MODELS } from '../terrain/trees.js';
@@ -144,15 +146,27 @@ function Terrain({ terrain, material, castShadow }) {
 function Forest({ forest, materials, castShadow }) {
   const tier = useRenderStore((state) => state.tier);
   const settings = TIERS[tier].forest;
+  /* Sin árboles dentro de los modelos de los lugares. */
+  const clearings = useClearingStore((state) => state.clearings);
+  const cleared = useMemo(
+    () =>
+      Object.fromEntries(
+        TREE_KINDS.filter((kind) => forest[kind]).map((kind) => [
+          kind,
+          withoutTreesIn(forest[kind], clearings),
+        ]),
+      ),
+    [forest, clearings],
+  );
   useFrame(() => {
     materials.simple.userData.time.value = performance.now() / 1000;
   });
   return TREE_KINDS.map((kind) =>
-    forest[kind]?.count ? (
+    cleared[kind]?.count ? (
       <TreeSet
         key={kind}
         kind={kind}
-        trees={forest[kind]}
+        trees={cleared[kind]}
         materials={materials}
         settings={settings}
         castShadow={castShadow}

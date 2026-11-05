@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('../utils/characterModel.js', () => ({ useCharacterModel: () => ({}) }));
 vi.mock('./DioramaScene.jsx', () => ({ useDiorama: () => ({}) }));
 
-const { nextWanderIndex, pickPause } = await import('./Avatar.jsx');
+const { RUN_KM, nextWanderIndex, pathLengthKm, pickPause } = await import('./Avatar.jsx');
 
 const pois = [
   { x: 0, z: 0 },
@@ -31,5 +31,20 @@ describe('pickPause', () => {
 
   it('sin animaciones de pausa, no hay pausa', () => {
     expect(pickPause({ Walking: {} }, () => 0.9)).toBeNull();
+  });
+});
+
+describe('pathLengthKm', () => {
+  it('adds up the legs from the start, so long trips run and short ones walk', () => {
+    const from = { x: 0, z: 0 };
+    expect(
+      pathLengthKm(from, [
+        { x: 0.3, z: 0 },
+        { x: 0.3, z: 0.4 },
+      ]),
+    ).toBeCloseTo(0.7);
+    expect(pathLengthKm(from, [])).toBe(0);
+    expect(pathLengthKm(from, [{ x: 0.5, z: 0 }]) > RUN_KM).toBe(false);
+    expect(pathLengthKm(from, [{ x: 2, z: 0 }]) > RUN_KM).toBe(true);
   });
 });

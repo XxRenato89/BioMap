@@ -28,11 +28,12 @@ function footprint(x, z, r) {
 /**
  * @param {Array<{ id: number|string, x: number, z: number, radius: number }>} items
  * @param {{ heightAt: (x: number, z: number) => number, isWater: (x: number, z: number) => boolean }} ground
+ * @param {Array<{ x: number, z: number, r: number }>} [taken] Huellas ya ocupadas (p. ej. campings en la orilla).
  * @returns {Map<number|string, { x: number, y: number, z: number, scale: number }>}
  *   Solo los que encontraron lugar.
  */
-export function placeModels(items, { heightAt, isWater }) {
-  const placed = [];
+export function placeModels(items, { heightAt, isWater }, taken = []) {
+  const placed = [...taken];
   const result = new Map();
   for (const item of [...items].sort((a, b) => b.radius - a.radius)) {
     let best = null;
@@ -44,13 +45,12 @@ export function placeModels(items, { heightAt, isWater }) {
           const x = item.x + Math.sin(angle) * ring * r;
           const z = item.z + Math.cos(angle) * ring * r;
           if (placed.some((p) => Math.hypot(p.x - x, p.z - z) < p.r + r)) continue;
-          const isBridge = item.kind === 'bridge' || item.type === 'bridge' || item.id === 15;
           const samples = footprint(x, z, r);
-          if (!isBridge && samples.some(([sx, sz]) => isWater(sx, sz))) continue;
+          if (samples.some(([sx, sz]) => isWater(sx, sz))) continue;
           const heights = samples.map(([sx, sz]) => heightAt(sx, sz));
           const low = Math.min(...heights);
           const relief = (Math.max(...heights) - low) / (2 * r);
-          if (relief > MAX_RELIEF && !isBridge) continue;
+          if (relief > MAX_RELIEF) continue;
           /* Lo más plano y lo más cerca de su punto. */
           const score = relief + ring * 0.04;
           if (!best || score < best.score) best = { x, z, y: low, scale, r, score };
@@ -144,4 +144,75 @@ export function shoreSpot(x, z, radius, { heightAt, isWater }) {
   const cx = x + Math.sin(nearest.angle) * move;
   const cz = z + Math.cos(nearest.angle) * move;
   return { x: cx, y: heightAt(cx, cz), z: cz, angle: nearest.angle };
+}
+
+/**
+ * Árboles (matrices de instancia de 16 números y colores RGB) sin los que caen
+ * dentro de alguna huella { x, z, r }: los modelos de los lugares no quedan
+ * atravesados por el bosque.
+ *
+ * @param {{ matrices: Float32Array, colors: Float32Array, count: number }} trees
+ * @param {Array<{ x: number, z: number, r: number }>} clearings
+ */
+export function withoutTreesIn(trees, clearings) {
+  if (clearings.length === 0) return trees;
+  const keep = [];
+  for (let k = 0; k < trees.count; k += 1) {
+    const x = trees.matrices[k * 16 + 12];
+    const z = trees.matrices[k * 16 + 14];
+    if (!clearings.some((c) => Math.hypot(c.x - x, c.z - z) < c.r)) keep.push(k);
+  }
+  if (keep.length === trees.count) return trees;
+  const matrices = new Float32Array(keep.length * 16);
+  const colors = new Float32Array(keep.length * 3);
+  keep.forEach((k, slot) => {
+    matrices.set(trees.matrices.subarray(k * 16, k * 16 + 16), slot * 16);
+    colors.set(trees.colors.subarray(k * 3, k * 3 + 3), slot * 3);
+  });
+  return { matrices, colors, count: keep.length };
+}
+
+/**
+ * Cruce más angosto del río junto a (x, z): de las rectas que pasan por el
+ * punto (cada 6°), la que cruza el agua más cercana en el tramo más corto.
+ * Devuelve sus dos orillas, o null si no hay agua a menos de `reach` km.
+ *
+ * @param {number} x
+ * @param {number} z
+ * @param {(x: number, z: number) => boolean} isWater
+ * @param {{ reach?: number, step?: number }} [options]
+ * @returns {{ a: { x: number, z: number }, b: { x: number, z: number } } | null}
+ */
+export function riverCrossing(x, z, isWater, { reach = 0.3, step = 0.002 } = {}) {
+  let best = null;
+  for (let deg = 0; deg < 180; deg += 6) {
+    const angle = (deg * Math.PI) / 180;
+    const [dx, dz] = [Math.cos(angle), Math.sin(angle)];
+    /* Tramos de agua a lo largo de la recta, de −reach a +reach. */
+    const runs = [];
+    let start = null;
+    for (let t = -reach; t <= reach + 1e-9; t += step) {
+      const wet = isWater(x + dx * t, z + dz * t);
+      if (wet && start === null) start = t;
+      if (!wet && start !== null) {
+        runs.push([start, t - step]);
+        start = null;
+      }
+    }
+    /* Un tramo que toca el borde de la búsqueda no tiene orilla del otro lado. */
+    const closed = runs.filter(([t0]) => t0 > -reach);
+    if (closed.length === 0) continue;
+    const near = (r) => (r[0] <= 0 && r[1] >= 0 ? 0 : Math.min(Math.abs(r[0]), Math.abs(r[1])));
+    const run = closed.reduce((m, r) => (near(r) < near(m) ? r : m));
+    const score = near(run) * 2 + (run[1] - run[0]);
+    if (!best || score < best.score) {
+      const [t0, t1] = [run[0] - step, run[1] + step];
+      best = {
+        score,
+        a: { x: x + dx * t0, z: z + dz * t0 },
+        b: { x: x + dx * t1, z: z + dz * t1 },
+      };
+    }
+  }
+  return best && { a: best.a, b: best.b };
 }

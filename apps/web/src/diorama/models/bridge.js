@@ -1,6 +1,10 @@
 import { DodecahedronGeometry, Group } from 'three';
 import { box, cyl, mat, metal, part, seeded, stone, wood } from './materials.js';
 
+/* Largo del tablero entre orillas y su altura (unidades del modelo): para tenderlo entre dos orillas. */
+export const BRIDGE_SPAN = 14;
+export const BRIDGE_DECK = 1.5;
+
 /**
  * Puente colgante peatonal del río Huequecura (fotos de Google Maps): una
  * pasarela angosta de tablones, casi plana, tendida entre dos peñones de roca.
@@ -11,8 +15,8 @@ import { box, cyl, mat, metal, part, seeded, stone, wood } from './materials.js'
  */
 export function buildBridge() {
   const g = new Group();
-  const half = 7;
-  const deckY = 1.5;
+  const half = BRIDGE_SPAN / 2;
+  const deckY = BRIDGE_DECK;
   const sag = 0.35;
   const width = 0.5;
   const steps = 28;

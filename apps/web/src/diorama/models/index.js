@@ -11,14 +11,13 @@ export {
 
 export { buildDam } from './dam.js';
 export { buildAngosturaFront } from './angosturaFront.js';
-export { buildBridge } from './bridge.js';
+export { buildBridge, BRIDGE_DECK, BRIDGE_SPAN } from './bridge.js';
 export { buildRuka } from './ruka.js';
 export { buildAraucarias, buildLengas } from './trees.js';
 export { buildWetland } from './wetland.js';
 export { buildVisitorCenter } from './visitorCenter.js';
 export { buildLookout } from './lookout.js';
 export { buildCamping } from './camping.js';
-export { buildBeach } from './beach.js';
 export { buildInfo } from './info.js';
 export { buildArboretum } from './arboretum.js';
 export { buildPowerhouse } from './powerhouse.js';

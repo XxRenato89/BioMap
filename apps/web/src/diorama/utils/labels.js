@@ -45,27 +45,42 @@ export function declutter(items) {
 }
 
 /**
- * Escalona insignias que se pisan: de mayor a menor prioridad, cada una sube
- * `step` px por nivel (alargando su poste) hasta quedar libre, hasta
- * `maxLift` niveles. Las que no caben quedan fuera del resultado.
+ * Agrupa pines que en pantalla quedan a menos de `radius` px: de mayor a
+ * menor prioridad, cada pin se suma al grupo más cercano a su alcance o abre
+ * uno nuevo (y es su líder, el que se dibuja). Los `solo` (el elegido) nunca
+ * se agrupan: siempre se ven tal cual.
  *
- * @param {Array<{ id: string|number, rect: { x: number, y: number, width: number, height: number }, rank: number }>} items
- * @param {{ step: number, maxLift?: number }} options
- * @returns {Map<string|number, number>} Nivel (0 = sin subir) de cada insignia que cabe.
+ * @param {Array<{ id: string|number, x: number, y: number, rank: number, solo?: boolean }>} items
+ * @param {number} radius
+ * @returns {Map<string|number, Array<string|number>>} Ids de cada grupo, por id de su líder.
  */
-export function liftBadges(items, { step, maxLift = 3 }) {
-  const placed = [];
-  const lifts = new Map();
-  const overlaps = (a, b) =>
-    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+export function clusterPins(items, radius) {
+  const groups = [];
   for (const item of [...items].sort((a, b) => b.rank - a.rank)) {
-    for (let lift = 0; lift <= maxLift; lift += 1) {
-      const rect = { ...item.rect, y: item.rect.y - lift * step };
-      if (placed.some((other) => overlaps(other, rect))) continue;
-      placed.push(rect);
-      lifts.set(item.id, lift);
-      break;
-    }
+    const near = item.solo
+      ? null
+      : groups.find((g) => !g.solo && Math.hypot(g.x - item.x, g.y - item.y) < radius);
+    if (near) near.ids.push(item.id);
+    else groups.push({ x: item.x, y: item.y, solo: item.solo, ids: [item.id] });
   }
-  return lifts;
+  return new Map(groups.map((g) => [g.ids[0], g.ids]));
+}
+
+/**
+ * Abanico para abrir un grupo de pines que siguen juntos aun de cerca: `n`
+ * desplazamientos (px) en círculo alrededor del grupo, empezando arriba, con
+ * el radio justo para que no se toquen (al menos `radius`).
+ *
+ * @param {number} n
+ * @param {number} radius
+ * @returns {Array<{ dx: number, dy: number }>}
+ */
+export function fanOffsets(n, radius) {
+  if (n < 2) return [{ dx: 0, dy: 0 }];
+  /* Cuerda entre vecinos ≥ radius: r = radius / (2 sin(π/n)). */
+  const r = Math.max(radius, radius / (2 * Math.sin(Math.PI / n)));
+  return Array.from({ length: n }, (_, k) => {
+    const angle = -Math.PI / 2 + (k / n) * Math.PI * 2;
+    return { dx: Math.cos(angle) * r, dy: Math.sin(angle) * r };
+  });
 }
