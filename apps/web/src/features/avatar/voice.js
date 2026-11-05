@@ -21,11 +21,20 @@ const langRank = (lang = '') => {
 
 const genderRank = (name) => (LIGHT_VOICES.test(name) ? 0 : MALE_VOICES.test(name) ? 2 : 1);
 
-/** Elige la voz en español que más suena a niño: ligera primero, luego la más cercana a Chile. */
-export function pickQuibarVoice(voices) {
+/* Las voces "Online"/Google se sintetizan en la nube y quedan mudas sin internet. */
+const offlineRank = (v) => (v.localService === false || /online|google/i.test(v.name) ? 1 : 0);
+
+/**
+ * Elige la voz en español que más suena a niño. Sin internet solo sirven las
+ * instaladas en el equipo, así que esas van primero; luego ligera, luego Chile.
+ */
+export function pickQuibarVoice(voices, online = globalThis.navigator?.onLine ?? true) {
   const spanish = voices.filter((v) => langRank(v.lang) < 9);
   spanish.sort(
-    (a, b) => genderRank(a.name) - genderRank(b.name) || langRank(a.lang) - langRank(b.lang),
+    (a, b) =>
+      (online ? 0 : offlineRank(a) - offlineRank(b)) ||
+      genderRank(a.name) - genderRank(b.name) ||
+      langRank(a.lang) - langRank(b.lang),
   );
   return spanish[0] ?? null;
 }

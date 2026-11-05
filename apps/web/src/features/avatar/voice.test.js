@@ -14,6 +14,16 @@ describe('pickQuibarVoice', () => {
     expect(pickQuibarVoice(voices).name).toMatch(/Catalina/);
   });
 
+  it('offline, prefers a voice installed on the PC over a cloud one', () => {
+    const voices = [
+      v('Microsoft Catalina Online (Natural) - Spanish (Chile)', 'es-CL'),
+      v('Microsoft Pablo - Spanish (Spain)', 'es-ES'),
+      v('Microsoft Sabina - Spanish (Mexico)', 'es-MX'),
+    ];
+    expect(pickQuibarVoice(voices, false).name).toMatch(/Sabina/);
+    expect(pickQuibarVoice(voices, true).name).toMatch(/Catalina/);
+  });
+
   it('falls back to any Spanish voice, and to null without one', () => {
     expect(pickQuibarVoice([v('Microsoft Raul', 'es-MX')]).name).toBe('Microsoft Raul');
     expect(pickQuibarVoice([v('Microsoft David', 'en-US')])).toBeNull();

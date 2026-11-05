@@ -72,4 +72,12 @@ ELEVENLABS_API_KEY=<clave de la cuenta de ElevenLabs>
   no gastan créditos y suenan aunque se corte internet. Para regenerarlas (por
   ejemplo, al cambiar de voz), borrar esa carpeta.
 - Como máximo 20 frases nuevas por minuto, para cuidar los créditos.
+- **Kiosco sin internet:** con internet y la API corriendo, ejecutar una vez
+  `npm run tts:warm` en `apps/api`. Genera todas las frases de Quibar (llegada a cada
+  punto en español e inglés y los hallazgos secretos) y las deja en caché. Después
+  suenan sin red. Repetirlo al agregar o renombrar puntos.
+- Sin internet y sin la frase en caché, se usa una voz instalada en Windows
+  (Sabina, Helena, Laura...). Las voces "Online" de Edge y las de Google no
+  funcionan sin red. Para instalar voces: Configuración → Hora e idioma → Voz →
+  Agregar voces → Español.
 - Sin clave, sin internet o sin créditos, Quibar usa la voz del navegador.
