@@ -7,7 +7,7 @@ import { useUserStore } from '../../store/userStore.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { PoiModel } from './PoiModel.jsx';
 import { PoiPin } from './PoiPin.jsx';
-import { clusterPins, declutter, fanOffsets } from '../utils/labels.js';
+import { clusterPins, declutter } from '../utils/labels.js';
 import {
   BRIDGE_DECK,
   BRIDGE_SPAN,
@@ -62,9 +62,6 @@ const STEM = 0;
 const LABEL_GAP = 0;
 /* Pines a menos de esto (px) en pantalla se juntan en uno con el número de lugares. */
 const CLUSTER_PX = 58;
-/* Al tocar un grupo, la cámara se acerca hasta verlo así de grande (km por km de ancho del grupo). */
-const CLUSTER_ZOOM = 3.5;
-const MIN_CLUSTER_RANGE_KM = 0.35;
 const CHAR_WIDTH = 9.5;
 const LABEL_PADDING = 30;
 const projected = new Vector3();
@@ -205,36 +202,11 @@ export function PoiMarkers({
   }, [spots, points]);
   const registry = useRef(new Map()).current;
   const lastUpdate = useRef(-Infinity);
-  /* Grupos del último reparto: id del líder → ids del grupo. */
-  const clusters = useRef(new Map());
-  /* Grupo abierto en abanico (al tocarlo) y a qué distancia de cámara se abrió. */
-  const fanned = useRef(null);
-  const controls = useThree((state) => state.controls);
-  const invalidate = useThree((state) => state.invalidate);
   const lastView = useRef({
     position: new Vector3(Infinity, 0, 0),
     quaternion: new Quaternion(),
     still: 0,
   });
-
-  /** Acerca la cámara al centro de un grupo, lo justo para que sus pines se separen. */
-  const openCluster = (ids) => {
-    const spotsOf = ids
-      .map((member) => points.features.find((f) => f.properties.id === member))
-      .filter(Boolean)
-      .map((feature) => projection.toWorld(feature.geometry.coordinates));
-    if (!controls || spotsOf.length === 0) return;
-    const cx = spotsOf.reduce((sum, p) => sum + p.x, 0) / spotsOf.length;
-    const cz = spotsOf.reduce((sum, p) => sum + p.z, 0) / spotsOf.length;
-    const spread = Math.max(...spotsOf.map((p) => Math.hypot(p.x - cx, p.z - cz)));
-    const range = Math.max(MIN_CLUSTER_RANGE_KM, spread * 2 * CLUSTER_ZOOM);
-    const distance = Math.min(range, controls.distance * 0.6);
-    controls.moveTo(cx, surfaceAt(cx, cz), cz, true);
-    controls.dollyTo(distance, true);
-    /* Si al llegar siguen juntos, se abren en abanico para tocar cada uno. */
-    fanned.current = { ids: new Set(ids), distance };
-    invalidate();
-  };
 
   useFrame(({ camera }) => {
     /*
@@ -308,57 +280,14 @@ export function PoiMarkers({
        * Los pines que se pisan en pantalla se juntan en uno solo con el número
        * de lugares (se ve limpio); al acercarse se separan solos.
        */
-      /* El abanico se cierra si el visitante aleja o acerca la cámara. */
-      const fan = fanned.current;
-      if (fan && Math.abs(controls.distance - fan.distance) > fan.distance * 0.35) {
-        fanned.current = null;
-      }
-      const inFan = fanned.current
-        ? items.filter(({ id }) => fanned.current.ids.has(id) && !registry.get(id)?.selected)
-        : [];
-      const offsets = new Map();
-      if (inFan.length > 1) {
-        const cx = inFan.reduce((sum, item) => sum + item.x, 0) / inFan.length;
-        const cy = inFan.reduce((sum, item) => sum + item.y, 0) / inFan.length;
-        const crowded = inFan.some((a) =>
-          inFan.some((b) => a !== b && Math.hypot(a.x - b.x, a.y - b.y) < CLUSTER_PX),
-        );
-        if (crowded) {
-          fanOffsets(inFan.length, CLUSTER_PX).forEach(({ dx, dy }, k) => {
-            const item = inFan[k];
-            offsets.set(item.id, { dx: cx + dx - item.x, dy: cy + dy - item.y });
-          });
-        }
-      }
-      const groups = clusterPins(
-        items.filter(({ id }) => !offsets.has(id)),
-        CLUSTER_PX,
-      );
-      for (const id of offsets.keys()) groups.set(id, [id]);
-      clusters.current = groups;
+      const groups = clusterPins(items, CLUSTER_PX);
       const leaderOf = new Map();
       for (const [leader, ids] of groups) for (const member of ids) leaderOf.set(member, leader);
       const withLabel = declutter(
-        items
-          .filter(({ id }) => groups.get(id)?.length === 1)
-          .map((item) => {
-            const off = offsets.get(item.id);
-            return off
-              ? {
-                  ...item,
-                  rect: { ...item.rect, x: item.rect.x + off.dx, y: item.rect.y + off.dy },
-                }
-              : item;
-          }),
+        items.filter(({ id }) => groups.get(id)?.length === 1),
       );
       for (const [id, entry] of registry) {
         const { element } = entry;
-        /* Desplazado en el abanico (o en su lugar). */
-        const off = offsets.get(id);
-        const left = off ? `${off.dx}px` : '';
-        const top = off ? `${off.dy}px` : '';
-        if (element.style.left !== left) element.style.left = left;
-        if (element.style.top !== top) element.style.top = top;
         const ids = groups.get(id);
         const hidden = String(!ids && leaderOf.has(id));
         const count = ids && ids.length > 1 ? String(ids.length) : '';
@@ -370,11 +299,11 @@ export function PoiMarkers({
         if ((element.dataset.count ?? '') !== count) {
           if (count) element.dataset.count = count;
           else delete element.dataset.count;
-          /* Para lectores de pantalla: el grupo se anuncia como tal, no como su líder. */
+          /* Para lectores de pantalla: el líder y cuántos lugares más tiene junto. */
           element.dataset.label ??= element.getAttribute('aria-label') ?? '';
           element.setAttribute(
             'aria-label',
-            count ? `${count} lugares juntos: acercar` : element.dataset.label,
+            count ? `${element.dataset.label} y ${count - 1} lugares más` : element.dataset.label,
           );
         }
         if (element.dataset.compact !== compact) element.dataset.compact = compact;
@@ -405,12 +334,6 @@ export function PoiMarkers({
         const fromScene = Boolean(event.intersections);
         if (fromScene && native.target.closest?.('[data-view]')?.dataset.view !== viewId) return;
         event.stopPropagation();
-        /* Un pin que agrupa varios lugares acerca la cámara hasta separarlos. */
-        const members = clusters.current.get(id);
-        if (!fromScene && members?.length > 1) {
-          openCluster(members);
-          return;
-        }
         /* Parada del recorrido aún bloqueada: no se abre. */
         if (getPoiState(id) === 'bloqueado') return;
         onSelectPoint(id, { x: native.clientX, y: native.clientY });

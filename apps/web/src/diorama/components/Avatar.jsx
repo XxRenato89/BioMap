@@ -62,20 +62,6 @@ const WATCH_KM = 0.6;
 /* Paseo: próximo destino al azar entre los lugares a menos de esto (km). */
 const WANDER_KM = 3;
 
-/* Con un camino más largo que esto (km) corre; si no, camina. */
-export const RUN_KM = 1.5;
-
-/** Largo (km) de un camino de puntos en el mundo ({ x, z }), partiendo de `from`. */
-export function pathLengthKm(from, points) {
-  let total = 0;
-  let prev = from;
-  for (const p of points) {
-    total += Math.hypot(p.x - prev.x, p.z - prev.z);
-    prev = p;
-  }
-  return total;
-}
-
 /**
  * Índice del próximo lugar del paseo: uno cercano al azar (distinto del
  * actual); si no hay ninguno cerca, cualquiera.
@@ -116,8 +102,6 @@ export default memo(function Avatar({
 
   const currentPos = useRef(new Vector3(0, 0, 0));
   const currentHeading = useRef(0);
-  /* Este viaje es largo: corre (más rápido y con la animación de carrera). */
-  const runningRef = useRef(false);
   const patrolIndex = useRef(0);
   const isInitialized = useRef(false);
   const idleWaitUntil = useRef(0);
@@ -301,12 +285,13 @@ export default memo(function Avatar({
     }
 
     const dt = Math.min(delta, 0.1);
-    const speed = runningRef.current ? runSpeed : patrolSpeed;
+    let speed = patrolSpeed;
     let activePoint = null;
     let targetCoord = null;
 
     if (mode === 'running_to_point' && targetPoint) {
       targetCoord = targetPoint.geometry.coordinates;
+      speed = runSpeed;
       const found = poiWorldPositions.find((p) => p.id === targetPoint.properties.id);
       if (found) activePoint = found;
     } else if (mode === 'patrol') {
@@ -360,8 +345,6 @@ export default memo(function Avatar({
         const { x, z } = projection.toWorld(coord);
         return { x, y: heightAt(x, z), z };
       });
-      runningRef.current =
-        pathLengthKm(currentPos.current, worldPath.slice(pathIndex.current)) > RUN_KM;
       setPath(worldPath);
     }
 
@@ -497,7 +480,7 @@ export default memo(function Avatar({
     // Selección de animación: caminar o correr al desplazarse; en pausa, la de la pausa.
     let currentAnim = 'Idle';
     if (isMoving) {
-      currentAnim = actions?.Running && runningRef.current ? 'Running' : 'Walking';
+      currentAnim = actions?.Running && mode === 'running_to_point' ? 'Running' : 'Walking';
     } else if (lookRef.current && actions?.[lookRef.current.anim]) {
       currentAnim = lookRef.current.anim;
     }
