@@ -4,8 +4,8 @@
   "geometry": {
     "type": "Point",
     "coordinates": [
-      -71.791274,
-      -37.743429
+      -71.79239,
+      -37.7426992
     ]
   },
   "properties": {
@@ -14,6 +14,7 @@
     "layerId": 3,
     "layerSlug": "tourism",
     "tourStop": null,
+    "secret": false,
     "description": "Camping y playa en la ribera sur del embalse, con quinchos de paja. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {

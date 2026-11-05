@@ -4,7 +4,7 @@
  * Excluye los puntos eliminados y los de capas inactivas.
  */
 const LIST_SQL = `
-  SELECT p.id, p.name, p.layer_id, l.slug AS layer_slug, p.tour_stop,
+  SELECT p.id, p.name, p.layer_id, l.slug AS layer_slug, p.tour_stop, p.is_secret,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat
     FROM points_of_interest p
     JOIN layers l ON l.id = p.layer_id
@@ -18,7 +18,7 @@ const LIST_SQL = `
  * json_agg en la misma consulta para evitar una consulta extra por imagen.
  */
 const DETAIL_SQL = `
-  SELECT p.id, p.name, p.description, p.layer_id, l.slug AS layer_slug, p.tour_stop,
+  SELECT p.id, p.name, p.description, p.layer_id, l.slug AS layer_slug, p.tour_stop, p.is_secret,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat,
          COALESCE(
            (SELECT json_agg(
@@ -53,6 +53,7 @@ export function toFeature(row, extraProperties = {}) {
       layerId: row.layer_id,
       layerSlug: row.layer_slug,
       tourStop: row.tour_stop ?? null,
+      secret: row.is_secret ?? false,
       ...extraProperties,
     },
   };

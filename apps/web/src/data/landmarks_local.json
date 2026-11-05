@@ -5,63 +5,79 @@
       "id": "river-biobio-inlet",
       "kind": "river",
       "name": "Río Biobío",
-      "coordinates": [
-        -71.7912,
-        -37.7428
-      ],
+      "coordinates": [-71.7912, -37.7428],
       "rank": 85
     },
     {
       "id": "local-embalse-angostura",
       "kind": "reservoir",
       "name": "Embalse Angostura",
-      "coordinates": [
-        -71.806,
-        -37.7265
-      ],
+      "coordinates": [-71.806, -37.7265],
       "rank": 80
     },
     {
       "id": "river-huequecura",
       "kind": "river",
       "name": "Río Huequecura",
-      "coordinates": [
-        -71.79327,
-        -37.70843
-      ],
+      "coordinates": [-71.79327, -37.70843],
       "rank": 45
     },
     {
       "id": "river-biobio-outlet",
       "kind": "river",
       "name": "Río Biobío",
-      "coordinates": [
-        -71.821,
-        -37.7095
-      ],
+      "coordinates": [-71.821, -37.7095],
       "rank": 45
     },
     {
       "id": "sector-los-notros",
       "kind": "village",
       "name": "Sector Los Notros",
-      "coordinates": [
-        -71.79234,
-        -37.73515
-      ],
+      "coordinates": [-71.79234, -37.73515],
       "rank": 40
     },
     {
       "id": "sector-el-piulo",
       "kind": "village",
       "name": "Sector El Piulo",
-      "coordinates": [
-        -71.8235,
-        -37.7115
-      ],
+      "coordinates": [-71.8235, -37.7115],
       "rank": 40
     }
   ],
   "buildings": [],
-  "roads": []
+  "roads": [
+    {
+      "kind": "track",
+      "name": "Camino al Cerro El Calvario",
+      "source": "Trazado sobre imagen satelital de Google Maps (nov. 2026); no está en OSM",
+      "line": [
+        [-71.803966, -37.71718],
+        [-71.803529, -37.717701],
+        [-71.80342, -37.718568],
+        [-71.803093, -37.719349],
+        [-71.802438, -37.71987],
+        [-71.802002, -37.719922],
+        [-71.80091, -37.719696],
+        [-71.799164, -37.719471],
+        [-71.797636, -37.719749],
+        [-71.796981, -37.719696],
+        [-71.795017, -37.719436],
+        [-71.793707, -37.719471],
+        [-71.793271, -37.719818],
+        [-71.792179, -37.720217],
+        [-71.789778, -37.720825],
+        [-71.787028, -37.721345],
+        [-71.786738, -37.721558],
+        [-71.787175, -37.722686],
+        [-71.787612, -37.724075],
+        [-71.787939, -37.724942],
+        [-71.788922, -37.725324],
+        [-71.790013, -37.72581],
+        [-71.79176, -37.725741],
+        [-71.793179, -37.72581],
+        [-71.79438, -37.726244],
+        [-71.7948384, -37.726559]
+      ]
+    }
+  ]
 }

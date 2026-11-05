@@ -15,6 +15,9 @@ const SNAP_CANDIDATES = 12;
 /* Para un destino en el agua, hasta dónde se busca el camino de la orilla. */
 const MAX_SHORE_KM = 1.5;
 const SHORE_SPREAD_KM = 0.1;
+/* Último paso fuera del camino hasta el lugar: más lejos, se queda en el camino
+ * (si no, cruzaba el bosque en línea recta hasta un lugar sin camino cargado). */
+const LAST_STEP_KM = 0.15;
 
 /**
  * Distancia aproximada (km) entre dos [lng, lat] cercanos.
@@ -236,9 +239,8 @@ export class Pathfinder {
     if (!best) return null;
     const middle = best.nodes.map((id) => this.nodes[id]);
     const path = [startCoord, best.start.point, ...middle, best.end.point];
-    /* Si el camino pasa a menos de 50m del destino (como un puente o mirador), llegar hasta el punto */
-    const reachedDestination = best.end.distance <= 0.05;
-    return onWater && !reachedDestination ? path : [...path, endCoord];
+    const reachable = best.end.distance <= LAST_STEP_KM && this.walkable(best.end.point, endCoord);
+    return reachable ? [...path, endCoord] : path;
   }
 
   /**

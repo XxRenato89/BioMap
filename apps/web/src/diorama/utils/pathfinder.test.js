@@ -122,6 +122,14 @@ describe('Pathfinder', () => {
   });
 });
 
+describe('Pathfinder with a destination far from any road', () => {
+  it('stops on the nearest road instead of cutting straight through the forest', () => {
+    const pf = new Pathfinder([WEST]);
+    const path = pf.findPath([-71.81, -37.7], [-71.805, -37.705]);
+    expect(path.at(-1)[1]).toBeCloseTo(-37.7, 6);
+  });
+});
+
 describe('Pathfinder with a destination on the water', () => {
   it('stops on the shore road nearest to it instead of walking into the water', () => {
     const pf = new Pathfinder([WEST], { water: RIVER });

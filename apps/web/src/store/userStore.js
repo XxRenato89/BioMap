@@ -1,11 +1,15 @@
 import { create } from 'zustand';
 
+/*
+ * Recorridos temáticos. Las paradas van por nombre del lugar, no por id: los ids
+ * cambian según el orden en que se cargó la base. «general» no tiene lista: sus
+ * paradas salen del campo `tour_stop` de los datos (ver tourFrom).
+ */
 export const AVAILABLE_TOURS = [
   {
     id: 'general',
     title: 'Ruta Esencial',
     description: 'Los puntos icónicos del Parque y la historia del Embalse Angostura.',
-    stops: [12, 1, 6, 10], // Centro de Visitantes -> Central -> Parque -> Sendero Huequecura
     duration: '45 min',
     distance: '3.2 km',
   },
@@ -13,7 +17,12 @@ export const AVAILABLE_TOURS = [
     id: 'nature',
     title: 'Naturaleza y Senderos',
     description: 'Recorre el bosque nativo, flora autóctona y miradores panorámicos.',
-    stops: [7, 8, 10, 13], // Arboretum -> Cerro El Calvario -> Mirador Huequecura -> Los Notros
+    stopNames: [
+      'Arboretum',
+      'Cerro el Calvario',
+      'Sendero y Mirador Huequecura',
+      'Camping Los Notros',
+    ],
     duration: '1h 15m',
     distance: '4.8 km',
   },
@@ -21,11 +30,31 @@ export const AVAILABLE_TOURS = [
     id: 'energy',
     title: 'Energía y Cañón del Biobío',
     description: 'Descubre las obras de ingeniería, miradores y el cañón del río Biobío.',
-    stops: [1, 11, 17, 3], // Central -> Mirador Central -> Mirador El Piulo -> Puente El Piulo
+    stopNames: [
+      'Central Hidroeléctrica Angostura',
+      'Mirador Central Angostura',
+      'Puente Piulo Oriente',
+      'Puente El Piulo',
+    ],
     duration: '50 min',
     distance: '3.8 km',
   },
 ];
+
+/**
+ * Ids de las paradas de un recorrido según los puntos cargados. Los nombres
+ * que no existen en los datos se omiten.
+ *
+ * @param {string} tourId
+ * @param {Array<{ properties: { id: number, name: string, tourStop?: number | null } }>} features
+ * @returns {number[]}
+ */
+export function stopsFor(tourId, features) {
+  const tour = AVAILABLE_TOURS.find((item) => item.id === tourId) ?? AVAILABLE_TOURS[0];
+  if (!tour.stopNames) return tourFrom(features);
+  const idByName = new Map(features.map((f) => [f.properties.name, Number(f.properties.id)]));
+  return tour.stopNames.map((name) => idByName.get(name)).filter((id) => id !== undefined);
+}
 
 const SECRET_EXPIRY_MS = 90 * 60 * 1000; // 90 minutos de vigencia antes de volver a ocultarse
 
@@ -34,19 +63,18 @@ const SECRET_EXPIRY_MS = 90 * 60 * 1000; // 90 minutos de vigencia antes de volv
  */
 export const useUserStore = create((set, get) => ({
   /** Ids de los puntos del recorrido actual, en orden. */
-  tour: [1, 6, 10, 12],
+  tour: [],
+  /** Puntos cargados, para traducir los nombres de las paradas a ids. */
+  features: [],
   visitedPoints: [],
   activeTourId: 'general',
   discoveredSecrets: {}, // { [poiId]: timestamp }
 
-  setActiveTour: (tourId) => {
-    const tourObj = AVAILABLE_TOURS.find((t) => t.id === tourId) ?? AVAILABLE_TOURS[0];
-    set({
-      activeTourId: tourId,
-      tour: tourObj.stops,
-      visitedPoints: [],
-    });
-  },
+  setActiveTour: (tourId) =>
+    set({ activeTourId: tourId, tour: stopsFor(tourId, get().features), visitedPoints: [] }),
+
+  /** Puntos nuevos de la API: recalcula las paradas del recorrido activo. */
+  setFeatures: (features) => set({ features, tour: stopsFor(get().activeTourId, features) }),
 
   discoverSecret: (poiId) => {
     const id = Number(poiId);
@@ -93,7 +121,14 @@ export const useUserStore = create((set, get) => ({
     return tour.length > 0 && tour.every((stop) => visitedPoints.some((v) => Number(v) === stop));
   },
 
-  resetProgress: () => set({ visitedPoints: [], discoveredSecrets: {} }),
+  /** Kiosco limpio para el próximo visitante: sin visitas y con la ruta general. */
+  resetProgress: () =>
+    set({
+      visitedPoints: [],
+      discoveredSecrets: {},
+      activeTourId: 'general',
+      tour: stopsFor('general', get().features),
+    }),
 }));
 
 /**

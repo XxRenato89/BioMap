@@ -15,24 +15,25 @@
       "layerId": 1,
       "layerSlug": "history",
       "tourStop": 1,
+      "secret": false,
       "description": "Central de pasada de Colbún, en operación desde 2014: 316 MW con tres turbinas instaladas en una caverna bajo el cerro. Su presa forma el embalse Angostura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/presa-angostura-aerea.png",
+          "url": "/media/presa-angostura-aerea.jpg",
           "altText": "Vista aérea panorámica del complejo hidroeléctrico Angostura, vertedero y embalse",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
           "kind": "photo"
         },
         {
-          "url": "/media/presa-angostura-vertedero.png",
+          "url": "/media/presa-angostura-vertedero.jpg",
           "altText": "Vertedero de compuertas radiales y grúa pórtico de la presa Angostura",
           "credit": "Google Maps / Parque Angostura",
           "isMain": false,
           "kind": "photo"
         },
         {
-          "url": "/media/presa-angostura-carretera.png",
+          "url": "/media/presa-angostura-carretera.jpg",
           "altText": "Vista de la presa Angostura y el canal de descarga desde la Ruta Q-61",
           "credit": "Google Maps / Parque Angostura",
           "isMain": false,
@@ -78,6 +79,7 @@
       "layerId": 1,
       "layerSlug": "history",
       "tourStop": null,
+      "secret": false,
       "description": "Puente de la Ruta Q-61 sobre el Biobío, aguas abajo de la presa, en el sector El Piulo. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -98,6 +100,7 @@
       "layerId": 1,
       "layerSlug": "history",
       "tourStop": null,
+      "secret": false,
       "description": "El antiguo puente de la ruta, junto al nuevo; hoy solo peatonal. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -118,6 +121,7 @@
       "layerId": 1,
       "layerSlug": "history",
       "tourStop": null,
+      "secret": false,
       "description": "Puente de la Ruta Q-61 que cruza el embalse hacia Quilaco. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -146,6 +150,7 @@
       "layerId": 1,
       "layerSlug": "history",
       "tourStop": null,
+      "secret": true,
       "description": "Localidad rural junto al río Huequecura, al norte del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -166,6 +171,7 @@
       "layerId": 2,
       "layerSlug": "ecology",
       "tourStop": 2,
+      "secret": false,
       "description": "Área natural junto a la central y el embalse, con senderos entre bosque nativo, playas, campings y un mirador. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -176,8 +182,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.796316,
-        -37.742917
+        -71.7935471,
+        -37.7427509
       ]
     },
     "properties": {
@@ -186,6 +192,7 @@
       "layerId": 2,
       "layerSlug": "ecology",
       "tourStop": null,
+      "secret": false,
       "description": "Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -214,10 +221,11 @@
       "layerId": 2,
       "layerSlug": "ecology",
       "tourStop": null,
+      "secret": false,
       "description": "Cerro con bosque nativo entre el embalse y el brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/mirador-san-sebastian.png",
+          "url": "/media/mirador-san-sebastian.jpg",
           "altText": "Vista panorámica del valle del Biobío desde el Santuario y Mirador San Sebastián",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
@@ -242,6 +250,7 @@
       "layerId": 2,
       "layerSlug": "ecology",
       "tourStop": null,
+      "secret": false,
       "description": "Embalse de 641 hectáreas y unos 100 millones de m³ formado por la presa Angostura en el río Biobío. Su nivel varía apenas un metro. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -262,17 +271,18 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": 3,
+      "secret": false,
       "description": "Sendero que sube a un mirador sobre la presa y el embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/mirador-huequecura-1.png",
+          "url": "/media/mirador-huequecura-1.jpg",
           "altText": "Vista panorámica desde la terraza del Mirador Huequecura hacia el Embalse Angostura y la presa",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
           "kind": "photo"
         },
         {
-          "url": "/media/mirador-huequecura-2.png",
+          "url": "/media/mirador-huequecura-2.jpg",
           "altText": "Sendero entre el bosque nativo con vista hacia la captación de la central Angostura",
           "credit": "Google Maps / Parque Angostura",
           "isMain": false,
@@ -297,10 +307,11 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Vista a la represa, junto al Biobío al pie de la presa. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/presa-angostura-carretera.png",
+          "url": "/media/presa-angostura-carretera.jpg",
           "altText": "Vista al aliviadero y caída de agua de la presa Angostura desde la Ruta Q-61",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
@@ -325,10 +336,11 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Punto de partida de la visita: exposición sobre la central, el territorio y su gente, con esta maqueta. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/centro-visitantes-angostura.png",
+          "url": "/media/centro-visitantes-angostura.jpg",
           "altText": "Fachada exterior del Centro de Visitantes Angostura y jardines en Ruta Q-61",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
@@ -353,6 +365,7 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Punto de información turística del parque. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -363,8 +376,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.803,
-        -37.7086
+        -71.7977756,
+        -37.7075806
       ]
     },
     "properties": {
@@ -373,10 +386,11 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Playa en la ribera norte del brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/playa-santa-barbara.png",
+          "url": "/media/playa-santa-barbara.jpg",
           "altText": "Playa pública Santa Bárbara en la ribera norte del Embalse Angostura",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
@@ -391,8 +405,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.78058,
-        -37.70792
+        -71.7806875,
+        -37.7078125
       ]
     },
     "properties": {
@@ -401,6 +415,7 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": true,
       "description": "Puente peatonal colgante sobre el río Huequecura, donde entra al embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -411,8 +426,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.793541,
-        -37.741749
+        -71.7939082,
+        -37.7415318
       ]
     },
     "properties": {
@@ -421,6 +436,7 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": 4,
+      "secret": false,
       "description": "Playa pública en la ribera sur del embalse, junto al Arboretum. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -431,8 +447,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.798078,
-        -37.726323
+        -71.7987735,
+        -37.7264148
       ]
     },
     "properties": {
@@ -441,24 +457,25 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
-      "description": "Camping a orillas del embalse, en el sector Los Notros, con playa, quinchos, muelle y pasarelas accesibles.",
+      "secret": false,
+      "description": "Camping a orillas del embalse, en el sector Los Notros, con playa, quinchos, muelle y pasarelas accesibles. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
-          "url": "/media/camping-los-notros-1.png",
+          "url": "/media/camping-los-notros-1.jpg",
           "altText": "Vista aérea de la ensenada, espigón y muelle de Camping Los Notros",
           "credit": "Google Maps / Parque Angostura",
           "isMain": true,
           "kind": "photo"
         },
         {
-          "url": "/media/camping-los-notros-2.png",
+          "url": "/media/camping-los-notros-2.jpg",
           "altText": "Borde de playa y quinchos frente al embalse en Camping Los Notros",
           "credit": "Google Maps / Parque Angostura",
           "isMain": false,
           "kind": "photo"
         },
         {
-          "url": "/media/camping-los-notros-3.png",
+          "url": "/media/camping-los-notros-3.jpg",
           "altText": "Pasarelas accesibles y sector de picnic arbolado en Camping Los Notros",
           "credit": "Google Maps / Parque Angostura",
           "isMain": false,
@@ -473,8 +490,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.791274,
-        -37.743429
+        -71.79239,
+        -37.7426992
       ]
     },
     "properties": {
@@ -483,6 +500,7 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Camping y playa en la ribera sur del embalse, con quinchos de paja. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -501,8 +519,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -71.767656,
-        -37.703407
+        -71.767142,
+        -37.702461
       ]
     },
     "properties": {
@@ -511,6 +529,7 @@
       "layerId": 3,
       "layerSlug": "tourism",
       "tourStop": null,
+      "secret": false,
       "description": "Camping junto al río Huequecura, en Lo Nieve. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }

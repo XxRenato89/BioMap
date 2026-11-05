@@ -11,3 +11,6 @@ biomap-demo.html
 ejemplo.html
 docs/archivo
 docs/diseno-visor/
+# Datos generados por apps/api/scripts/export-static.js
+apps/web/public/mock
+apps/web/public/api

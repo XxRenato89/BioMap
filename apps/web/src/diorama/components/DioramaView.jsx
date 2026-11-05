@@ -65,9 +65,7 @@ function Loading() {
         <p className="m-0 font-display font-extrabold text-6xl tracking-tight text-white drop-shadow-sm">
           BioMap
         </p>
-        <p className="m-0 text-lg text-cream/90 font-medium">
-          {stage}
-        </p>
+        <p className="m-0 text-lg text-cream/90 font-medium">{stage}</p>
 
         {/* Barra de progreso con porcentaje */}
         <div className="w-72 mt-2">
@@ -100,8 +98,7 @@ function Loading() {
           >
             <Lightbulb size={20} className="flex-none text-ochre mt-0.5" aria-hidden="true" />
             <p className="m-0">
-              <strong className="text-ochre">¿Sabías que?</strong>{' '}
-              {tip[lang] ?? tip.es}
+              <strong className="text-ochre">¿Sabías que?</strong> {tip[lang] ?? tip.es}
             </p>
           </motion.div>
         </AnimatePresence>

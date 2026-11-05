@@ -3,7 +3,6 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect, useState } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 import { setFrameRequester } from '../utils/frame.js';
-import { useRenderStore } from '../utils/quality.js';
 
 /**
  * Deja disponible `requestFrame()` fuera del canvas (por ejemplo, al

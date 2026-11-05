@@ -31,3 +31,13 @@ describe('mock repositories (USE_MOCKS)', () => {
     expect(await createPointsMockRepository().findById(9999)).toBeNull();
   });
 });
+
+describe('static viewer data', () => {
+  it('matches the seeds: regenerate with `npm run export:static -w apps/api`, never by hand', async () => {
+    const { readFileSync } = await import('node:fs');
+    const read = (file) =>
+      JSON.parse(readFileSync(new URL(`../../../web/public/mock/${file}`, import.meta.url)));
+    expect(read('layers.json')).toEqual(await createLayersMockRepository().findActive());
+    expect(read('points.json').features).toEqual(await createPointsMockRepository().findAll());
+  });
+});

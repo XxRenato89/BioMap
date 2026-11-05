@@ -38,9 +38,9 @@ export async function seed(pool) {
     let pointsInserted = 0;
     for (const point of SAMPLE_POINTS) {
       const { rowCount } = await client.query(
-        `INSERT INTO points_of_interest (layer_id, name, description, location, tour_stop)
+        `INSERT INTO points_of_interest (layer_id, name, description, location, tour_stop, is_secret)
          SELECT l.id, $2::text, $3::text, ST_SetSRID(ST_MakePoint($4::float8, $5::float8), 4326),
-                $6::smallint
+                $6::smallint, $7::boolean
            FROM layers l
           WHERE l.slug = $1::text
             AND NOT EXISTS (SELECT 1 FROM points_of_interest p WHERE p.name = $2::text)`,
@@ -51,6 +51,7 @@ export async function seed(pool) {
           point.lng,
           point.lat,
           point.tourStop ?? null,
+          point.secret ?? false,
         ],
       );
       pointsInserted += rowCount;
@@ -64,13 +65,21 @@ export async function seed(pool) {
       await client.query(
         `UPDATE points_of_interest
             SET tour_stop = $2::smallint,
-                location = ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326)
+                location = ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326),
+                is_secret = $5::boolean
           WHERE name = $1::text
             AND (tour_stop IS DISTINCT FROM $2::smallint
+                 OR is_secret IS DISTINCT FROM $5::boolean
                  OR NOT ST_Equals(location, ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326)))`,
-        [point.name, point.tourStop ?? null, point.lng, point.lat],
+        [point.name, point.tourStop ?? null, point.lng, point.lat, point.secret ?? false],
       );
     }
+
+    /* Las fotos de ejemplo pasaron de PNG a JPG: corrige bases cargadas antes. */
+    await client.query(
+      `UPDATE images SET file_path = regexp_replace(file_path, '\\.png$', '.jpg')
+        WHERE file_path ~ '\\.png$'`,
+    );
 
     let imagesInserted = 0;
     for (const img of SAMPLE_IMAGES) {

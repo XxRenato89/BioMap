@@ -47,7 +47,7 @@ function toMediaUrl(mediaBaseUrl, filePath) {
 /**
  * Reemplaza la ruta interna de cada imagen (filePath) por su URL pública.
  */
-function withPublicImages(feature, mediaBaseUrl) {
+export function withPublicImages(feature, mediaBaseUrl) {
   const { images, ...properties } = feature.properties;
   return {
     ...feature,

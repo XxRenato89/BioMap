@@ -108,3 +108,40 @@ export function cliffEdge(x, z, { heightAt, isWater }, { taken = [], spacing = 0
   }
   return null;
 }
+
+/* Orilla: hasta dónde buscar agua (km) y paso de avance. */
+const SHORE_SEARCH_KM = 0.4;
+const SHORE_STEP_KM = 0.005;
+/* Fracción del radio del modelo que queda entre su centro y la orilla: la
+ * playa (al frente) toca el agua y el resto queda en tierra. */
+const SHORE_SETBACK = 0.7;
+
+/**
+ * Lugar para un modelo de orilla (camping, playa): se busca el agua más
+ * cercana al punto y el modelo se corre hasta que su frente toque la orilla,
+ * mirando al agua. Así la playa no queda sobre el pasto cuando el punto del
+ * lugar (la portería, la oficina) está tierra adentro.
+ *
+ * @param {number} x
+ * @param {number} z
+ * @param {number} radius Radio del modelo (km).
+ * @param {{ heightAt: (x: number, z: number) => number, isWater: (x: number, z: number) => boolean }} ground
+ * @returns {{ x: number, y: number, z: number, angle: number } | null} Sin agua cerca, null.
+ */
+export function shoreSpot(x, z, radius, { heightAt, isWater }) {
+  let nearest = null;
+  for (let k = 0; k < 48; k += 1) {
+    const angle = (k / 48) * Math.PI * 2;
+    for (let reach = SHORE_STEP_KM; reach <= SHORE_SEARCH_KM; reach += SHORE_STEP_KM) {
+      if (isWater(x + Math.sin(angle) * reach, z + Math.cos(angle) * reach)) {
+        if (!nearest || reach < nearest.reach) nearest = { angle, reach };
+        break;
+      }
+    }
+  }
+  if (!nearest) return null;
+  const move = nearest.reach - radius * SHORE_SETBACK;
+  const cx = x + Math.sin(nearest.angle) * move;
+  const cz = z + Math.cos(nearest.angle) * move;
+  return { x: cx, y: heightAt(cx, cz), z: cz, angle: nearest.angle };
+}

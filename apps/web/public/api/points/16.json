@@ -4,8 +4,8 @@
   "geometry": {
     "type": "Point",
     "coordinates": [
-      -71.793541,
-      -37.741749
+      -71.7939082,
+      -37.7415318
     ]
   },
   "properties": {
@@ -14,6 +14,7 @@
     "layerId": 3,
     "layerSlug": "tourism",
     "tourStop": 4,
+    "secret": false,
     "description": "Playa pública en la ribera sur del embalse, junto al Arboretum. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": []
   }

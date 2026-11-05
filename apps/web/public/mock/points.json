@@ -16,7 +16,8 @@
         "name": "Central Hidroeléctrica Angostura",
         "layerId": 1,
         "layerSlug": "history",
-        "tourStop": 1
+        "tourStop": 1,
+        "secret": false
       }
     },
     {
@@ -34,7 +35,8 @@
         "name": "Puente Piulo Oriente",
         "layerId": 1,
         "layerSlug": "history",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -52,7 +54,8 @@
         "name": "Puente El Piulo",
         "layerId": 1,
         "layerSlug": "history",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -70,7 +73,8 @@
         "name": "Puente Quilaco",
         "layerId": 1,
         "layerSlug": "history",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -107,7 +111,8 @@
         "name": "Parque Angostura",
         "layerId": 2,
         "layerSlug": "ecology",
-        "tourStop": 2
+        "tourStop": 2,
+        "secret": false
       }
     },
     {
@@ -116,8 +121,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.796316,
-          -37.742917
+          -71.7935471,
+          -37.7427509
         ]
       },
       "properties": {
@@ -125,7 +130,8 @@
         "name": "Arboretum",
         "layerId": 2,
         "layerSlug": "ecology",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -143,7 +149,8 @@
         "name": "Cerro el Calvario",
         "layerId": 2,
         "layerSlug": "ecology",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -161,7 +168,8 @@
         "name": "Embalse Angostura",
         "layerId": 2,
         "layerSlug": "ecology",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -179,7 +187,8 @@
         "name": "Sendero y Mirador Huequecura",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": 3
+        "tourStop": 3,
+        "secret": false
       }
     },
     {
@@ -197,7 +206,8 @@
         "name": "Mirador Central Angostura",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -215,7 +225,8 @@
         "name": "Centro de Visitantes Angostura",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -233,7 +244,8 @@
         "name": "Informaciones Turísticas",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -242,8 +254,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.7968,
-          -37.7064
+          -71.7977756,
+          -37.7075806
         ]
       },
       "properties": {
@@ -251,7 +263,8 @@
         "name": "Playa Santa Bárbara",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -260,8 +273,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.78065,
-          -37.70778
+          -71.7806875,
+          -37.7078125
         ]
       },
       "properties": {
@@ -279,8 +292,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.793541,
-          -37.741749
+          -71.7939082,
+          -37.7415318
         ]
       },
       "properties": {
@@ -288,7 +301,8 @@
         "name": "Playa Quilaco",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": 4
+        "tourStop": 4,
+        "secret": false
       }
     },
     {
@@ -297,8 +311,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.798078,
-          -37.726323
+          -71.7987735,
+          -37.7264148
         ]
       },
       "properties": {
@@ -306,7 +320,8 @@
         "name": "Camping Los Notros",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -315,8 +330,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.791274,
-          -37.743429
+          -71.79239,
+          -37.7426992
         ]
       },
       "properties": {
@@ -324,7 +339,8 @@
         "name": "Camping Trompelhueno de Quilaco",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     },
     {
@@ -333,8 +349,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.767656,
-          -37.703407
+          -71.767142,
+          -37.702461
         ]
       },
       "properties": {
@@ -342,7 +358,8 @@
         "name": "Camping La Patagua de Lo Nieve",
         "layerId": 3,
         "layerSlug": "tourism",
-        "tourStop": null
+        "tourStop": null,
+        "secret": false
       }
     }
   ]

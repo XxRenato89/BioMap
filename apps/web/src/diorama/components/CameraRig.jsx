@@ -1,6 +1,6 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Box3, MathUtils, Vector3 } from 'three';
 import { normalizeHeading } from '../utils/cameraMath.js';
 import { useDiorama } from './DioramaScene.jsx';
@@ -10,12 +10,6 @@ const { ACTION } = CameraControlsImpl;
 const TILTED_PITCH = -33;
 const TOP_PITCH = -88;
 const target = new Vector3();
-/* Visor 3D a pie: ojos a 4 m del suelo (el relieve va exagerado) y la cámara
-   pegada al objetivo, que gira en su lugar como Street View. */
-const EYE_KM = 0.004;
-const FIRST_PERSON_KM = 0.0001;
-const STAND_OFF_KM = 0.08;
-const DRONE_VIEW = { range: 450, pitch: -22 };
 
 /**
  * Posición y objetivo de la cámara para una vista {center, range, heading,
@@ -43,7 +37,7 @@ export function viewToPose(view, projection, heightAt) {
  * maqueta, dos dedos acercan y desplazan. Todas las órdenes de los botones
  * usan transiciones suaves. Publica qué está mirando y expone sus órdenes
  * por `ref` (zoomBy, orbitBy, setTilted, resetNorth, zoomToRange, flyTo,
- * resetView, fly, startAttract, view, enterVisor, exitVisor, setSpin).
+ * resetView, fly, startAttract, view).
  *
  * @param {object} props
  * @param {import('react').Ref<object>} props.ref
@@ -69,10 +63,6 @@ export default function CameraRig({
   const homeRef = useRef(homeView);
   const callbacks = useRef({ onView, onTiltChange });
   const attract = useRef(null);
-  /* Visor 3D: 'ground' (a pie) o 'drone' (dron que rodea el lugar); null = maqueta. */
-  const [visor, setVisor] = useState(null);
-  const visorRef = useRef(null);
-  const spin = useRef(false);
 
   const reducedMotion = useMemo(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -200,13 +190,6 @@ export default function CameraRig({
      * acompaña sin cambiar distancia ni ángulo. En patrulla, el visitante
      * mueve la cámara libremente.
      */
-    if (visorRef.current) {
-      if (spin.current) {
-        controls.current.rotate(delta * 0.18, 0, false);
-        invalidate();
-      }
-      return;
-    }
     const { mode, currentPosition } = useAvatarStore.getState();
     if (currentPosition && mode === 'running_to_point') {
       controls.current.moveTo(
@@ -218,28 +201,6 @@ export default function CameraRig({
       invalidate();
     }
   });
-
-  /* Ajusta la cámara al modo: a pie, gira en su lugar, acerca con zoom y ve de cerca. */
-  const applyVisor = (kind) => {
-    const c = controls.current;
-    const ground = kind === 'ground';
-    c.minDistance = ground ? FIRST_PERSON_KM : config.minRange / 1000;
-    c.maxDistance = ground ? FIRST_PERSON_KM : config.maxRange / 1000;
-    c.mouseButtons.wheel = ground ? ACTION.ZOOM : ACTION.DOLLY;
-    c.touches.two = ground ? ACTION.TOUCH_ZOOM : ACTION.TOUCH_DOLLY;
-    c.camera.near = ground ? 0.0008 : 0.01;
-    c.camera.far = ground ? 60 : 200;
-    c.camera.updateProjectionMatrix();
-    if (!ground) c.zoomTo(1, true);
-    spin.current = kind === 'drone';
-  };
-  const leaveVisor = () => {
-    if (!visorRef.current) return;
-    visorRef.current = null;
-    setVisor(null);
-    applyVisor(null);
-    spin.current = false;
-  };
 
   useImperativeHandle(ref, () => ({
     zoomBy: (factor) => {
@@ -271,51 +232,7 @@ export default function CameraRig({
       invalidate();
     },
     flyTo: (view) => flyTo(view),
-    resetView: () => {
-      leaveVisor();
-      flyTo(homeRef.current);
-    },
-    /*
-     * Visor 3D de un lugar: 'ground' pone los ojos del visitante en el suelo y
-     * se mira en 360° arrastrando; 'drone' lo rodea desde el aire.
-     */
-    enterVisor: (center, kind) => {
-      const c = controls.current;
-      visorRef.current ??= { saved: currentView() };
-      visorRef.current.kind = kind;
-      setVisor(kind);
-      applyVisor(kind);
-      if (kind === 'ground') {
-        /* Parado a un costado del lugar (no dentro de su modelo), mirándolo. */
-        const poi = projection.toWorld(center);
-        const az = c.azimuthAngle;
-        const x = poi.x + Math.sin(az) * STAND_OFF_KM;
-        const z = poi.z + Math.cos(az) * STAND_OFF_KM;
-        const y = heightAt(x, z) + EYE_KM;
-        c.setLookAt(
-          x + Math.sin(az) * FIRST_PERSON_KM,
-          y,
-          z + Math.cos(az) * FIRST_PERSON_KM,
-          x,
-          y,
-          z,
-          true,
-        );
-        c.setFocalOffset(0, 0, 0, true);
-      } else {
-        flyTo({ center, heading: currentView().heading, ...DRONE_VIEW });
-      }
-      invalidate();
-    },
-    exitVisor: () => {
-      const saved = visorRef.current?.saved;
-      leaveVisor();
-      if (saved) flyTo(saved);
-    },
-    setSpin: (on) => {
-      spin.current = on;
-      invalidate();
-    },
+    resetView: () => flyTo(homeRef.current),
     view: () => currentView(),
     /*
      * Un paso del mando de vuelo: avanzar sobre el terreno en la dirección
@@ -349,14 +266,14 @@ export default function CameraRig({
       ref={controls}
       makeDefault
       domElement={domElement}
-      minDistance={visor === 'ground' ? FIRST_PERSON_KM : config.minRange / 1000}
-      maxDistance={visor === 'ground' ? FIRST_PERSON_KM : config.maxRange / 1000}
-      minPolarAngle={visor === 'ground' ? 0.6 : 0.05}
-      maxPolarAngle={visor === 'ground' ? 2.3 : 1.22}
-      azimuthRotateSpeed={visor === 'ground' ? -0.4 : 1}
-      polarRotateSpeed={visor === 'ground' ? -0.4 : 1}
+      minDistance={config.minRange / 1000}
+      maxDistance={config.maxRange / 1000}
+      minPolarAngle={0.05}
+      maxPolarAngle={1.22}
+      azimuthRotateSpeed={1}
+      polarRotateSpeed={1}
       minZoom={1}
-      maxZoom={visor === 'ground' ? 4 : 1}
+      maxZoom={1}
       smoothTime={0.45}
       draggingSmoothTime={0.12}
       dollyToCursor={false}

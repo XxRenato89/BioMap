@@ -30,7 +30,7 @@ import { useRestMode } from './hooks/useRestMode.js';
 import { useVisibleLayers } from './hooks/useLayers.js';
 import { TEXT_SCALES, useViewerStore } from './store/viewerStore.js';
 import { useAvatarStore } from './store/avatarStore.js';
-import { AVAILABLE_TOURS, useUserStore } from './store/userStore.js';
+import { useUserStore } from './store/userStore.js';
 import { publishMainView } from './store/viewsStore.js';
 import TourSheet from './features/tour/TourSheet.jsx';
 
@@ -71,7 +71,7 @@ export default function App({ mapConfig = config }) {
   const [panel, setPanel] = useState(null);
   const togglePanel = useCallback((name) => setPanel((open) => (open === name ? null : name)), []);
   const closePanel = useCallback(() => setPanel(null), []);
-  /* Visor 3D abierto sobre un lugar: { name, center, kind, spinning }. */
+  /* Visor 360° abierto sobre un lugar: { name }. */
   const [visor, setVisor] = useState(null);
 
   useEffect(() => {
@@ -192,20 +192,11 @@ export default function App({ mapConfig = config }) {
     markClean();
   };
 
-  const openVisor = (feature, kind = 'ground') => {
+  const openVisor = (feature) => {
     setPanel(null);
-    setVisor({
-      name: feature.properties.name,
-      center: feature.geometry.coordinates,
-      kind,
-      spinning: kind === 'drone',
-    });
-    mainRef.current?.enterVisor(feature.geometry.coordinates, kind);
+    setVisor({ name: feature.properties.name });
   };
-  const closeVisor = () => {
-    setVisor(null);
-    mainRef.current?.exitVisor();
-  };
+  const closeVisor = useCallback(() => setVisor(null), []);
 
   const togglePitch = () => {
     actions.setPitched(!pitched);
@@ -280,7 +271,7 @@ export default function App({ mapConfig = config }) {
 
         {panel === 'mobile' && (
           <MobilePanel
-            url={mapConfig.publicUrl || window.location.origin}
+            url={mapConfig.publicUrl}
             wifi={mapConfig.kioskWifi}
             selectedPoint={openSheets.length > 0 ? openSheets[openSheets.length - 1].feature : null}
             onClose={closePanel}
@@ -300,11 +291,9 @@ export default function App({ mapConfig = config }) {
         {panel === 'tour' && (
           <TourSheet
             onClose={closePanel}
-            onSelectTour={(tourId) => {
-              const activeTour = AVAILABLE_TOURS.find((t) => t.id === tourId);
-              if (activeTour?.stops?.[0]) {
-                selectPoint(activeTour.stops[0]);
-              }
+            onSelectTour={() => {
+              const [first] = useUserStore.getState().tour;
+              if (first !== undefined) selectPoint(first);
             }}
           />
         )}
@@ -334,23 +323,7 @@ export default function App({ mapConfig = config }) {
         />
       </div>
 
-      {visor && (
-        <Visor3D
-          name={visor.name}
-          kind={visor.kind}
-          spinning={visor.spinning}
-          onKind={(kind) => {
-            setVisor({ ...visor, kind, spinning: kind === 'drone' });
-            mainRef.current?.enterVisor(visor.center, kind);
-          }}
-          onSpin={() => {
-            mainRef.current?.setSpin(!visor.spinning);
-            setVisor({ ...visor, spinning: !visor.spinning });
-          }}
-          onExit={closeVisor}
-          onResetNorth={() => mainRef.current?.resetNorth()}
-        />
-      )}
+      {visor && <Visor3D name={visor.name} onExit={closeVisor} />}
       <PointSheets
         open={visor ? [] : openSheets}
         onOpen3d={openVisor}

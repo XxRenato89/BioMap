@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from 'react';
+import { recordEvent } from '../../api/client.js';
 import { triggerConfetti } from '../../components/ConfettiCanvas.jsx';
 import { useAvatarStore } from '../../store/avatarStore.js';
-import { tourFrom, useUserStore } from '../../store/userStore.js';
+import { useUserStore } from '../../store/userStore.js';
 import { useViewerStore } from '../../store/viewerStore.js';
 
 /*
@@ -25,7 +26,7 @@ const SHEET_SHIFT = { x: 0.13, y: 0 };
  *   sheetShift?: { x: number, y: number } }} options
  */
 export function useTour({ points, camera, sheetShift = SHEET_SHIFT }) {
-  useEffect(() => useUserStore.getState().setTour(tourFrom(points.features)), [points]);
+  useEffect(() => useUserStore.getState().setFeatures(points.features), [points]);
 
   const selectPoint = useCallback(
     (pointId) => {
@@ -55,7 +56,12 @@ export function useTour({ points, camera, sheetShift = SHEET_SHIFT }) {
       const isNewVisit = !user.visitedPoints.includes(id);
       user.visitPoint(id);
       /* Celebración en cada lugar nuevo, y una mayor al completar el recorrido. */
-      if (isNewVisit) triggerConfetti({ grandFinale: useUserStore.getState().tourCompleted() });
+      recordEvent({ type: 'point_open', pointId: id });
+      if (isNewVisit) {
+        const completed = useUserStore.getState().tourCompleted();
+        triggerConfetti({ grandFinale: completed });
+        if (completed) recordEvent({ type: 'tour_complete' });
+      }
     },
     [camera, sheetShift],
   );

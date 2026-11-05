@@ -14,6 +14,7 @@
     "layerId": 2,
     "layerSlug": "ecology",
     "tourStop": null,
+    "secret": false,
     "description": "Embalse de 641 hectáreas y unos 100 millones de m³ formado por la presa Angostura en el río Biobío. Su nivel varía apenas un metro. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": []
   }

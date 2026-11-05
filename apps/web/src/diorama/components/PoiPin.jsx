@@ -125,14 +125,17 @@ export function PoiPin({
           data-name={name}
           onClick={locked ? undefined : onSelect}
           disabled={locked}
-          aria-label={isSecret ? 'Lugar secreto por descubrir' : (stop ? `${stop}. ${name}` : name)}
+          aria-label={isSecret ? 'Lugar secreto por descubrir' : stop ? `${stop}. ${name}` : name}
         >
           {/* Marcador: círculo blanco con punta hacia el poste y el icono gris del lugar. */}
-          <span
-            className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[mini=true]:scale-[0.36] group-data-[mini=true]:[&>*]:opacity-0 group-data-[state=bloqueado]:opacity-70"
-          >
+          <span className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[mini=true]:scale-[0.36] group-data-[mini=true]:[&>*]:opacity-0 group-data-[state=bloqueado]:opacity-70">
             {isSecret ? (
-              <HelpCircle size={22} strokeWidth={2.6} aria-hidden="true" className="text-neutral-400" />
+              <HelpCircle
+                size={22}
+                strokeWidth={2.6}
+                aria-hidden="true"
+                className="text-neutral-400"
+              />
             ) : locked ? (
               <Lock size={20} strokeWidth={2.6} aria-hidden="true" />
             ) : (
@@ -164,9 +167,7 @@ export function PoiPin({
             )}
           </span>
           {/* Placa con el nombre, unida al marcador. */}
-          <span
-            className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden"
-          >
+          <span className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden">
             {isSecret ? '?' : name}
           </span>
         </button>

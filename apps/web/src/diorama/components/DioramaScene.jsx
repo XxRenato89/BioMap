@@ -25,12 +25,6 @@ export function useDiorama() {
 }
 
 /*
- * Distancia de cámara (km) bajo la cual se usan los modelos detallados cerca
- * del punto que se mira; más lejos, todos los árboles van con el modelo liviano.
- */
-const DETAIL_VIEW_DISTANCE = 5;
-
-/*
  * Los árboles se agrupan en mosaicos de TILES × TILES: los que quedan fuera
  * de la pantalla no se dibujan, y los que están más lejos que TREE_VIEW_KM
  * tampoco (a esa distancia un árbol mide un par de píxeles y solo parpadea:
@@ -38,7 +32,6 @@ const DETAIL_VIEW_DISTANCE = 5;
  */
 const TILES = 8;
 export const TREE_VIEW_KM = 35;
-const forestTarget = new Vector3();
 const tileCenter = new Vector3();
 
 /**
@@ -50,7 +43,6 @@ const tileCenter = new Vector3();
  */
 function TreeSet({ kind, trees, materials, settings, castShadow }) {
   const controls = useThree((state) => state.controls);
-  const gl = useThree((state) => state.gl);
   const split = useRef(null);
   const meshes = useMemo(() => {
     const make = (geometry, material, capacity) => {

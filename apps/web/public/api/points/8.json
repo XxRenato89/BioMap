@@ -14,10 +14,11 @@
     "layerId": 2,
     "layerSlug": "ecology",
     "tourStop": null,
+    "secret": false,
     "description": "Cerro con bosque nativo entre el embalse y el brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {
-        "url": "/media/mirador-san-sebastian.png",
+        "url": "/media/mirador-san-sebastian.jpg",
         "altText": "Vista panorámica del valle del Biobío desde el Santuario y Mirador San Sebastián",
         "credit": "Google Maps / Parque Angostura",
         "isMain": true,

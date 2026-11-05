@@ -8,7 +8,7 @@ import { PoiModel } from './PoiModel.jsx';
 import { PoiPin } from './PoiPin.jsx';
 import { declutter, liftBadges } from '../utils/labels.js';
 import { modelKindFor, modelRadius } from '../models/index.js';
-import { cliffEdge, placeModels } from '../utils/placement.js';
+import { cliffEdge, placeModels, shoreSpot } from '../utils/placement.js';
 import { RESERVOIR, within } from '../utils/reservoir.js';
 import { isOccluded } from '../utils/occlusion.js';
 import { waterTest } from '../utils/pathfinder.js';
@@ -22,6 +22,8 @@ import { waterTest } from '../utils/pathfinder.js';
  */
 /* Modelos que van al borde del barranco más cercano, mirando al agua. */
 const EDGE_KINDS = new Set(['forestTrail', 'meshDeck']);
+/* Modelos que van en la orilla, con la playa tocando el agua. */
+const SHORE_KINDS = new Set(['camping', 'beach']);
 /* Separación mínima entre dos miradores al borde (km). */
 const EDGE_SPACING_KM = 0.04;
 
@@ -113,9 +115,14 @@ export function PoiMarkers({
     });
     const ground = { heightAt, isWater: (x, z) => inWater(projection.toLngLat(x, z)) };
     const spots = placeModels(
-      items.filter((item) => !EDGE_KINDS.has(item.kind)),
+      items.filter((item) => !EDGE_KINDS.has(item.kind) && !SHORE_KINDS.has(item.kind)),
       ground,
     );
+    for (const item of items.filter((i) => SHORE_KINDS.has(i.kind))) {
+      const shore = shoreSpot(item.x, item.z, item.radius, ground);
+      const spot = shore ? { ...shore, scale: 1 } : placeModels([item], ground).get(item.id);
+      if (spot) spots.set(item.id, spot);
+    }
     /* Miradores: al borde del barranco, mirando al embalse (como en sus fotos). */
     for (const feature of points.features) {
       if (!EDGE_KINDS.has(kindOf(feature))) continue;

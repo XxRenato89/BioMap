@@ -1,7 +1,7 @@
 import { Check, Clock, MapPin, Navigation, Play, Route, Trees, X, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { AVAILABLE_TOURS, useUserStore } from '../../store/userStore.js';
+import { AVAILABLE_TOURS, stopsFor, useUserStore } from '../../store/userStore.js';
 
 const TOUR_ICONS = { general: Route, nature: Trees, energy: Zap };
 
@@ -13,7 +13,7 @@ const TOUR_ICONS = { general: Route, nature: Trees, energy: Zap };
  */
 export default function TourSheet({ onClose, onSelectTour }) {
   const { t } = useTranslation();
-  const { activeTourId, setActiveTour, visitedPoints } = useUserStore();
+  const { activeTourId, setActiveTour, visitedPoints, features } = useUserStore();
 
   const handleSelect = (tourId) => {
     setActiveTour(tourId);
@@ -55,8 +55,9 @@ export default function TourSheet({ onClose, onSelectTour }) {
       <div className="grid grid-cols-3 gap-4">
         {AVAILABLE_TOURS.map((item) => {
           const isActive = activeTourId === item.id;
-          const total = item.stops.length;
-          const done = item.stops.filter((s) => visitedPoints.includes(s)).length;
+          const stops = stopsFor(item.id, features);
+          const total = stops.length;
+          const done = stops.filter((s) => visitedPoints.includes(s)).length;
           const Icon = TOUR_ICONS[item.id] ?? Route;
           return (
             <article
@@ -106,7 +107,7 @@ export default function TourSheet({ onClose, onSelectTour }) {
               >
                 <div
                   className="h-full rounded-full bg-forest-light"
-                  style={{ width: `${(done / total) * 100}%` }}
+                  style={{ width: `${total ? (done / total) * 100 : 0}%` }}
                 />
               </div>
               <button

@@ -23,8 +23,10 @@ export const PRESA_ANGOSTURA_COORDINATES = {
   },
   // Camino de servicio que baja en diagonal por la ladera desde el estribo norte
   // del vertedero, por la orilla norte del cauce, hasta la Central (punto de interés 1;
-  // foto aérea "represa.PNG"; no está en OSM)
+  // foto aérea "represa.PNG"; no está en OSM). Parte del camino de acceso al
+  // estribo (red principal): sin ese tramo quedaba aislado y la mascota se atascaba.
   powerhouseRoad: [
+    [-71.8151862, -37.7110558],
     [-71.8164, -37.7117],
     [-71.8168, -37.71125],
     [-71.8174, -37.71077],

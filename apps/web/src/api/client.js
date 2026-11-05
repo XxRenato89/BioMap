@@ -4,31 +4,28 @@ import staticDetails from '../../public/mock/points-detail.json';
 
 /**
  * Pide un recurso JSON a la API. 'cache: no-cache' obliga al navegador a
- * revalidar con el ETag: si nada cambio, recibe un 304 vacio y reutiliza su copia.
- * Si la API no esta disponible (ej. entorno de demostracion sin base de datos),
- * recurre de forma transparente al fallback estatico local.
+ * revalidar con el ETag: si nada cambió, recibe un 304 vacío y reutiliza su copia.
+ * Solo si no hay red (la API no responde: fetch lanza TypeError) usa los datos
+ * estáticos incluidos en el build. Una respuesta de error (404 de un punto
+ * borrado, 500 de la base) se propaga, para que el visor avise y no muestre
+ * contenido viejo.
  */
 async function getJson(path, fetchImpl = fetch, fallbackData = null) {
+  let response;
   try {
-    const response = await fetchImpl(path, {
+    response = await fetchImpl(path, {
       cache: 'no-cache',
       headers: { Accept: 'application/json' },
     });
-    if (!response.ok) {
-      if (fallbackData !== null && fetchImpl === fetch) {
-        console.warn(`[BioMap] API ${path} no disponible (${response.status}). Usando fallback estatico local.`);
-        return fallbackData;
-      }
-      throw new Error(`GET ${path} failed with ${response.status}`);
-    }
-    return response.json();
   } catch (err) {
-    if (fallbackData !== null && (fetchImpl === fetch || err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('NetworkError'))) {
-      console.warn(`[BioMap] Sin conexion a ${path}. Usando datos estaticos locales.`);
+    if (fallbackData !== null && err instanceof TypeError) {
+      console.warn(`[BioMap] Sin conexión a ${path}. Usando datos estáticos locales.`);
       return fallbackData;
     }
     throw err;
   }
+  if (!response.ok) throw new Error(`GET ${path} failed with ${response.status}`);
+  return response.json();
 }
 
 /**
@@ -49,6 +46,22 @@ export function fetchPoints(fetchImpl = fetch) {
  * Ficha completa de un punto: descripcion e imagenes con su URL publica.
  */
 export function fetchPoint(id, fetchImpl = fetch) {
-  const fallback = staticDetails[String(id)] || staticPoints.features?.find((f) => f.id === Number(id)) || null;
+  const fallback =
+    staticDetails[String(id)] || staticPoints.features?.find((f) => f.id === Number(id)) || null;
   return getJson(`/api/points/${encodeURIComponent(id)}`, fetchImpl, fallback);
+}
+
+/**
+ * Registra una visita para las estadísticas del panel (sin datos personales).
+ * Nunca falla: sin API (demo estática) simplemente no se cuenta.
+ *
+ * @param {{ type: 'point_open' | 'tour_complete', pointId?: number }} event
+ */
+export function recordEvent(event, fetchImpl = fetch) {
+  return fetchImpl('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event),
+    keepalive: true,
+  }).catch(() => {});
 }

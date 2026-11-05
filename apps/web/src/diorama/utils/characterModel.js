@@ -20,7 +20,18 @@ export const ANIM_ALIASES = {
   wave: ['wave', 'Wave', 'saludo'],
   look: ['look', 'Look', 'Looking Around', 'mirar'],
   clapping: ['clapping', 'Clapping', 'aplauso', 'aplausos', 'Clap'],
-  paddle: ['paddle', 'Paddle', 'paddling', 'Paddling', 'row', 'Row', 'rowing', 'Rowing', 'remar', 'remo'],
+  paddle: [
+    'paddle',
+    'Paddle',
+    'paddling',
+    'Paddling',
+    'row',
+    'Row',
+    'rowing',
+    'Rowing',
+    'remar',
+    'remo',
+  ],
   sit: ['sit', 'Sit', 'sitting', 'Sitting', 'Sitting Idle', 'sentado'],
 };
 
@@ -86,9 +97,7 @@ export function normalizeAnimationClips(clips = []) {
 
     for (const [canonical, aliases] of Object.entries(ANIM_ALIASES)) {
       const matches = aliases.some(
-        (a) =>
-          raw.toLowerCase() === a.toLowerCase() ||
-          raw.toLowerCase().includes(a.toLowerCase()),
+        (a) => raw.toLowerCase() === a.toLowerCase() || raw.toLowerCase().includes(a.toLowerCase()),
       );
       if (matches) {
         addClip(clip, canonical);
@@ -186,4 +195,3 @@ export function useCharacterModel(groupRef) {
 
   return { scene, animations: mergedClips, actions, mixer, names };
 }
-

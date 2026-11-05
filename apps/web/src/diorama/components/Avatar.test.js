@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('../utils/characterModel.js', () => ({ useCharacterModel: () => ({}) }));
 vi.mock('./DioramaScene.jsx', () => ({ useDiorama: () => ({}) }));
 
-const { nextWanderIndex, pickPause, PAUSES } = await import('./Avatar.jsx');
+const { nextWanderIndex, pickPause } = await import('./Avatar.jsx');
 
 const pois = [
   { x: 0, z: 0 },

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fetchLayers, fetchPoint, fetchPoints } from './client.js';
+import { fetchLayers, fetchPoint, fetchPoints, recordEvent } from './client.js';
 
 /**
  * fetch falso que responde con el estado y el cuerpo indicados.
@@ -34,5 +34,28 @@ describe('api client', () => {
     await expect(fetchLayers(fakeFetch(503, {}))).rejects.toThrow(
       'GET /api/layers failed with 503',
     );
+  });
+
+  it('a deleted point (404) is an error, never the old bundled copy', async () => {
+    await expect(fetchPoint(1, fakeFetch(404, {}))).rejects.toThrow('failed with 404');
+  });
+
+  it('with no network it falls back to the bundled data', async () => {
+    const offline = vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const points = await fetchPoints(offline);
+    expect(points.type).toBe('FeatureCollection');
+    expect(points.features.length).toBeGreaterThan(0);
+  });
+
+  it('recordEvent posts the visit and never throws without an API', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: true }));
+    await recordEvent({ type: 'point_open', pointId: 4 }, fetchImpl);
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({ type: 'point_open', pointId: 4 });
+    await expect(
+      recordEvent({ type: 'tour_complete' }, () => Promise.reject(new TypeError())),
+    ).resolves.toBeUndefined();
   });
 });

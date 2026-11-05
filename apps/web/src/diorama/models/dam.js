@@ -1,16 +1,5 @@
 import { Group } from 'three';
-import {
-  box,
-  concrete,
-  concreteDark,
-  cyl,
-  dark,
-  glass,
-  mat,
-  red,
-  stone,
-  white,
-} from './materials.js';
+import { box, concrete, concreteDark, cyl, dark, glass, mat, stone, white } from './materials.js';
 
 /**
  * Presa de hormigón con compuertas, casa de máquinas, tuberías forzadas y aliviadero.

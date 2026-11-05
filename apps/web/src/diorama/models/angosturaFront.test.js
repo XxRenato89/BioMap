@@ -92,10 +92,22 @@ describe('muro frontal de Angostura', () => {
 describe('raiseCauseway', () => {
   it('levanta la corona y los taludes sin bajar nada', async () => {
     const { raiseCauseway } = await import('../terrain/damToe.js');
-    const meta = { bounds: { west: 0, south: 0, east: 0.001, north: 0.001 }, columns: 11, rows: 11 };
+    const meta = {
+      bounds: { west: 0, south: 0, east: 0.001, north: 0.001 },
+      columns: 11,
+      rows: 11,
+    };
     const heights = new Uint16Array(121).fill(300);
     heights[0] = 400;
-    raiseCauseway(meta, heights, [[0, 0.0005], [0.001, 0.0005]], { crest: 330 });
+    raiseCauseway(
+      meta,
+      heights,
+      [
+        [0, 0.0005],
+        [0.001, 0.0005],
+      ],
+      { crest: 330 },
+    );
     expect(heights[5 * 11 + 5]).toBe(330);
     expect(heights[0]).toBe(400);
     expect(heights[0 * 11 + 5]).toBeGreaterThan(300);

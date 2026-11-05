@@ -4,14 +4,15 @@ Aquí se suben todas las animaciones del personaje 3D con su respectivo nombre p
 
 ## Archivos y Nombres Estándar
 
-| Archivo | Acción | Descripción |
-|---|---|---|
+| Archivo    | Acción   | Descripción                                             |
+| ---------- | -------- | ------------------------------------------------------- |
 | `walk.glb` | **walk** | Ciclo de caminata. Quieto, Quibar usa su primer cuadro. |
-| `run.glb` | **run** | Ciclo de carrera. |
+| `run.glb`  | **run**  | Ciclo de carrera.                                       |
 
 ## Modelo 3D Base (Fuera de esta carpeta)
 
 El modelo 3D con su malla y esqueleto se ubica fuera de la carpeta de animaciones:
+
 - En la aplicación web: `/models/quibar.fbx` (o `/models/model.fbx`).
 
 ## Cómo agregar o reemplazar una animación

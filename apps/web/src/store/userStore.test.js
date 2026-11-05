@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { tourFrom, useUserStore } from './userStore.js';
+import { stopsFor, tourFrom, useUserStore } from './userStore.js';
 
-const feature = (id, tourStop) => ({ properties: { id, tourStop } });
+const feature = (id, tourStop, name = `p${id}`) => ({ properties: { id, tourStop, name } });
 
 describe('guided tour', () => {
   beforeEach(() => useUserStore.setState({ tour: [], visitedPoints: [] }));
@@ -32,5 +32,24 @@ describe('guided tour', () => {
     expect(useUserStore.getState().tourCompleted()).toBe(true);
     store.resetProgress();
     expect(useUserStore.getState().visitedPoints).toEqual([]);
+  });
+
+  it('themed tours find their stops by place name, whatever the ids are', () => {
+    const features = [
+      feature(40, null, 'Camping Los Notros'),
+      feature(41, null, 'Arboretum'),
+      feature(42, null, 'Cerro el Calvario'),
+    ];
+    expect(stopsFor('nature', features)).toEqual([41, 42, 40]);
+  });
+
+  it('the inactivity reset goes back to the general tour', () => {
+    const store = useUserStore.getState();
+    store.setFeatures([feature(3, 1), feature(41, null, 'Arboretum')]);
+    store.setActiveTour('nature');
+    expect(useUserStore.getState().tour).toEqual([41]);
+    useUserStore.getState().resetProgress();
+    expect(useUserStore.getState().activeTourId).toBe('general');
+    expect(useUserStore.getState().tour).toEqual([3]);
   });
 });

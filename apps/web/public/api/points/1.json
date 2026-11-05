@@ -14,24 +14,25 @@
     "layerId": 1,
     "layerSlug": "history",
     "tourStop": 1,
+    "secret": false,
     "description": "Central de pasada de Colbún, en operación desde 2014: 316 MW con tres turbinas instaladas en una caverna bajo el cerro. Su presa forma el embalse Angostura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {
-        "url": "/media/presa-angostura-aerea.png",
+        "url": "/media/presa-angostura-aerea.jpg",
         "altText": "Vista aérea panorámica del complejo hidroeléctrico Angostura, vertedero y embalse",
         "credit": "Google Maps / Parque Angostura",
         "isMain": true,
         "kind": "photo"
       },
       {
-        "url": "/media/presa-angostura-vertedero.png",
+        "url": "/media/presa-angostura-vertedero.jpg",
         "altText": "Vertedero de compuertas radiales y grúa pórtico de la presa Angostura",
         "credit": "Google Maps / Parque Angostura",
         "isMain": false,
         "kind": "photo"
       },
       {
-        "url": "/media/presa-angostura-carretera.png",
+        "url": "/media/presa-angostura-carretera.jpg",
         "altText": "Vista de la presa Angostura y el canal de descarga desde la Ruta Q-61",
         "credit": "Google Maps / Parque Angostura",
         "isMain": false,

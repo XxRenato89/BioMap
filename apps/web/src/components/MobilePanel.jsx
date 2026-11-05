@@ -18,6 +18,8 @@ export default function MobilePanel({ url, wifi, selectedPoint = null, onClose }
   const [qrSvg, setQrSvg] = useState('');
 
   const baseUrl = url || window.location.origin;
+  /* Sin VITE_PUBLIC_URL, el kiosco se abre en localhost: un teléfono no llega ahí. */
+  const unreachable = !url && /^(localhost|127\.|\[::1\])/.test(window.location.hostname);
   const pointId = selectedPoint?.properties?.id;
   const name = selectedPoint?.properties?.name;
   const activeUrl = useMemo(
@@ -64,14 +66,20 @@ export default function MobilePanel({ url, wifi, selectedPoint = null, onClose }
       data-obstacle
     >
       <div className="flex w-[260px] flex-none flex-col items-center justify-center gap-3 border-r-2 border-forest/15 pr-8">
-        <div className="rounded-2xl bg-white p-3 ring-4 ring-forest-light">
-          <div
-            className="h-[200px] w-[200px] [&_svg]:h-full [&_svg]:w-full"
-            role="img"
-            aria-label={t('mobile.qrAlt')}
-            dangerouslySetInnerHTML={{ __html: qrSvg }}
-          />
-        </div>
+        {unreachable ? (
+          <p className="m-0 flex h-[224px] w-[224px] items-center rounded-2xl bg-white/70 p-4 text-center text-sm font-bold text-muted">
+            {t('mobile.notConfigured')}
+          </p>
+        ) : (
+          <div className="rounded-2xl bg-white p-3 ring-4 ring-forest-light">
+            <div
+              className="h-[200px] w-[200px] [&_svg]:h-full [&_svg]:w-full"
+              role="img"
+              aria-label={t('mobile.qrAlt')}
+              dangerouslySetInnerHTML={{ __html: qrSvg }}
+            />
+          </div>
+        )}
         <p className="m-0 font-display text-lg font-extrabold">{t('mobile.scanMe')}</p>
         <p className="m-0 max-w-full truncate text-xs text-muted">
           {activeUrl.replace(/^https?:\/\//, '')}

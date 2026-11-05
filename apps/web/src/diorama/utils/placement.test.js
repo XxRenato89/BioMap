@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cliffEdge, placeModels } from './placement.js';
+import { cliffEdge, placeModels, shoreSpot } from './placement.js';
 
 const flat = { heightAt: () => 0, isWater: () => false };
 
@@ -50,5 +50,22 @@ describe('cliffEdge', () => {
     expect(edge.x).toBeLessThan(0.11);
     expect(Math.sin(edge.angle)).toBeCloseTo(1);
     expect(cliffEdge(0, 0, { heightAt, isWater: () => false })).toBeNull();
+  });
+});
+
+describe('shoreSpot', () => {
+  /* Agua al este de x = 1 (plano). */
+  const ground = { heightAt: () => 0, isWater: (x) => x > 1 };
+
+  it('moves a shore model from its inland point to the water, facing it', () => {
+    const spot = shoreSpot(0.8, 0, 0.1, ground);
+    expect(spot.angle).toBeCloseTo(Math.PI / 2, 5);
+    /* Su centro queda a 0,7 radios de la orilla, en tierra. */
+    expect(spot.x).toBeCloseTo(1 - 0.07, 1);
+    expect(ground.isWater(spot.x, spot.z)).toBe(false);
+  });
+
+  it('returns null with no water nearby', () => {
+    expect(shoreSpot(0, 0, 0.1, { heightAt: () => 0, isWater: () => false })).toBeNull();
   });
 });

@@ -236,7 +236,11 @@ function coigueDetailed() {
   return assemble([
     piece(new CylinderGeometry(0.035, 0.07, 0.95, 7).translate(0, 0.47, 0), TRUNK_COLORS.coigue, 0),
     ...tiers.map(([r, y, dx, dz]) =>
-      leaves(blob(r, r > 0.25 ? 1 : 0, random, 0.14).scale(1, 0.32, 1).translate(dx, y, dz)),
+      leaves(
+        blob(r, r > 0.25 ? 1 : 0, random, 0.14)
+          .scale(1, 0.32, 1)
+          .translate(dx, y, dz),
+      ),
     ),
   ]);
 }

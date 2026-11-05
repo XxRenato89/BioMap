@@ -297,8 +297,6 @@ async function queryOverpass(query) {
 rmSync(TMP_DIR, { recursive: true, force: true });
 mkdirSync(TMP_DIR, { recursive: true });
 
-
-
 step('hitos, caminos y edificios (OpenStreetMap + datos locales de Angostura)');
 const boundsPair = [
   [BOUNDS.west, BOUNDS.south],

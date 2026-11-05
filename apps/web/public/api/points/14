@@ -4,8 +4,8 @@
   "geometry": {
     "type": "Point",
     "coordinates": [
-      -71.803,
-      -37.7086
+      -71.7977756,
+      -37.7075806
     ]
   },
   "properties": {
@@ -14,10 +14,11 @@
     "layerId": 3,
     "layerSlug": "tourism",
     "tourStop": null,
+    "secret": false,
     "description": "Playa en la ribera norte del brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {
-        "url": "/media/playa-santa-barbara.png",
+        "url": "/media/playa-santa-barbara.jpg",
         "altText": "Playa pública Santa Bárbara en la ribera norte del Embalse Angostura",
         "credit": "Google Maps / Parque Angostura",
         "isMain": true,

@@ -33,11 +33,7 @@ describe('characterModel utils', () => {
   it('removes forward root drift on hips position track', () => {
     const times = [0, 0.5, 1.0];
     // Start at Y = 0, End at Y = 80 (delta = 80)
-    const values = [
-      0, 0, 0,
-      0, 40, 0,
-      0, 80, 0,
-    ];
+    const values = [0, 0, 0, 0, 40, 0, 0, 80, 0];
     const track = new THREE.VectorKeyframeTrack('mixamorigHips.position', times, values);
     const clip = new THREE.AnimationClip('walk', 1.0, [track]);
 
@@ -49,4 +45,3 @@ describe('characterModel utils', () => {
     expect(resultValues[7]).toBeCloseTo(0);
   });
 });
-

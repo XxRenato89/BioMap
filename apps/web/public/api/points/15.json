@@ -4,8 +4,8 @@
   "geometry": {
     "type": "Point",
     "coordinates": [
-      -71.78058,
-      -37.70792
+      -71.7806875,
+      -37.7078125
     ]
   },
   "properties": {
@@ -14,6 +14,7 @@
     "layerId": 3,
     "layerSlug": "tourism",
     "tourStop": null,
+    "secret": true,
     "description": "Puente peatonal colgante sobre el río Huequecura, donde entra al embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": []
   }

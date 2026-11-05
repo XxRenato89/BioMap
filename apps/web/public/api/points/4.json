@@ -14,6 +14,7 @@
     "layerId": 1,
     "layerSlug": "history",
     "tourStop": null,
+    "secret": false,
     "description": "Puente de la Ruta Q-61 que cruza el embalse hacia Quilaco. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {

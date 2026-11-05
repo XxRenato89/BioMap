@@ -26,7 +26,8 @@ const draft = (what) =>
 /*
  * Lugares del mapa oficial y de la maqueta física del Centro de Visitantes
  * (fotos de octubre de 2026, ver docs/referencias.md), con coordenadas de
- * OpenStreetMap salvo donde se indica.
+ * OpenStreetMap salvo donde se indica. Playas, campings, Arboretum y el puente
+ * colgante: coordenadas de Google Maps (revisadas en noviembre de 2026).
  */
 export const SAMPLE_POINTS = [
   {
@@ -68,6 +69,7 @@ export const SAMPLE_POINTS = [
     description: draft('Localidad rural junto al río Huequecura, al norte del embalse.'),
     lng: -71.766676,
     lat: -37.701958,
+    secret: true,
   },
   {
     layerSlug: 'ecology',
@@ -85,8 +87,8 @@ export const SAMPLE_POINTS = [
     description: draft(
       'Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse.',
     ),
-    lng: -71.796316,
-    lat: -37.742917,
+    lng: -71.7935471,
+    lat: -37.7427509,
   },
   {
     layerSlug: 'ecology',
@@ -142,44 +144,47 @@ export const SAMPLE_POINTS = [
     name: 'Playa Santa Bárbara',
     description: draft('Playa en la ribera norte del brazo del río Huequecura.'),
     /* No está en OSM: en la orilla del brazo, donde la muestra el mapa oficial (por validar). */
-    lng: -71.803,
-    lat: -37.7086,
+    lng: -71.7977756,
+    lat: -37.7075806,
   },
   {
     layerSlug: 'tourism',
     name: 'Puente Colgante Huequecura',
     description: draft('Puente peatonal colgante sobre el río Huequecura, donde entra al embalse.'),
-    lng: -71.78058,
-    lat: -37.70792,
+    lng: -71.7806875,
+    lat: -37.7078125,
+    secret: true,
   },
   {
     layerSlug: 'tourism',
     name: 'Playa Quilaco',
     description: draft('Playa pública en la ribera sur del embalse, junto al Arboretum.'),
-    lng: -71.793541,
-    lat: -37.741749,
+    lng: -71.7939082,
+    lat: -37.7415318,
     tourStop: 4,
   },
   {
     layerSlug: 'tourism',
     name: 'Camping Los Notros',
-    description: draft('Camping a orillas del embalse, en el sector Los Notros.'),
-    lng: -71.798078,
-    lat: -37.726323,
+    description: draft(
+      'Camping a orillas del embalse, en el sector Los Notros, con playa, quinchos, muelle y pasarelas accesibles.',
+    ),
+    lng: -71.7987735,
+    lat: -37.7264148,
   },
   {
     layerSlug: 'tourism',
     name: 'Camping Trompelhueno de Quilaco',
     description: draft('Camping y playa en la ribera sur del embalse, con quinchos de paja.'),
-    lng: -71.791274,
-    lat: -37.743429,
+    lng: -71.79239,
+    lat: -37.7426992,
   },
   {
     layerSlug: 'tourism',
     name: 'Camping La Patagua de Lo Nieve',
     description: draft('Camping junto al río Huequecura, en Lo Nieve.'),
-    lng: -71.767656,
-    lat: -37.703407,
+    lng: -71.767142,
+    lat: -37.702461,
   },
 ];
 
@@ -193,7 +198,7 @@ const MAPS_CREDIT = 'Google Maps / Parque Angostura';
 export const SAMPLE_IMAGES = [
   {
     pointName: 'Central Hidroeléctrica Angostura',
-    filePath: 'presa-angostura-aerea.png',
+    filePath: 'presa-angostura-aerea.jpg',
     altText: 'Vista aérea panorámica del complejo hidroeléctrico Angostura, vertedero y embalse',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -202,7 +207,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Central Hidroeléctrica Angostura',
-    filePath: 'presa-angostura-vertedero.png',
+    filePath: 'presa-angostura-vertedero.jpg',
     altText: 'Vertedero de compuertas radiales y grúa pórtico de la presa Angostura',
     credit: MAPS_CREDIT,
     isMain: false,
@@ -211,7 +216,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Central Hidroeléctrica Angostura',
-    filePath: 'presa-angostura-carretera.png',
+    filePath: 'presa-angostura-carretera.jpg',
     altText: 'Vista de la presa Angostura y el canal de descarga desde la Ruta Q-61',
     credit: MAPS_CREDIT,
     isMain: false,
@@ -248,7 +253,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Cerro el Calvario',
-    filePath: 'mirador-san-sebastian.png',
+    filePath: 'mirador-san-sebastian.jpg',
     altText: 'Vista panorámica del valle del Biobío desde el Santuario y Mirador San Sebastián',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -275,8 +280,9 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Sendero y Mirador Huequecura',
-    filePath: 'mirador-huequecura-1.png',
-    altText: 'Vista panorámica desde la terraza del Mirador Huequecura hacia el Embalse Angostura y la presa',
+    filePath: 'mirador-huequecura-1.jpg',
+    altText:
+      'Vista panorámica desde la terraza del Mirador Huequecura hacia el Embalse Angostura y la presa',
     credit: MAPS_CREDIT,
     isMain: true,
     kind: 'photo',
@@ -284,7 +290,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Sendero y Mirador Huequecura',
-    filePath: 'mirador-huequecura-2.png',
+    filePath: 'mirador-huequecura-2.jpg',
     altText: 'Sendero entre el bosque nativo con vista hacia la captación de la central Angostura',
     credit: MAPS_CREDIT,
     isMain: false,
@@ -293,7 +299,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Mirador Central Angostura',
-    filePath: 'presa-angostura-carretera.png',
+    filePath: 'presa-angostura-carretera.jpg',
     altText: 'Vista al aliviadero y caída de agua de la presa Angostura desde la Ruta Q-61',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -302,7 +308,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Centro de Visitantes Angostura',
-    filePath: 'centro-visitantes-angostura.png',
+    filePath: 'centro-visitantes-angostura.jpg',
     altText: 'Fachada exterior del Centro de Visitantes Angostura y jardines en Ruta Q-61',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -311,7 +317,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Playa Santa Bárbara',
-    filePath: 'playa-santa-barbara.png',
+    filePath: 'playa-santa-barbara.jpg',
     altText: 'Playa pública Santa Bárbara en la ribera norte del Embalse Angostura',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -320,7 +326,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Camping Los Notros',
-    filePath: 'camping-los-notros-1.png',
+    filePath: 'camping-los-notros-1.jpg',
     altText: 'Vista aérea de la ensenada, espigón y muelle de Camping Los Notros',
     credit: MAPS_CREDIT,
     isMain: true,
@@ -329,7 +335,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Camping Los Notros',
-    filePath: 'camping-los-notros-2.png',
+    filePath: 'camping-los-notros-2.jpg',
     altText: 'Borde de playa y quinchos frente al embalse en Camping Los Notros',
     credit: MAPS_CREDIT,
     isMain: false,
@@ -338,7 +344,7 @@ export const SAMPLE_IMAGES = [
   },
   {
     pointName: 'Camping Los Notros',
-    filePath: 'camping-los-notros-3.png',
+    filePath: 'camping-los-notros-3.jpg',
     altText: 'Pasarelas accesibles y sector de picnic arbolado en Camping Los Notros',
     credit: MAPS_CREDIT,
     isMain: false,

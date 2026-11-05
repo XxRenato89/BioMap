@@ -269,7 +269,13 @@ export default memo(function Avatar({
       // Salto completado: pasa hacia adelante de la pantalla
       const arrivedPoint = jumpingRef.current.point;
       jumpingRef.current = null;
-      lastArrivedPointRef.current = arrivedPoint;
+      /* Vuelve donde terminó el camino, no a la coordenada del lugar: la de la
+         Central cae sobre el río, y ahí la mascota quedaba atrapada. */
+      lastArrivedPointRef.current = {
+        ...arrivedPoint,
+        x: currentPos.current.x,
+        z: currentPos.current.z,
+      };
       setLastArrivedPoint(arrivedPoint.raw);
       pathRef.current = [];
       setMode('speaking');
@@ -345,13 +351,16 @@ export default memo(function Avatar({
 
     // Salto inmediato si el visitante solicitó saltar la caminata
     if (skipRequested && mode === 'running_to_point' && activePoint) {
-      currentPos.current.x = activePoint.x;
-      currentPos.current.z = activePoint.z;
-      currentPos.current.y = heightAt(activePoint.x, activePoint.z) + roadOffset;
+      /* Salta al final de su camino (en tierra), no a la coordenada del lugar. */
+      const end = pathRef.current.at(-1);
+      const { x: endX, z: endZ } = end ? projection.toWorld(end) : activePoint;
+      currentPos.current.x = endX;
+      currentPos.current.z = endZ;
+      currentPos.current.y = heightAt(endX, endZ) + roadOffset;
       pathIndex.current = pathRef.current.length;
       pathRef.current = [];
       jumpingRef.current = null;
-      lastArrivedPointRef.current = activePoint;
+      lastArrivedPointRef.current = { ...activePoint, x: endX, z: endZ };
       setLastArrivedPoint(activePoint.raw);
       groupRef.current.position.copy(currentPos.current);
       setPosition(currentPos.current);

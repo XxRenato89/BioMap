@@ -122,7 +122,8 @@
     "wifi": "Conéctate al Wi‑Fi {{wifi}}",
     "scanMe": "Escanea este código",
     "qrAlt": "Código QR para abrir BioMap en tu teléfono",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "notConfigured": "El código QR aún no está configurado (falta VITE_PUBLIC_URL)."
   },
   "layers": {
     "count_one": "{{count}} punto",
@@ -142,13 +143,9 @@
   "visor": {
     "open": "Visor 3D",
     "title": "Visor 3D",
-    "ground": "A pie",
-    "drone": "Dron",
-    "spin": "Girar 360°",
-    "hint": "Arrastra para mirar alrededor. Pellizca para acercar.",
-    "droneHint": "Arrastra para rodear el lugar. Pellizca para acercar.",
-    "back": "Volver a la ficha",
-    "mode": "Modo de vista"
+    "back": "Cerrar",
+    "soon": "Vista 360° próximamente",
+    "soonText": "Aquí podrás mirar el lugar en 360°, como si estuvieras parado ahí."
   },
   "tours": {
     "title": "Recorridos temáticos",
