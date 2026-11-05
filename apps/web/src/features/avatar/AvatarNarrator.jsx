@@ -1,8 +1,9 @@
 import { Compass, Volume2, VolumeX, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useAvatarStore } from '../../store/avatarStore.js';
 import { useViewerStore } from '../../store/viewerStore.js';
+import { speakAsQuibar } from './voice.js';
 
 /**
  * Módulo de voz y diálogo del Avatar ("BioGuía").
@@ -17,8 +18,6 @@ export default function AvatarNarrator() {
   const toggleMute = useAvatarStore((state) => state.toggleMute);
   const stopSpeaking = useAvatarStore((state) => state.stopSpeaking);
 
-  const utteranceRef = useRef(null);
-
   // Síntesis de voz offline con Web Speech API
   useEffect(() => {
     if (!isSpeaking || !activeSpeech || muted) {
@@ -28,39 +27,18 @@ export default function AvatarNarrator() {
       return;
     }
 
+    let stopWaiting;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-
       try {
-        const utterance = new SpeechSynthesisUtterance(activeSpeech);
-        utterance.lang = 'es-CL'; // Prioridad español de Chile / neutro
-        utterance.rate = 1.0;
-        utterance.pitch = 1.05; // Tono amigable y enérgico de explorador
-
-        const assignVoice = () => {
-          const voices = window.speechSynthesis.getVoices();
-          const spanishVoice = voices.find(
-            (v) =>
-              v.lang.startsWith('es') || v.name.includes('Spanish') || v.name.includes('Sabina'),
-          );
-          if (spanishVoice) {
-            utterance.voice = spanishVoice;
-          }
-        };
-
-        assignVoice();
-        if (!utterance.voice && window.speechSynthesis.onvoiceschanged !== undefined) {
-          window.speechSynthesis.onvoiceschanged = assignVoice;
-        }
-
-        utteranceRef.current = utterance;
-        window.speechSynthesis.speak(utterance);
+        stopWaiting = speakAsQuibar(activeSpeech);
       } catch {
         // En caso de que el navegador bloquee la síntesis de voz
       }
     }
 
     return () => {
+      stopWaiting?.();
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
