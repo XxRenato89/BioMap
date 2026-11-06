@@ -16,12 +16,17 @@ Puesta en marcha del mini PC del Centro de Visitantes.
    En `.env` va también `SESSION_SECRET` (32+ caracteres al azar; ver `.env.example`).
 
 3. Probar: `powershell -ExecutionPolicy Bypass -File infra\kiosk\start-kiosk.ps1`
-4. Arranque automático: `powershell -ExecutionPolicy Bypass -File infra\kiosk\install-autostart.ps1`
+4. Arranque y respaldo automático: `powershell -ExecutionPolicy Bypass -File infra\kiosk\install-autostart.ps1`
 
-`start-kiosk.ps1` levanta la API, que también sirve el visor compilado
+`start-kiosk.ps1` (tarea `BioMapKiosk`) levanta la API, que también sirve el visor compilado
 (`WEB_DIR=apps/web/dist`), y abre Chrome (o Edge) en modo kiosco: pantalla completa,
 sin zoom con gestos ni navegación por historial. Si el navegador o la API se cierran,
 los vuelve a abrir. Deja un registro en `kiosk.log`.
+
+`backup.ps1` (tarea `BioMapBackup`, todos los días a las 19:00) vuelca PostgreSQL con
+`pg_dump`, comprime la carpeta `/media` en el disco externo USB (`D:\BioMapBackups` o
+`BIOMAP_BACKUP_DIR`), verifica que el volcado no esté vacío, elimina respaldos con más de
+14 días de antigüedad y registra el resultado en `backup.log`.
 
 Para salir del modo kiosco: `Alt+F4` (el script lo vuelve a abrir en 3 s; detener
 antes la tarea con `Stop-ScheduledTask BioMapKiosk`).
