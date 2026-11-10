@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampToBounds,
+  fitView,
   isInside,
   levelForRange,
   normalizeHeading,
@@ -38,5 +39,32 @@ describe('cameraMath', () => {
   it('normalizes headings', () => {
     expect(normalizeHeading(-30)).toBe(330);
     expect(normalizeHeading(400)).toBe(40);
+  });
+});
+
+describe('fitView', () => {
+  const base = { pitch: -48, heading: 0 };
+  it('centers on the points and backs off more on a narrow screen', () => {
+    const coords = [
+      [-71.81, -37.73],
+      [-71.79, -37.72],
+    ];
+    const wide = fitView(coords, { aspect: 1.6, fov: 32, base });
+    const narrow = fitView(coords, { aspect: 0.45, fov: 32, base });
+    expect(wide.center[0]).toBeCloseTo(-71.8);
+    expect(wide.center[1]).toBeCloseTo(-37.725);
+    expect(narrow.range).toBeGreaterThan(wide.range);
+    expect(narrow.pitch).toBe(-48);
+  });
+
+  it('turns the map so a diagonal row of points runs up the screen', () => {
+    const coords = [
+      [-71.82, -37.74],
+      [-71.78, -37.708],
+    ];
+    const view = fitView(coords, { aspect: 0.45, fov: 32, base, headings: [0, 45, 90, 135] });
+    expect(view.heading).toBe(45);
+    expect(view.center[0]).toBeCloseTo(-71.8);
+    expect(view.center[1]).toBeCloseTo(-37.724);
   });
 });

@@ -78,6 +78,7 @@ const projected = new Vector3();
  * @param {number[]} [props.selectedIds]
  * @param {string} props.viewId
  * @param {(id: number, screen: { x: number, y: number }) => void} props.onSelectPoint
+ * @param {number} [props.pinScale] Tamaño de los pines (1 en el kiosco; menos en el teléfono).
  */
 export function PoiMarkers({
   points,
@@ -86,6 +87,7 @@ export function PoiMarkers({
   selectedIds = [],
   viewId,
   onSelectPoint,
+  pinScale = 1,
 }) {
   const { projection, heightAt, surfaceAt, dams, waterPolygons } = useDiorama();
   const inWater = useMemo(() => waterTest(waterPolygons ?? []), [waterPolygons]);
@@ -255,7 +257,8 @@ export function PoiMarkers({
           if (element.dataset.occluded !== String(occluded))
             element.dataset.occluded = String(occluded);
 
-          const labelWidth = entry.name.length * CHAR_WIDTH + LABEL_PADDING;
+          const labelWidth = (entry.name.length * CHAR_WIDTH + LABEL_PADDING) * pinScale;
+          const dot = DOT * pinScale;
           /* Mandan el elegido y las paradas del recorrido; después, el orden de llegada. */
           const tourRank = tour.includes(Number(id)) ? 1_000 : 0;
           items.push({
@@ -264,12 +267,11 @@ export function PoiMarkers({
             y,
             solo: entry.selected,
             rank: entry.selected ? 1_000_000 : tourRank - order,
-            rect: {
-              x: x - DOT / 2,
-              y: y - STEM - DOT,
-              width: DOT + LABEL_GAP + labelWidth,
-              height: DOT,
-            },
+            /* Solo la placa del nombre: el círculo va aparte, como obstáculo para los demás. */
+            rect: { x: x + dot / 2 + LABEL_GAP, y: y - STEM - dot, width: labelWidth, height: dot },
+            /* Si a la derecha no cabe, la placa va a la izquierda del pin. */
+            alt: { x: x - dot / 2 - labelWidth, y: y - STEM - dot, width: labelWidth, height: dot },
+            dot: { x: x - dot / 2, y: y - STEM - dot, width: dot, height: dot },
           });
         }
       }
@@ -280,11 +282,16 @@ export function PoiMarkers({
        * Los pines que se pisan en pantalla se juntan en uno solo con el número
        * de lugares (se ve limpio); al acercarse se separan solos.
        */
-      const groups = clusterPins(items, CLUSTER_PX);
+      const groups = clusterPins(items, CLUSTER_PX * pinScale);
       const leaderOf = new Map();
       for (const [leader, ids] of groups) for (const member of ids) leaderOf.set(member, leader);
+      /* Una placa no tapa el círculo de otro pin ni se corta en el borde de la pantalla. */
       const withLabel = declutter(
         items.filter(({ id }) => groups.get(id)?.length === 1),
+        {
+          obstacles: items.filter(({ id }) => groups.has(id)).map((item) => item.dot),
+          width: size.width,
+        },
       );
       for (const [id, entry] of registry) {
         const { element } = entry;
@@ -307,6 +314,8 @@ export function PoiMarkers({
           );
         }
         if (element.dataset.compact !== compact) element.dataset.compact = compact;
+        const side = withLabel.get(id) === 'alt' ? 'left' : 'right';
+        if (element.dataset.side !== side) element.dataset.side = side;
       }
     }
 
@@ -364,6 +373,7 @@ export function PoiMarkers({
             state={getPoiState(id)}
             stop={tour.indexOf(Number(id)) + 1}
             isSecret={isSecret}
+            scale={pinScale}
           />
         </group>
       );

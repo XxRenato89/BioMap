@@ -75,6 +75,7 @@ export function PoiPin({
   state = 'disponible',
   stop = 0,
   isSecret = false,
+  scale = 1,
 }) {
   const group = useRef(null);
   const button = useRef(null);
@@ -89,7 +90,7 @@ export function PoiPin({
     if (!stem) return;
     /* El poste mide lo mismo en pantalla. Si el pin quedó dentro de un grupo, no se ve. */
     stem.visible = button.current?.dataset.hidden !== 'true';
-    const size = camera.position.distanceTo(stem.position) * STEM_PX;
+    const size = camera.position.distanceTo(stem.position) * STEM_PX * scale;
     stem.scale.setScalar(size);
     base.set(position[0], position[1] + size, position[2]);
     /* El marcador va en la punta del poste: de ahí se proyecta y se tapa. */
@@ -117,10 +118,12 @@ export function PoiPin({
         <button
           ref={register}
           type="button"
-          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale data-[hidden=true]:!opacity-0 data-[hidden=true]:!pointer-events-none aria-disabled:cursor-default data-[count]:cursor-pointer"
+          className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] data-[side=left]:flex-row-reverse data-[side=left]:-translate-x-[calc(100%-21px)] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale data-[hidden=true]:!opacity-0 data-[hidden=true]:!pointer-events-none aria-disabled:cursor-default data-[count]:cursor-pointer"
           data-selected={selected || undefined}
           data-state={state}
           data-name={name}
+          /* En el teléfono, pin y placa más chicos (zoom escala también su desplazamiento). */
+          style={scale === 1 ? undefined : { zoom: scale }}
           onClick={onSelect}
           aria-disabled={locked || undefined}
           aria-label={isSecret ? 'Lugar secreto por descubrir' : stop ? `${stop}. ${name}` : name}
@@ -170,7 +173,7 @@ export function PoiPin({
             )}
           </span>
           {/* Placa con el nombre, unida al marcador. */}
-          <span className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden">
+          <span className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full group-data-[side=left]:ml-0 group-data-[side=left]:-mr-4 group-data-[side=left]:pl-4 group-data-[side=left]:pr-6 group-data-[side=left]:rounded-r-none group-data-[side=left]:rounded-l-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden">
             {isSecret ? '?' : name}
           </span>
         </button>

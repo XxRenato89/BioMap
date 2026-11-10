@@ -143,20 +143,29 @@ así que se niegan a correr si el nombre de la base no termina en `_test`. El CI
 
 ## API
 
-| Ruta                                     | Descripción                                            |
-| ---------------------------------------- | ------------------------------------------------------ |
-| `GET /api/health`                        | `200` si la base responde, `503` si no                 |
-| `GET /api/layers`                        | Capas temáticas activas                                |
-| `GET /api/points?layers=history,tourism` | Puntos como FeatureCollection GeoJSON (con `tourStop`) |
-| `GET /api/points/:id`                    | Ficha completa del punto, con sus imágenes y créditos  |
+| Ruta                                        | Descripción                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `GET /api/health`                           | `200` (`{"status":"ok","database":"up"}`) o `503` si la base cae  |
+| `GET /api/layers`                           | Capas temáticas activas (`history`, `ecology`, `tourism`)         |
+| `GET /api/points?layers=history,tourism`    | Puntos como FeatureCollection GeoJSON (con `tourStop` y `secret`) |
+| `GET /api/points/:id`                       | Ficha completa del punto, con sus imágenes (`photo`/`panorama`)   |
+| `POST /api/visits`                          | Registra evento anónimo de visita (`point_open`, `tour_complete`) |
+| `POST /api/tts`                             | Síntesis de voz de Quibar (ElevenLabs con caché local en disco)   |
+| `POST /api/admin/session`                   | Inicio de sesión admin (`scrypt` + cookie `HttpOnly` firmada)     |
+| `DELETE /api/admin/session`                 | Cierre de sesión del administrador                                |
+| `GET /api/admin/me` · `PUT /api/admin/password` | Sesión actual y cambio obligatorio/voluntario de contraseña   |
+| `GET\|POST\|PATCH\|DELETE /api/admin/points` | CRUD, borrado lógico y restauración (`/points/:id/restore`)       |
+| `POST\|PATCH\|DELETE /api/admin/images`     | Carga y gestión de fotos y panoramas 360° de cada punto           |
+| `GET\|PATCH /api/admin/layers`              | Listado y activación/desactivación de capas temáticas             |
+| `GET /api/admin/stats` · `/stats.csv`       | Estadísticas de visitas y exportación CSV por rango de fechas     |
+| `GET /api/admin/audit`                      | Registro de auditoría de cambios administrativos                  |
 
 Los errores siempre tienen la forma `{ "error": { "code": "...", "message": "..." } }`.
 
 ## Contenido pendiente del cliente
 
-`PENDING.md` y `docs/referencias.md` listan lo que falta: textos validados, fotos del
-mirador y el centro de visitantes, coordenadas tomadas en terreno, medidas de la presa
-y el modelo 3D de la mascota oficial (Quibar).
+`PENDING.md` y `docs/referencias.md` listan lo que falta validar con la contraparte: textos definitivos, fotos del
+mirador y el centro de visitantes, coordenadas tomadas en terreno y medidas oficiales de la presa.
 
 ## Convenciones
 

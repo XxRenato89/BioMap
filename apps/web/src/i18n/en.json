@@ -130,13 +130,10 @@
     "close": "Close",
     "notConfigured": "The QR code is not set up yet (VITE_PUBLIC_URL is missing)."
   },
-  "layers": {
-    "count_one": "{{count}} place",
-    "count_other": "{{count}} places"
-  },
   "m": {
-    "layers": "Layers",
-    "place": "Place"
+    "place": "Place",
+    "next": "Next: {{name}}",
+    "tourDone": "Tour complete!"
   },
   "curiosity": {
     "title": "Did you know…?",

@@ -10,7 +10,28 @@ describe('declutter', () => {
       { id: 'volcano', rect: rect(50, 10), rank: 90 },
       { id: 'far', rect: rect(400, 400), rank: 10 },
     ]);
-    expect([...shown].sort()).toEqual(['far', 'volcano']);
+    expect([...shown.keys()].sort()).toEqual(['far', 'volcano']);
+  });
+
+  it('hides labels that would cover another pin or leave the screen', () => {
+    const shown = declutter(
+      [
+        { id: 'under-pin', rect: rect(0, 0), rank: 2 },
+        { id: 'off-screen', rect: rect(250, 200), rank: 1 },
+        { id: 'free', rect: rect(0, 200), rank: 0 },
+      ],
+      { obstacles: [{ x: 60, y: 10, width: 40, height: 40 }], width: 300 },
+    );
+    expect([...shown.keys()]).toEqual(['free']);
+  });
+
+  it('moves a label to its spare side when the main one is taken', () => {
+    const shown = declutter([
+      { id: 'big', rect: rect(100, 0), rank: 2 },
+      { id: 'flip', rect: rect(120, 0), alt: rect(0, 40), rank: 1 },
+    ]);
+    expect(shown.get('big')).toBe('main');
+    expect(shown.get('flip')).toBe('alt');
   });
 });
 

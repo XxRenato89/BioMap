@@ -4,12 +4,15 @@
 services:
   db:
     image: postgis/postgis:17-3.5
+    # En el kiosco, Docker Desktop reanuda la base de datos al iniciar Windows.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: biomap
       POSTGRES_PASSWORD: biomap
       POSTGRES_DB: biomap
     ports:
-      - '5432:5432'
+      # Solo en la interfaz local: la LAN del kiosco no debe llegar a la base de datos.
+      - '127.0.0.1:5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./infra/db/create-test-db.sql:/docker-entrypoint-initdb.d/20-create-test-db.sql:ro

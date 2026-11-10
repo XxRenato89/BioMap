@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n from '../i18n/index.js';
 import { axeViolations } from '../test/axe.js';
 import { clearTestQueryClients, makeWrapper } from '../test/providers.jsx';
-import LayersSheet from './LayersSheet.jsx';
 import PlaceSearch from './PlaceSearch.jsx';
 import PlaceSheet from './PlaceSheet.jsx';
 
@@ -13,35 +12,10 @@ afterEach(() => {
 });
 
 const HISTORY = { id: 1, slug: 'history', name: 'Historia', color: '#b4440e' };
-const TOURISM = { id: 3, slug: 'tourism', name: 'Turismo', color: '#1d4ed8' };
 const feature = (id, name, coordinates = [-71.8, -37.7]) => ({
   type: 'Feature',
   geometry: { type: 'Point', coordinates },
   properties: { id, name, layerId: 1 },
-});
-
-describe('LayersSheet', () => {
-  it('shows each layer with its count and toggles it, accessibly', async () => {
-    const onToggle = vi.fn();
-    const { container } = render(
-      <LayersSheet
-        layers={[HISTORY, TOURISM]}
-        hidden={new Set([3])}
-        counts={new Map([[1, 5]])}
-        onToggle={onToggle}
-        onClose={vi.fn()}
-      />,
-    );
-    const history = screen.getByRole('switch', { name: /Historia/ });
-    const tourism = screen.getByRole('switch', { name: /Turismo/ });
-    expect(history.getAttribute('aria-checked')).toBe('true');
-    expect(tourism.getAttribute('aria-checked')).toBe('false');
-    expect(history.textContent).toContain('5 puntos');
-    expect(tourism.textContent).toContain('0 puntos');
-    fireEvent.click(tourism);
-    expect(onToggle).toHaveBeenCalledWith(3);
-    expect(await axeViolations(container)).toEqual([]);
-  });
 });
 
 describe('PlaceSearch', () => {

@@ -1,3 +1,4 @@
+import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { memo, useEffect, useMemo, useRef } from 'react';
 import { Box3, Vector3 } from 'three';
@@ -82,6 +83,7 @@ export default memo(function Avatar({
   runSpeed = AVATAR_CONFIG.runSpeed,
   runCadence = AVATAR_CONFIG.runCadence,
   walkCadence = AVATAR_CONFIG.walkCadence,
+  marker = false,
 }) {
   /* La mascota pisa lo que se ve: relieve, o el tablero si cruza un puente. */
   const { projection, surfaceAt: heightAt, roadsData, waterPolygons } = useDiorama();
@@ -548,6 +550,20 @@ export default memo(function Avatar({
         <meshBasicMaterial color="#000000" transparent opacity={0.35} />
       </mesh>
       <primitive object={scene} />
+      {/* En el teléfono Quibar se ve chico: una etiqueta con su nombre lo señala. */}
+      {marker && (
+        <Html position={[0, modelHeight * 1.15, 0]} center zIndexRange={[8, 8]}>
+          <span
+            className="pointer-events-none flex select-none flex-col items-center"
+            aria-hidden="true"
+          >
+            <span className="rounded-full bg-orange-700 px-2.5 py-0.5 text-xs font-extrabold text-white shadow-[0_2px_8px_rgba(0,0,0,0.4)] ring-2 ring-white">
+              Quibar
+            </span>
+            <span className="h-0 w-0 border-x-[6px] border-t-[8px] border-x-transparent border-t-orange-700" />
+          </span>
+        </Html>
+      )}
     </group>
   );
 });

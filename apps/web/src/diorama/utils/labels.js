@@ -26,20 +26,28 @@ export function visibleKinds(range) {
 
 /**
  * Elige qué etiquetas caben en pantalla sin taparse: recorre de mayor a
- * menor prioridad y descarta las que chocan con una ya elegida.
+ * menor prioridad y descarta las que chocan con una ya elegida, con un
+ * obstáculo (p. ej. el círculo de otro pin) o se salen de la pantalla. Si la
+ * etiqueta trae un lugar de reserva (`alt`, p. ej. a la izquierda del pin),
+ * lo prueba antes de descartarla.
  *
- * @param {Array<{ id: string, rect: { x: number, y: number, width: number, height: number }, rank: number }>} items
- * @returns {Set<string>} Ids de las etiquetas que se muestran.
+ * @param {Array<{ id: string, rect: Rect, alt?: Rect, rank: number }>} items
+ * @param {{ obstacles?: Rect[], width?: number }} [options]
+ * @returns {Map<string, 'main' | 'alt'>} Etiquetas que se muestran y en qué lugar.
+ * @typedef {{ x: number, y: number, width: number, height: number }} Rect
  */
-export function declutter(items) {
-  const shown = [];
-  const result = new Set();
+export function declutter(items, { obstacles = [], width = Infinity } = {}) {
+  const shown = [...obstacles];
+  const result = new Map();
   const overlaps = (a, b) =>
     a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  const fits = (rect) =>
+    rect.x >= 0 && rect.x + rect.width <= width && !shown.some((other) => overlaps(other, rect));
   for (const item of [...items].sort((a, b) => b.rank - a.rank)) {
-    if (shown.some((rect) => overlaps(rect, item.rect))) continue;
-    shown.push(item.rect);
-    result.add(item.id);
+    const side = fits(item.rect) ? 'main' : item.alt && fits(item.alt) ? 'alt' : null;
+    if (!side) continue;
+    shown.push(side === 'main' ? item.rect : item.alt);
+    result.set(item.id, side);
   }
   return result;
 }

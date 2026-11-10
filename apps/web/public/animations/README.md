@@ -13,7 +13,7 @@ Aquí se suben todas las animaciones del personaje 3D con su respectivo nombre p
 
 El modelo 3D con su malla y esqueleto se ubica fuera de la carpeta de animaciones:
 
-- En la aplicación web: `/models/quibar.fbx` (o `/models/model.fbx`).
+- En la aplicación web: `/models/quibar.glb` (o `/models/model.glb`).
 
 ## Cómo agregar o reemplazar una animación
 

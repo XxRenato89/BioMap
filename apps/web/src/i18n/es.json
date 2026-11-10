@@ -125,13 +125,10 @@
     "close": "Cerrar",
     "notConfigured": "El código QR aún no está configurado (falta VITE_PUBLIC_URL)."
   },
-  "layers": {
-    "count_one": "{{count}} punto",
-    "count_other": "{{count}} puntos"
-  },
   "m": {
-    "layers": "Capas",
-    "place": "Lugar"
+    "place": "Lugar",
+    "next": "Siguiente: {{name}}",
+    "tourDone": "¡Recorrido completo!"
   },
   "curiosity": {
     "title": "¿Sabías que…?",
