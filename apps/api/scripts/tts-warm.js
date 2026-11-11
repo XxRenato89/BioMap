@@ -43,7 +43,9 @@ for (const [i, text] of texts.entries()) {
     body: JSON.stringify({ text }),
   }).catch(() => null);
   const ms = Date.now() - started;
-  console.log(`${i + 1}/${texts.length} ${res?.ok ? 'ok' : `falló (${res?.status ?? 'sin red'})`}: ${text}`);
+  console.log(
+    `${i + 1}/${texts.length} ${res?.ok ? 'ok' : `falló (${res?.status ?? 'sin red'})`}: ${text}`,
+  );
   if (res?.status === 503) {
     console.error('La API no tiene ELEVENLABS_API_KEY: ver infra/kiosk/README.md');
     process.exit(1);

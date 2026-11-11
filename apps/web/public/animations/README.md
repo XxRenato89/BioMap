@@ -4,15 +4,15 @@ Aquí se suben todas las animaciones del personaje 3D con su respectivo nombre p
 
 ## Archivos y Nombres Estándar
 
-| Archivo    | Acción   | Descripción                                             |
-| ---------- | -------- | ------------------------------------------------------- |
-| `walk.glb` | **walk** | Ciclo de caminata (Mixamo).                             |
-| `run.glb`  | **run**  | Ciclo de carrera (Mixamo).                              |
-| `idle.glb` | **idle** | Reposo: respira, mueve la cola y la cabeza.             |
-| `look.glb` | **look** | Pausa del paseo: mira el paisaje.                       |
-| `wave.glb` | **wave** | Saludo (pausa del paseo y al abrir una ficha).          |
-| `clapping.glb` | **clapping** | Aplauso (pausa y al hallar un lugar secreto).   |
-| `sit.glb`  | **sit**  | Pausa del paseo: se sienta a descansar.                 |
+| Archivo        | Acción       | Descripción                                    |
+| -------------- | ------------ | ---------------------------------------------- |
+| `walk.glb`     | **walk**     | Ciclo de caminata (Mixamo).                    |
+| `run.glb`      | **run**      | Ciclo de carrera (Mixamo).                     |
+| `idle.glb`     | **idle**     | Reposo: respira, mueve la cola y la cabeza.    |
+| `look.glb`     | **look**     | Pausa del paseo: mira el paisaje.              |
+| `wave.glb`     | **wave**     | Saludo (pausa del paseo y al abrir una ficha). |
+| `clapping.glb` | **clapping** | Aplauso (pausa y al hallar un lugar secreto).  |
+| `sit.glb`      | **sit**      | Pausa del paseo: se sienta a descansar.        |
 
 `idle`, `look`, `wave`, `clapping` y `sit` se generan con Blender:
 `blender -b -P apps/web/scripts/quibar.blender.py -- <quibar-original.glb> <salida> apps/web/public/animations/walk.glb`.

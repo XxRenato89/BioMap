@@ -42,7 +42,7 @@ jobs:
 
   # Flujos completos del kiosco en un navegador real (sin base de datos: API en modo de prueba).
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright 1.55 has no Chromium build for ubuntu 26.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
