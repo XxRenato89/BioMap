@@ -50,6 +50,8 @@ describeWithDb('points repository', () => {
             layerSlug: 'history',
             tourStop: null,
             secret: false,
+            modelKind: null,
+            icon: null,
           },
         },
       ]);
