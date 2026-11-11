@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bakeRipples, blendShore } from './water.js';
+import { bakeRipples, beachBand, blendShore } from './water.js';
 
 describe('blendShore', () => {
   /* Una fila: agua a 326 m en las 3 primeras celdas y tierra después. */
@@ -45,5 +45,13 @@ describe('bakeRipples', () => {
       inside += Math.abs(at(size / 2, y) - at(size / 2 - 1, y));
     }
     expect(seam).toBeLessThan(inside * 2);
+  });
+});
+
+describe('beachBand', () => {
+  it('fades from the cell next to the water to nothing past its reach', () => {
+    /* Una fila: agua en las 2 primeras celdas. */
+    const band = beachBand({ columns: 8, rows: 1 }, new Uint8Array([9, 9, 0, 0, 0, 0, 0, 0]), 3);
+    expect(Array.from(band)).toEqual([0, 0, 255, 170, 85, 0, 0, 0]);
   });
 });

@@ -5,11 +5,15 @@ import {
   LinearFilter,
   LinearMipmapLinearFilter,
   MeshStandardMaterial,
+  NearestFilter,
   ObjectSpaceNormalMap,
+  RedFormat,
   RepeatWrapping,
   RGBAFormat,
   SRGBColorSpace,
   TextureLoader,
+  UnsignedByteType,
+  Vector2,
   Vector3,
   Vector4,
 } from 'three';
@@ -53,7 +57,7 @@ import {
 import { PRESA_ANGOSTURA_COORDINATES as ANGOSTURA } from '../../data/damCoordinates.js';
 import { TIERS, useRenderStore } from '../utils/quality.js';
 import { rockMaterial, treeMaterial } from './trees.js';
-import { blendShore, shoreTexture, sinkUnderWater, waterMaterial } from './water.js';
+import { beachBand, blendShore, shoreTexture, sinkUnderWater, waterMaterial } from './water.js';
 
 /*
  * Lugares cuyo entorno se ajusta a sus fotos de Google Maps [lng, lat]: el Centro
@@ -145,16 +149,33 @@ function reservoirBox(projection) {
 }
 
 /**
+ * Cobertura del suelo como textura de un canal (la clase de cada celda, sin
+ * suavizar: son categorías). Sin datos, una sola celda «sin dato».
+ *
+ * @param {{ data: Uint8Array, columns: number, rows: number } | null} landcover
+ */
+function coverTexture(landcover) {
+  const { data, columns, rows } = landcover ?? { data: new Uint8Array(1), columns: 1, rows: 1 };
+  const texture = new DataTexture(data, columns, rows, RedFormat, UnsignedByteType);
+  texture.magFilter = texture.minFilter = NearestFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
  * Material del terreno: color (foto satelital fundida con la paleta de
  * maqueta) y normales horneados del relieve real, grano fino repetido para
  * el detalle de cerca y curvas de nivel (fina y gruesa, ver `contourSteps`).
  * Las curvas se encienden o apagan con `material.userData.contours.value` (1 o 0).
  * Con el embalse vaciado (`reservoirDrain`), su fondo se ve como sedimento.
+ * De cerca, el suelo toma el material de su cobertura (`coverMap`, clases de
+ * landcover.js): hojarasca bajo el bosque, pasto, surcos en los cultivos,
+ * ripio y tierra. `beachMap` (ver `beachBand`) pinta arena junto al agua.
  *
  * @param {{ fine: number, major: number }} steps
  * @param {import('three').Vector4} box Ver `reservoirBox`.
  */
-function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps, box) {
+function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps, box, coverMap, beachMap) {
   const material = new MeshStandardMaterial({
     map: colorMap,
     normalMap,
@@ -168,6 +189,11 @@ function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps, box) {
     shader.uniforms.contours = contours;
     shader.uniforms.detailMap = { value: detailMap };
     shader.uniforms.shoreMap = { value: shoreMap };
+    shader.uniforms.coverMap = { value: coverMap };
+    shader.uniforms.beachMap = { value: beachMap };
+    shader.uniforms.coverTexel = {
+      value: new Vector2(1 / coverMap.image.width, 1 / coverMap.image.height),
+    };
     shader.uniforms.detailRepeat = { value: DETAIL_REPEAT };
     shader.uniforms.exaggeration = { value: VERTICAL_EXAGGERATION };
     shader.uniforms.reservoirDrain = reservoirDrain;
@@ -189,6 +215,9 @@ function terrainMaterial(colorMap, normalMap, detailMap, shoreMap, steps, box) {
         `#include <common>
 uniform sampler2D detailMap;
 uniform sampler2D shoreMap;
+uniform sampler2D coverMap;
+uniform sampler2D beachMap;
+uniform vec2 coverTexel;
 uniform float detailRepeat;
 uniform float exaggeration;
 uniform float contours;
@@ -208,7 +237,8 @@ float groundNoise(vec2 p) {
   return mix(mix(groundHash(i), groundHash(i + vec2(1.0, 0.0)), f.x),
     mix(groundHash(i + vec2(0.0, 1.0)), groundHash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
-float wet;`,
+float wet;
+float beach;`,
       )
       .replace(
         '#include <map_fragment>',
@@ -222,6 +252,11 @@ diffuseColor.rgb = pow(diffuseColor.rgb, vec3(0.98));
 /* Dentro del agua el lecho toma el color natural del fondo fluvial profundo. */
 wet = smoothstep(0.5 / 255.0, 3.0 / 255.0, texture2D(shoreMap, vMapUv).r);
 diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.03, 0.09, 0.11), wet);
+/* Arena y ripio en la orilla, a manchones: no toda la ribera es playa. */
+beach = texture2D(beachMap, vMapUv).r * (1.0 - wet);
+beach *= beach * (0.35 + 0.55 * groundNoise(vGround.xz * 1000.0 / 45.0));
+vec3 sand = vec3(0.74, 0.68, 0.53) * (0.88 + grain * 0.2 + grainFine * 0.08);
+diffuseColor.rgb = mix(diffuseColor.rgb, sand, beach);
 float meters = vHeight / exaggeration * 1000.0;
 float fine = meters / ${steps.fine.toFixed(1)};
 float major = meters / ${steps.major.toFixed(1)};
@@ -263,6 +298,34 @@ if (closeUp > 0.0 && wet < 0.5) {
   vec3 grassTint = mix(vec3(0.86, 0.84, 0.62), vec3(0.72, 0.9, 0.62), patches);
   vec3 detailed = diffuseColor.rgb
     * mix(vec3(0.85 + patches * 0.3), grassTint * 1.12, clamp(green * 6.0, 0.0, 1.0));
+  /* Material según la cobertura del suelo; el borde entre clases se mueve con ruido para que no se vea cuadriculado. */
+  vec2 coverUv = vMapUv + (vec2(groundNoise(m / 6.0), groundNoise(m / 6.0 + 17.0)) - 0.5) * coverTexel * 2.5;
+  float cover = floor(texture2D(coverMap, coverUv).r * 255.0 + 0.5);
+  float speck = texture2D(detailMap, m / 3.0).r;
+  float blotch = texture2D(detailMap, m / 23.0).r;
+  vec3 soil = detailed;
+  float soilMix = 0.55;
+  if (cover == 1.0) {
+    /* Bosque: hojarasca oscura. */
+    soil = mix(vec3(0.2, 0.17, 0.1), vec3(0.3, 0.33, 0.16), blotch);
+  } else if (cover == 2.0) {
+    soil = mix(vec3(0.5, 0.46, 0.3), vec3(0.42, 0.47, 0.26), blotch);
+  } else if (cover == 3.0) {
+    soil = mix(vec3(0.36, 0.5, 0.22), vec3(0.52, 0.6, 0.3), blotch);
+  } else if (cover == 4.0) {
+    /* Cultivos: surcos de tierra y verde. */
+    float furrow = smoothstep(0.35, 0.65, fract(dot(m, vec2(0.8, 0.6)) / 1.6));
+    soil = mix(vec3(0.42, 0.34, 0.22), vec3(0.5, 0.58, 0.26), furrow);
+  } else if (cover == 5.0) {
+    soil = vec3(0.55, 0.53, 0.5);
+  } else if (cover == 6.0) {
+    soil = mix(vec3(0.52, 0.45, 0.34), vec3(0.62, 0.56, 0.44), blotch);
+  } else {
+    soilMix = 0.0;
+  }
+  /* La arena de la orilla manda sobre la cobertura. */
+  soilMix *= 1.0 - beach;
+  detailed = mix(detailed, soil * (0.8 + speck * 0.4), soilMix);
   vec3 up = inverseTransformDirection(normal, viewMatrix);
   float steep = smoothstep(0.62, 0.42, up.y);
   float strata = groundNoise(vec2(m.x * 0.15, vGround.y * 1000.0 / exaggeration * 1.4));
@@ -446,6 +509,16 @@ export function loadDiorama({ anisotropy }) {
     const detailMap = crisp(new DataTexture(bakeDetail(512), 512, 512, RGBAFormat), anisotropy);
     detailMap.wrapS = detailMap.wrapT = RepeatWrapping;
 
+    const beachMap = new DataTexture(
+      beachBand(meta, shore),
+      meta.columns,
+      meta.rows,
+      RedFormat,
+      UnsignedByteType,
+    );
+    beachMap.magFilter = beachMap.minFilter = LinearFilter;
+    beachMap.needsUpdate = true;
+
     await stageDone('water');
     const landcover = landcoverBuffer
       ? {
@@ -594,6 +667,8 @@ export function loadDiorama({ anisotropy }) {
           shoreMap,
           contourSteps(meta.minHeight, meta.maxHeight),
           reservoirBox(projection),
+          coverTexture(landcover),
+          beachMap,
         ),
         dam: new MeshStandardMaterial({ vertexColors: true, roughness: 0.75 }),
         water: waterMaterial(shoreMap, projection),

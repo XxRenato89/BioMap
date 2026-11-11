@@ -32,6 +32,45 @@ export function shoreTexture(meta, shore) {
 }
 
 /**
+ * Cercanía al agua de cada celda de tierra, para pintar la arena de la orilla:
+ * 255 en la celda pegada al agua y 0 a `reach` celdas o más (y dentro del agua).
+ *
+ * @param {{ columns: number, rows: number }} meta
+ * @param {Uint8Array} shore > 0 en las celdas de agua.
+ * @param {number} [reach] Celdas (~4,4 m cada una).
+ * @returns {Uint8Array}
+ */
+export function beachBand(meta, shore, reach = 3) {
+  const { columns } = meta;
+  const band = new Uint8Array(shore.length);
+  const seen = new Uint8Array(shore.length);
+  let frontier = [];
+  for (let i = 0; i < shore.length; i += 1) {
+    if (shore[i]) {
+      seen[i] = 1;
+      frontier.push(i);
+    }
+  }
+  for (let step = 1; step <= reach && frontier.length > 0; step += 1) {
+    const next = [];
+    for (const i of frontier) {
+      const col = i % columns;
+      const neighbours = [i - columns, i + columns];
+      if (col > 0) neighbours.push(i - 1);
+      if (col < columns - 1) neighbours.push(i + 1);
+      for (const j of neighbours) {
+        if (j < 0 || j >= shore.length || seen[j]) continue;
+        seen[j] = 1;
+        band[j] = Math.round(255 * (1 - (step - 1) / reach));
+        next.push(j);
+      }
+    }
+    frontier = next;
+  }
+  return band;
+}
+
+/**
  * Hunde bajo la superficie del agua (la malla que realmente se dibuja) cada
  * celda de agua del relieve que quedara por encima de ella. El build rebaja
  * el fondo con un nivel interpolado distinto al de la malla del agua y, donde
