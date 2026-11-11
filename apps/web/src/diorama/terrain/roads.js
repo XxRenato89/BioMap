@@ -203,6 +203,16 @@ function sideways(points, k) {
 }
 
 /**
+ * Pasarela peatonal: no se dibuja como camino ni como puente de hormigón. La
+ * única de la zona es el Puente Colgante Huequecura, que tiene su propio
+ * modelo tendido de orilla a orilla (ver PoiMarkers); con los dos se veía un
+ * arco corto que terminaba en medio del agua.
+ *
+ * @param {{ kind: string, bridge?: boolean }} road
+ */
+export const isFootbridge = (road) => Boolean(road.bridge) && road.kind === 'footway';
+
+/**
  * Cintas de todos los caminos. Cada vértice guarda el punto del eje y el
  * shader lo abre hacia su lado (`roadSide`) según el ancho real del camino
  * o el ancho mínimo en pantalla, lo que sea mayor.
@@ -222,7 +232,7 @@ export function buildRoads(roads, widths, heightAt, projection) {
   const along = [];
   const index = [];
   for (const road of roads) {
-    if (ROAD_CLASS[road.kind] === undefined) continue;
+    if (ROAD_CLASS[road.kind] === undefined || isFootbridge(road)) continue;
     const points = roadPoints(road, heightAt, projection);
     if (points.length < 2) continue;
     const start = position.length / 3;
@@ -406,7 +416,7 @@ export function buildBridges(roads, widths, heightAt, projection) {
     );
   };
   for (const road of roads) {
-    if (!road.bridge) continue;
+    if (!road.bridge || isFootbridge(road)) continue;
     const points = roadPoints(road, heightAt, projection);
     if (points.length < 2) continue;
     const half = (widths[road.kind] ?? 6) / 2000 + SIDEWALK;

@@ -16,6 +16,7 @@ import {
   modelRadius,
   modelScale,
 } from '../models/index.js';
+import { isFootbridge } from '../terrain/roads.js';
 import { cliffEdge, placeModels, riverCrossing, shoreSpot } from '../utils/placement.js';
 import { RESERVOIR, within } from '../utils/reservoir.js';
 import { isOccluded } from '../utils/occlusion.js';
@@ -93,7 +94,7 @@ export function PoiMarkers({
   pinScale = 1,
 }) {
   const { t } = useTranslation();
-  const { projection, heightAt, surfaceAt, dams, waterPolygons } = useDiorama();
+  const { projection, heightAt, surfaceAt, dams, waterPolygons, roadsData } = useDiorama();
   const inWater = useMemo(() => waterTest(waterPolygons ?? []), [waterPolygons]);
   const getPoiState = useUserStore((state) => state.getPoiState);
   /* Suscripciones para redibujar los candados al avanzar el recorrido. */
@@ -141,12 +142,22 @@ export function PoiMarkers({
       taken.push({ x: spot.x, z: spot.z, r: item.radius * spot.scale });
     }
     /*
-     * Puente colgante: tendido de orilla a orilla en el cruce más angosto del
-     * río junto a su punto, con el largo justo y el tablero a la altura de la
-     * orilla más baja.
+     * Puente colgante: tendido de orilla a orilla sobre el eje de la pasarela
+     * real de OpenStreetMap (a menos de 150 m de su punto), o en el cruce más
+     * angosto del río si no hay una, con el largo justo y el tablero a la
+     * altura de la orilla más baja.
      */
+    const walkways = (roadsData ?? []).filter(isFootbridge).map((road) => {
+      const a = projection.toWorld(road.line[0]);
+      const b = projection.toWorld(road.line.at(-1));
+      return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, angle: Math.atan2(b.z - a.z, b.x - a.x) };
+    });
     for (const item of items.filter((i) => i.kind === 'bridge')) {
-      const crossing = riverCrossing(item.x, item.z, ground.isWater);
+      const walkway = walkways.find((w) => Math.hypot(w.x - item.x, w.z - item.z) < 0.15);
+      const crossing =
+        (walkway &&
+          riverCrossing(walkway.x, walkway.z, ground.isWater, { angle: walkway.angle })) ||
+        riverCrossing(item.x, item.z, ground.isWater);
       if (!crossing) continue;
       const { a, b } = crossing;
       const [dx, dz] = [b.x - a.x, b.z - a.z];
@@ -200,7 +211,7 @@ export function PoiMarkers({
       spot.angle ??= facingWater(spot.x, spot.z, inWater, projection);
     return spots;
     // kindOf solo depende de layerById y dams.
-  }, [points, layerById, dams, projection, heightAt, inWater]);
+  }, [points, layerById, dams, projection, heightAt, inWater, roadsData]);
   /* El bosque se despeja donde va cada modelo (con un poco de holgura). */
   useEffect(() => {
     const kinds = new Map(points.features.map((f) => [f.properties.id, kindOf(f)]));

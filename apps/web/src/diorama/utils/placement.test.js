@@ -120,4 +120,11 @@ describe('riverCrossing', () => {
   it('returns null with no water in reach', () => {
     expect(riverCrossing(0, 0, () => false)).toBeNull();
   });
+
+  it('follows a given axis instead of the narrowest crossing', () => {
+    /* A 45°, el mismo río de 60 m se cruza en ~85 m. */
+    const { a, b } = riverCrossing(0, 0.05, river, { angle: Math.PI / 4 });
+    expect(Math.abs(a.x - b.x)).toBeCloseTo(Math.abs(a.z - b.z), 3);
+    expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThan(0.08);
+  });
 });
