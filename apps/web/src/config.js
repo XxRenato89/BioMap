@@ -42,7 +42,7 @@ export function buildConfig(env) {
      * que deja ver agua, relieve, bosque y riberas. `range` es la distancia de la cámara al
      * centro (m) y `pitch` su inclinación (grados).
      */
-    initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -48 },
+    initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -33 },
     maxBounds: toBounds(env.VITE_MAP_BOUNDS) ?? DEFAULT_BOUNDS,
     minRange: 150,
     maxRange: 12_000,

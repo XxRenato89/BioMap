@@ -4,7 +4,7 @@ import { buildConfig } from './config.js';
 describe('buildConfig', () => {
   it('uses the documented defaults', () => {
     expect(buildConfig({})).toMatchObject({
-      initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -48 },
+      initialView: { center: [-71.801, -37.724], range: 5_200, heading: 0, pitch: -33 },
       maxBounds: [
         [-71.855, -37.7672],
         [-71.75374, -37.672],

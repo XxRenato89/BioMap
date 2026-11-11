@@ -9,6 +9,8 @@ import { useAvatarStore } from '../../store/avatarStore.js';
 const { ACTION } = CameraControlsImpl;
 const TILTED_PITCH = -33;
 const TOP_PITCH = -88;
+// Distancia mínima (km de escena) entre la cámara y el relieve bajo ella.
+const GROUND_CLEARANCE = 0.015;
 const target = new Vector3();
 
 /**
@@ -166,6 +168,17 @@ export default function CameraRig({
    * Modo atracción: la cámara rodea lentamente cada parada y salta a la siguiente.
    */
   useFrame((state, delta) => {
+    /*
+     * La cámara nunca se hunde en el relieve: si queda bajo el suelo, se
+     * levanta la inclinación (más cenital) hasta despejarlo.
+     */
+    const rig = controls.current;
+    const { x, y, z } = rig.camera.position;
+    if (y < heightAt(x, z) + GROUND_CLEARANCE && rig.polarAngle > rig.minPolarAngle) {
+      rig.rotatePolarTo(Math.max(rig.minPolarAngle, rig.polarAngle - 0.06), false);
+      invalidate();
+    }
+
     const stateAttract = attract.current;
     if (stateAttract) {
       controls.current.rotate(delta * 0.12, 0, false);
