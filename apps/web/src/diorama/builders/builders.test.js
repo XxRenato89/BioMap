@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildDamWall, plantationSpecies, plantForest, plantFringe, treeKind } from './index.js';
+import { nativeSpecies } from './forest.js';
 import { LANDCOVER } from '../terrain/landcover.js';
 import { createHeightSampler, createProjection } from '../utils/projection.js';
 
@@ -121,5 +122,31 @@ describe('plantFringe', () => {
     const near = xs.filter(([x]) => x > 1 && x < 1.3).length;
     const far = xs.filter(([x]) => x > 1.7 && x < 2).length;
     expect(near).toBeGreaterThan(far * 2);
+  });
+});
+
+describe('nativeSpecies', () => {
+  const count = (meters) => {
+    const seen = {};
+    for (let x = -4; x < 4; x += 0.03)
+      for (let z = -5; z < 5; z += 0.03) {
+        const kind = nativeSpecies(x, z, meters);
+        seen[kind] = (seen[kind] ?? 0) + 1;
+      }
+    return seen;
+  };
+
+  it('mixes every native species, with roble still the most common up the slopes', () => {
+    const high = count(550);
+    for (const kind of ['native', 'coigue', 'peumo', 'rauli', 'canelo', 'olivillo'])
+      expect(high[kind]).toBeGreaterThan(0);
+    expect(high.native).toBeGreaterThan(high.canelo);
+    expect(high.native).toBeGreaterThan(high.olivillo);
+  });
+
+  it('keeps raulí off the low ground and gives it more peumo', () => {
+    const low = count(320);
+    expect(low.rauli).toBeUndefined();
+    expect(low.peumo).toBeGreaterThan(count(550).peumo);
   });
 });
