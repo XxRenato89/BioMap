@@ -3,8 +3,11 @@ import {
   DataTexture,
   DoubleSide,
   LinearFilter,
+  LinearMipmapLinearFilter,
   MeshStandardMaterial,
   RedFormat,
+  RepeatWrapping,
+  RGBAFormat,
   UnsignedByteType,
   Vector2,
   Vector3,
@@ -138,6 +141,54 @@ export function blendShore(meta, heights, shore, levels, reach = 10) {
   }
 }
 
+/**
+ * Rizos del agua como textura que se repite sin costura: la pendiente (x en
+ * rojo, y en verde, 128 = plano) de una suma de ondas de largos y rumbos
+ * distintos. Reemplaza al ruido de bloques, que de cerca se veía artificial;
+ * de lejos, sus niveles reducidos se aplanan solos y el agua no chispea.
+ *
+ * @param {number} [size] Lado en píxeles.
+ * @returns {Uint8Array} RGBA.
+ */
+export function bakeRipples(size = 256) {
+  /* Números fijos: la textura sale igual en cada carga. */
+  let seed = 7;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const waves = [];
+  while (waves.length < 28) {
+    /* Ondas enteras por lado: así el borde derecho calza con el izquierdo. */
+    const kx = Math.round(random() * 18 - 9);
+    const ky = Math.round(random() * 18 - 9);
+    const k = Math.hypot(kx, ky);
+    if (k < 2) continue;
+    waves.push({ kx, ky, amp: 1 / k ** 1.3, phase: random() * Math.PI * 2 });
+  }
+  const slopes = new Float32Array(size * size * 2);
+  let peak = 0;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      let sx = 0;
+      let sy = 0;
+      for (const { kx, ky, amp, phase } of waves) {
+        const s = -amp * Math.sin(((kx * x + ky * y) / size) * Math.PI * 2 + phase);
+        sx += s * kx;
+        sy += s * ky;
+      }
+      slopes[(y * size + x) * 2] = sx;
+      slopes[(y * size + x) * 2 + 1] = sy;
+      peak = Math.max(peak, Math.abs(sx), Math.abs(sy));
+    }
+  }
+  const pixels = new Uint8Array(size * size * 4);
+  for (let i = 0; i < size * size; i += 1) {
+    pixels[i * 4] = Math.round(128 + (slopes[i * 2] / peak) * 127);
+    pixels[i * 4 + 1] = Math.round(128 + (slopes[i * 2 + 1] / peak) * 127);
+    pixels[i * 4 + 2] = 255;
+    pixels[i * 4 + 3] = 255;
+  }
+  return pixels;
+}
+
 /*
  * Corriente general del agua (m/s, hacia el poniente, como baja el Biobío).
  */
@@ -147,7 +198,9 @@ const FLOW = new Vector2(-0.55, -0.15);
  * Agua viva y cristalina: una capa opaca con profundidad garantizada que cubre
  * el relieve sin dejar ver imperfecciones del fondo, con color turquesa vivo en
  * las orillas, azul profundo al centro, espuma dinámica en las riberas y reflejos
- * del cielo.
+ * del cielo. En los primeros metros desde la orilla dibuja ella misma un fondo
+ * de arena y piedras con la luz del sol bailando encima: se ve a través del
+ * agua sin volverla transparente (el relieve de abajo no es digno de verse).
  *
  * @param {import('three').Texture} shore Ver `shoreTexture`.
  * @param {{ width: number, depth: number }} zone Tamaño de la zona (km).
@@ -169,7 +222,14 @@ export function waterMaterial(shore, zone) {
   material.userData.sky = { value: new Color(0.42, 0.6, 0.72) };
   material.userData.sun = { value: new Vector3(-0.75, 0.6, -0.33).normalize() };
   const half = new Vector2(zone.width / 2, zone.depth / 2);
+  const ripples = new DataTexture(bakeRipples(256), 256, 256, RGBAFormat, UnsignedByteType);
+  ripples.wrapS = ripples.wrapT = RepeatWrapping;
+  ripples.magFilter = LinearFilter;
+  ripples.minFilter = LinearMipmapLinearFilter;
+  ripples.generateMipmaps = true;
+  ripples.needsUpdate = true;
   material.onBeforeCompile = (shader) => {
+    shader.uniforms.waterRipples = { value: ripples };
     shader.uniforms.waterTime = time;
     shader.uniforms.waterShore = { value: shore };
     shader.uniforms.waterHalf = { value: half };
@@ -199,6 +259,7 @@ export function waterMaterial(shore, zone) {
         `#include <common>
 uniform float waterTime;
 uniform sampler2D waterShore;
+uniform sampler2D waterRipples;
 uniform vec2 waterHalf;
 uniform vec2 waterFlow;
 uniform vec3 waterSky;
@@ -251,8 +312,19 @@ vec2 along = normalize(waterFlow);
 float streaks = waterFbm(vec2(dot(moved, along) / 160.0, dot(moved, vec2(-along.y, along.x)) / 22.0));
 float current = waterFbm(moved / 90.0);
 waterColor *= 0.72 + current * 0.24 + streaks * 0.34;
-/* Aguas bajas: el fondo tiñe solo los primeros metros. */
-waterColor = mix(waterColor, vec3(0.2, 0.34, 0.3), (1.0 - smoothstep(0.0, 3.5, shoreMeters)) * 0.5);
+/* Aguas bajas: en los primeros metros se ve el fondo de arena y piedras, movido por los rizos. */
+float shallows = 1.0 - smoothstep(0.0, 6.0, shoreMeters);
+vec2 bent = meters + (texture2D(waterRipples, meters / 6.0 + waterTime * 0.03).xy - 0.5) * 1.6;
+float pebbles = waterNoise(bent / 0.7) * 0.6 + waterNoise(bent / 2.6) * 0.4;
+vec3 bed = mix(vec3(0.40, 0.38, 0.28), vec3(0.64, 0.6, 0.46), pebbles);
+/* Luz del sol en el fondo: una red de líneas claras donde dos capas de rizos se cruzan. */
+float lightA = texture2D(waterRipples, meters / 5.0 + waterTime * vec2(0.05, 0.02)).r;
+float lightB = texture2D(waterRipples, meters / 4.1 - waterTime * vec2(0.03, 0.045)).g;
+float caustics = pow(clamp(1.0 - abs(lightA + lightB - 1.0) * 5.0, 0.0, 1.0), 3.0);
+bed += caustics * 0.3 * vec3(1.0, 0.97, 0.85);
+/* El agua tiñe el fondo de verde y lo oscurece con la profundidad. */
+bed *= mix(vec3(0.7, 0.92, 0.85), vec3(0.3, 0.55, 0.55), smoothstep(0.0, 6.0, shoreMeters));
+waterColor = mix(waterColor, bed, shallows * shallows * 0.8);
 /* Orilla viva: una línea de agua que sube y baja sobre la playa, cortada por el ruido. */
 float lap = 1.2 + sin(waterTime * 0.7 + waterNoise(meters / 25.0) * 6.2831) * 0.9;
 float wash = (1.0 - smoothstep(lap - 0.6, lap + 0.4, shoreMeters)) * smoothstep(0.35, 0.75, waterNoise(flowing(meters, 0.6) / 3.0));
@@ -269,10 +341,11 @@ vec2 slope = waveSlope(drift, vec2(1.0, 0.25), 9.0, 0.04, 1.4)
   + waveSlope(drift, vec2(0.9, 0.6), 17.0, 0.05, 0.9);
 /* Olas grandes y lentas: mueven los brillos del sol a la escala de la maqueta. */
 slope += waveSlope(drift, vec2(0.6, 0.8), 48.0, 0.35, 0.5) + waveSlope(drift, vec2(-0.8, 0.5), 31.0, 0.22, 0.65);
-/* Rizos irregulares encima de las olas regulares. */
-vec2 rp = drift / 1.6;
-float rc = waterNoise(rp);
-slope += vec2(waterNoise(rp + vec2(0.35, 0.0)) - rc, waterNoise(rp + vec2(0.0, 0.35)) - rc) * 0.12;
+/* Rizos encima de las olas regulares: dos capas de la textura que se cruzan a distinto paso. */
+vec2 rippleMeters = vWater.xz * 1000.0;
+vec2 ripple = texture2D(waterRipples, rippleMeters / 9.0 + waterTime * vec2(0.035, 0.012)).xy - 0.5
+  + (texture2D(waterRipples, rippleMeters.yx / 3.7 - waterTime * vec2(0.02, 0.05)).xy - 0.5) * 0.7;
+slope += ripple * 0.55;
 vec3 wavePerturbation = (viewMatrix * vec4(-slope.x, 0.0, -slope.y, 0.0)).xyz * 0.22;
 normal = normalize(normal + wavePerturbation);
 vec3 viewDir = normalize(vViewPosition);
