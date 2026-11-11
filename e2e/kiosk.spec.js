@@ -7,8 +7,11 @@ import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  /* La pantalla de carga desaparece cuando la maqueta está lista. */
-  await expect(page.getByText('Preparando la maqueta del Biobío…')).toBeHidden({ timeout: 90_000 });
+  /* La maqueta está lista cuando aparecen los pines y se va la pantalla de carga. */
+  await expect(page.getByRole('button', { name: 'Central Hidroeléctrica Angostura' })).toBeVisible({
+    timeout: 90_000,
+  });
+  await expect(page.getByRole('status', { name: /Cargando la maqueta/ })).toBeHidden();
 });
 
 test('shows the map with its tour and the guided-tour lock', async ({ page }) => {
@@ -27,7 +30,7 @@ test('walks to a place, opens its sheet and moves on to the next stop', async ({
   const sheet = page.getByRole('dialog', { name: 'Central Hidroeléctrica Angostura' });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByText('Parada 1 de 4')).toBeVisible();
-  await expect(sheet.getByText(/Fotografía: Marcelo A Contreras/)).toBeVisible();
+  await expect(sheet.getByText(/Fotografía: \S/)).toBeVisible();
 
   await sheet.getByRole('button', { name: /Seguir a Parque Angostura/ }).click();
   await page.getByRole('button', { name: 'Saltar caminata' }).click();

@@ -51,6 +51,7 @@ export default function MobileApp() {
   const { points, failing: pointsFailing } = usePointsQuery(timing);
   const visibleLayerIds = useVisibleLayers(layers);
   const selectedPointIds = useViewerStore((state) => state.selectedPointIds);
+  const drained = useViewerStore((state) => state.drained);
   const tour = useUserStore((state) => state.tour);
   const visitedPoints = useUserStore((state) => state.visitedPoints);
   const sky = useDaylight().sky.map((color) => `#${color.getHexString()}`);
@@ -167,6 +168,11 @@ export default function MobileApp() {
     setPanel(null);
     selectPoint(id);
   };
+  /* Época: «2000» vacía el embalse (igual que en el kiosco, parte desde la vista general). */
+  const toggleEpoch = () => {
+    if (!drained) mainRef.current?.resetView();
+    useViewerStore.getState().toggleDrained();
+  };
 
   const messages = layersFailing || pointsFailing ? [t('status.offline')] : [];
   const iconButton =
@@ -241,6 +247,16 @@ export default function MobileApp() {
           <Compass onResetNorth={() => mainRef.current?.resetNorth()} />
         </div>
 
+        {/* Es una reconstrucción ilustrativa: se dice en pantalla mientras el embalse está vacío. */}
+        {drained && !selected && !panel && (
+          <p
+            className="absolute left-3 right-[72px] top-[88px] m-0 rounded-2xl bg-cream p-3 text-xs leading-snug text-forest shadow-[0_4px_14px_rgba(20,51,77,0.3)]"
+            aria-live="polite"
+          >
+            {t('epoch.note')}
+          </p>
+        )}
+
         {!selected && !panel && (
           <>
             <div className="absolute inset-x-3 bottom-[max(16px,env(safe-area-inset-bottom))] flex items-center gap-2 rounded-[28px] bg-cream p-2 text-forest shadow-[0_6px_20px_rgba(20,51,77,0.35)]">
@@ -274,6 +290,15 @@ export default function MobileApp() {
               </button>
             </div>
             <div className="absolute bottom-[calc(max(16px,env(safe-area-inset-bottom))+88px)] right-3 flex flex-col overflow-hidden rounded-2xl bg-cream text-forest shadow-[0_4px_14px_rgba(20,51,77,0.3)]">
+              <button
+                type="button"
+                className={`flex h-12 w-12 items-center justify-center border-0 border-b border-forest/15 text-sm font-extrabold ${drained ? 'bg-forest text-white' : 'bg-transparent'}`}
+                aria-label={`${t('dock.epoch')}: ${drained ? t('epoch.year2000') : t('epoch.today')}`}
+                aria-pressed={drained}
+                onClick={toggleEpoch}
+              >
+                {drained ? t('epoch.year2000') : t('epoch.today')}
+              </button>
               <button
                 type="button"
                 className="flex h-12 w-12 items-center justify-center border-0 border-b border-forest/15 bg-transparent"

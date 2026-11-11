@@ -6,7 +6,7 @@
  * contenido crece o cambia seguido, pasar a Workbox con precarga del build.
  */
 const CACHE = 'biomap-v1';
-/* Archivos pesados que casi no cambian: primero la copia guardada. */
+/* Archivos pesados que casi no cambian: primero la copia guardada, y se refresca por detrás. */
 const STATIC = /^\/(diorama|models|animations|assets|media)\//;
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -37,9 +37,10 @@ self.addEventListener('fetch', (event) => {
   /* El panel de administración y la voz nunca se guardan. */
   if (/^\/(api\/(admin|events|tts)|admin)/.test(url.pathname)) return;
   if (STATIC.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then((hit) => hit ?? fetch(request).then((r) => save(request, r))),
-    );
+    /* Un modelo o relieve nuevo llega en la visita siguiente, sin cambiar el nombre de la caché. */
+    const fresh = fetch(request).then((response) => save(request, response));
+    event.waitUntil(fresh.catch(() => {}));
+    event.respondWith(caches.match(request).then((hit) => hit ?? fresh));
     return;
   }
   /* Página y datos: lo más nuevo si hay red; si no, la última copia. */

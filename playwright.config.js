@@ -4,15 +4,16 @@ import { defineConfig } from '@playwright/test';
  * Pruebas de extremo a extremo del kiosco: la API en modo de prueba
  * (USE_MOCKS, sin base de datos) y el visor de Vite, en puertos propios para
  * no chocar con los de desarrollo. WebGL corre por software (SwiftShader), así
- * que la maqueta va lenta: los tiempos de espera son generosos.
+ * que la maqueta va lenta: los tiempos de espera son generosos (en el CI carga
+ * en ~40 s y una caminata saltada tarda más de 30 s en abrir la ficha).
  */
 const API_PORT = 3100;
 const WEB_PORT = 5180;
 
 export default defineConfig({
   testDir: 'e2e',
-  timeout: 120_000,
-  expect: { timeout: 30_000 },
+  timeout: 300_000,
+  expect: { timeout: 60_000 },
   workers: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
@@ -30,7 +31,12 @@ export default defineConfig({
     },
     {
       command: `npm run dev -w apps/web -- --port ${WEB_PORT} --strictPort`,
-      env: { API_PROXY_TARGET: `http://localhost:${API_PORT}`, VITE_ATTRACT_DELAY_S: '0' },
+      env: {
+        API_PROXY_TARGET: `http://localhost:${API_PORT}`,
+        VITE_ATTRACT_DELAY_S: '0',
+        /* Sin dirección pública, el panel del QR avisa que falta configurarla. */
+        VITE_PUBLIC_URL: 'http://biomap.test',
+      },
       url: `http://localhost:${WEB_PORT}`,
       reuseExistingServer: !process.env.CI,
     },
