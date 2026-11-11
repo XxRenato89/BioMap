@@ -43,29 +43,43 @@ export function plantationSpecies(x, z) {
 /**
  * Especie de un árbol nativo: rodales mezclados de roble, coigüe y peumo o
  * quillay; el bosque esclerófilo (peumo, quillay) abunda en las partes bajas.
+ * Dentro de cada rodal van manchas chicas de otras especies: canelo y
+ * olivillo entre los robles, y raulí en las partes altas, con el coigüe.
+ * Las especies tienen fuente (docs/referencias.md); dónde crece cada una es
+ * una aproximación por altura, no un inventario.
  *
  * @param {number} x Posición en la maqueta (km).
  * @param {number} z
  * @param {number} meters Altura del terreno.
- * @returns {'native' | 'coigue' | 'peumo'}
+ * @returns {'native' | 'coigue' | 'peumo' | 'rauli' | 'canelo' | 'olivillo'}
  */
 export function nativeSpecies(x, z, meters) {
   const stand = valueNoise(x / 0.25 - 7.1, z / 0.25 + 3.9);
+  /* Manchas de ~100 m dentro del rodal. */
+  const patch = valueNoise(x / 0.1 + 41.3, z / 0.1 - 19.7);
   const low = Math.min(Math.max((420 - meters) / 160, 0), 1);
+  const high = meters > 480;
   if (stand < 0.25 + 0.25 * low) return 'peumo';
-  if (stand > 0.72) return 'coigue';
+  if (stand > 0.72) return high && patch > 0.5 ? 'rauli' : 'coigue';
+  if (patch < 0.24) return 'canelo';
+  if (patch > 0.76) return 'olivillo';
+  if (high && patch > 0.58) return 'rauli';
   return 'native';
 }
 
 /*
  * Altura real de los árboles (m): robles de 15 a 28 m, coigües de 20 a 35 m,
- * peumos y quillayes de 8 a 15 m, pinos radiata de 22 a 32 m y eucaliptos,
- * los más altos, de 25 a 40 m.
+ * peumos y quillayes de 8 a 15 m, raulíes de 22 a 35 m, canelos de 10 a 20 m,
+ * olivillos de 15 a 25 m, pinos radiata de 22 a 32 m y eucaliptos, los más
+ * altos, de 25 a 40 m.
  */
 export const TREE_HEIGHT = {
   native: [15, 28],
   coigue: [20, 35],
   peumo: [8, 15],
+  rauli: [22, 35],
+  canelo: [10, 20],
+  olivillo: [15, 25],
   pine: [22, 32],
   eucalyptus: [25, 40],
 };
@@ -95,8 +109,10 @@ function emitTree(target, kind, x, ground, z, meters, i, j, scale, color) {
   const size = ((low + (high - low) * cellRandom(i, j, 4)) * scale) / 1000;
   const tall = size * (0.92 + cellRandom(i, j, 5) * 0.16);
   const angle = cellRandom(i, j, 6) * Math.PI * 2;
-  const cos = Math.cos(angle) * size;
-  const sin = Math.sin(angle) * size;
+  /* Copa más angosta o más ancha que el modelo: dos árboles de la misma especie no se ven iguales. */
+  const wide = size * (0.82 + cellRandom(i, j, 12) * 0.4);
+  const cos = Math.cos(angle) * wide;
+  const sin = Math.sin(angle) * wide;
   /* Leve inclinación propia (hasta ~5°): un bosque real no crece a plomo. */
   const leanX = (cellRandom(i, j, 10) - 0.5) * 0.18 * tall;
   const leanZ = (cellRandom(i, j, 11) - 0.5) * 0.18 * tall;
@@ -120,6 +136,15 @@ function emitTree(target, kind, x, ground, z, meters, i, j, scale, color) {
   } else if (kind === 'peumo') {
     /* Esclerófilo: verde oliva oscuro, algo grisáceo. */
     color.setHSL(0.22 + r * 0.04, 0.32, 0.16 + cellRandom(i, j, 8) * 0.04);
+  } else if (kind === 'rauli') {
+    /* Caducifolio: verde fresco y claro. */
+    color.setHSL(0.24 + r * 0.05, 0.42, 0.22 + cellRandom(i, j, 8) * 0.06);
+  } else if (kind === 'canelo') {
+    /* Hoja clara y algo azulada. */
+    color.setHSL(0.33 + r * 0.03, 0.34, 0.26 + cellRandom(i, j, 8) * 0.05);
+  } else if (kind === 'olivillo') {
+    /* Verde oscuro y opaco, tirando a gris. */
+    color.setHSL(0.29 + r * 0.03, 0.3, 0.14 + cellRandom(i, j, 8) * 0.04);
   } else {
     /* Roble: verde más claro y variado; algo más oscuro en altura. */
     const altitude = Math.min(Math.max((meters - 600) / 1400, 0), 1);

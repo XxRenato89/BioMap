@@ -11,7 +11,7 @@ import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferG
 import { seeded } from '../utils/noise.js';
 
 /*
- * Modelos de los tres tipos de árbol de la maqueta, cada uno en dos versiones:
+ * Modelos de los tipos de árbol de la maqueta, cada uno en dos versiones:
  * `detailed` (de cerca: copa de varias masas, ramas, pisos) y `simple` (de
  * lejos: unas pocas caras). Todos miden 1 de alto: la matriz de cada árbol
  * los escala a su altura real. El atributo `foliage` marca el follaje (1),
@@ -34,6 +34,9 @@ const TRUNK_COLORS = {
   eucalyptus: hex(0x8f7f68),
   coigue: hex(0x4b3a2c),
   peumo: hex(0x5c4a3a),
+  rauli: hex(0x6a5a4a),
+  canelo: hex(0xa39b8e),
+  olivillo: hex(0x6e6558),
 };
 
 /**
@@ -288,14 +291,114 @@ function peumoSimple() {
 }
 
 /**
- * Tipos de árbol de la maqueta, con sus dos modelos.
+ * Raulí: tronco alto y recto y una copa ovalada que se angosta hacia arriba,
+ * más esbelta que la del roble.
  */
-export const TREE_KINDS = ['native', 'coigue', 'peumo', 'pine', 'eucalyptus'];
+function rauliDetailed() {
+  const random = seeded(71);
+  const shade = canopyShade(0.45, 1.25);
+  const leaves = (geometry) => piece(geometry, WHITE, 1, shade);
+  return assemble([
+    piece(new CylinderGeometry(0.035, 0.065, 0.7, 7).translate(0, 0.35, 0), TRUNK_COLORS.rauli, 0),
+    leaves(blob(0.3, 1, random, 0.14).scale(1, 1.1, 1).translate(0, 0.72, 0)),
+    leaves(blob(0.25, 0, random).translate(0.03, 0.95, -0.02)),
+    leaves(blob(0.17, 0, random).translate(-0.02, 1.14, 0.02)),
+    leaves(blob(0.18, 0, random).translate(0.2, 0.66, 0.08)),
+    leaves(blob(0.18, 0, random).translate(-0.2, 0.68, -0.07)),
+  ]);
+}
+
+function rauliSimple() {
+  return assemble([
+    piece(new CylinderGeometry(0.04, 0.06, 0.6, 5).translate(0, 0.3, 0), FAR_TRUNK, 0),
+    piece(
+      new IcosahedronGeometry(0.3, 0).scale(1, 1.45, 1).translate(0, 0.85, 0),
+      WHITE,
+      1,
+      farShade,
+    ),
+  ]);
+}
+
+/**
+ * Canelo: tronco delgado y claro y una copa cónica y compacta, en tres pisos
+ * anchos (árbol de lugares húmedos, sagrado para el pueblo mapuche).
+ */
+function caneloDetailed() {
+  const random = seeded(83);
+  const shade = canopyShade(0.35, 1.15);
+  const tiers = [
+    [0.3, 0.4, 0.55],
+    [0.24, 0.36, 0.8],
+    [0.16, 0.3, 1.02],
+  ].map(([radius, height, y], k) =>
+    piece(new ConeGeometry(radius, height, 8).rotateY(k * 0.5).translate(0, y, 0), WHITE, 1, shade),
+  );
+  return assemble([
+    piece(new CylinderGeometry(0.03, 0.05, 0.6, 6).translate(0, 0.3, 0), TRUNK_COLORS.canelo, 0),
+    ...tiers,
+    piece(blob(0.09, 0, random).translate(0, 1.16, 0), WHITE, 1, shade),
+  ]);
+}
+
+function caneloSimple() {
+  return assemble([
+    piece(new CylinderGeometry(0.035, 0.05, 0.45, 5).translate(0, 0.22, 0), FAR_TRUNK, 0),
+    piece(new ConeGeometry(0.27, 0.8, 6).translate(0, 0.72, 0), WHITE, 1, farShade),
+  ]);
+}
+
+/**
+ * Olivillo: copa densa, oscura y en forma de huevo, sobre un tronco corto.
+ */
+function olivilloDetailed() {
+  const random = seeded(97);
+  const shade = canopyShade(0.35, 1.2);
+  const leaves = (geometry) => piece(geometry, WHITE, 1, shade);
+  return assemble([
+    piece(new CylinderGeometry(0.05, 0.08, 0.5, 6).translate(0, 0.25, 0), TRUNK_COLORS.olivillo, 0),
+    leaves(blob(0.38, 1, random, 0.1).scale(1, 1.15, 1).translate(0, 0.78, 0)),
+    leaves(blob(0.24, 0, random).translate(0.24, 0.62, 0.1)),
+    leaves(blob(0.24, 0, random).translate(-0.25, 0.66, -0.08)),
+    leaves(blob(0.22, 0, random).translate(0, 0.6, -0.27)),
+    leaves(blob(0.22, 0, random).translate(0.02, 1.08, 0.03)),
+  ]);
+}
+
+function olivilloSimple() {
+  return assemble([
+    piece(new CylinderGeometry(0.06, 0.08, 0.45, 5).translate(0, 0.22, 0), FAR_TRUNK, 0),
+    piece(
+      new IcosahedronGeometry(0.4, 0).scale(0.95, 1.2, 0.95).translate(0, 0.8, 0),
+      WHITE,
+      1,
+      farShade,
+    ),
+  ]);
+}
+
+/**
+ * Tipos de árbol de la maqueta, con sus dos modelos. Los nativos son las
+ * especies que la SMA constató en el arboreto de Quilaco (ver docs/referencias.md).
+ */
+export const TREE_KINDS = [
+  'native',
+  'coigue',
+  'peumo',
+  'rauli',
+  'canelo',
+  'olivillo',
+  'pine',
+  'eucalyptus',
+];
 
 export const TREE_MODELS = {
   native: { detailed: nativeDetailed(), simple: nativeSimple() },
   coigue: { detailed: coigueDetailed(), simple: coigueSimple() },
   peumo: { detailed: peumoDetailed(), simple: peumoSimple() },
+  rauli: { detailed: rauliDetailed(), simple: rauliSimple() },
+  canelo: { detailed: caneloDetailed(), simple: caneloSimple() },
+  olivillo: { detailed: olivilloDetailed(), simple: olivilloSimple() },
   pine: { detailed: pineDetailed(), simple: pineSimple() },
   eucalyptus: { detailed: eucalyptusDetailed(), simple: eucalyptusSimple() },
 };
