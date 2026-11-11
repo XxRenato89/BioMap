@@ -176,17 +176,20 @@ export function withoutTreesIn(trees, clearings) {
  * Cruce más angosto del río junto a (x, z): de las rectas que pasan por el
  * punto (cada 6°), la que cruza el agua más cercana en el tramo más corto.
  * Devuelve sus dos orillas, o null si no hay agua a menos de `reach` km.
+ * Con `angle` (rad, en el plano x-z) solo se prueba esa recta: sirve para
+ * tender el puente sobre el eje de la pasarela real.
  *
  * @param {number} x
  * @param {number} z
  * @param {(x: number, z: number) => boolean} isWater
- * @param {{ reach?: number, step?: number }} [options]
+ * @param {{ reach?: number, step?: number, angle?: number }} [options]
  * @returns {{ a: { x: number, z: number }, b: { x: number, z: number } } | null}
  */
-export function riverCrossing(x, z, isWater, { reach = 0.3, step = 0.002 } = {}) {
+export function riverCrossing(x, z, isWater, { reach = 0.3, step = 0.002, angle: only } = {}) {
   let best = null;
-  for (let deg = 0; deg < 180; deg += 6) {
-    const angle = (deg * Math.PI) / 180;
+  const angles =
+    only === undefined ? Array.from({ length: 30 }, (_, k) => (k * 6 * Math.PI) / 180) : [only];
+  for (const angle of angles) {
     const [dx, dz] = [Math.cos(angle), Math.sin(angle)];
     /* Tramos de agua a lo largo de la recta, de −reach a +reach. */
     const runs = [];
