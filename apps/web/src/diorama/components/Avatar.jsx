@@ -8,7 +8,7 @@ import { useViewerStore } from '../../store/viewerStore.js';
 import i18n from '../../i18n/index.js';
 import { useDiorama } from './DioramaScene.jsx';
 import { Pathfinder } from '../utils/pathfinder.js';
-import { useCharacterModel } from '../utils/characterModel.js';
+import { idleSpeed, useCharacterModel } from '../utils/characterModel.js';
 import { useUserStore } from '../../store/userStore.js';
 import { WILDLIFE_SPOTS } from './Wildlife.jsx';
 
@@ -49,6 +49,8 @@ export const PAUSES = [
   { anim: 'Sit', ms: 7000, face: 'keep' },
 ];
 const CLAPPING = PAUSES[2];
+/* Saludo al visitante que lo toca: más largo, para alcanzar a leer el globo. */
+const GREETING = { anim: 'Wave', ms: 5200, face: 'camera' };
 
 /** Una pausa al azar entre las que tienen su animación cargada, o null si no hay ninguna. */
 export function pickPause(actions, random = Math.random) {
@@ -145,7 +147,7 @@ export default memo(function Avatar({
     mixer?.stopAllAction();
     const idleAction = actions?.idle || actions?.Idle;
     if (idleAction) {
-      idleAction.reset().setEffectiveTimeScale(0).fadeIn(0.2).play();
+      idleAction.reset().setEffectiveTimeScale(idleSpeed(idleAction)).fadeIn(0.2).play();
       currentAnimRef.current = 'Idle';
     }
   }, [actions, mixer]);
@@ -499,8 +501,8 @@ export default memo(function Avatar({
         } else if (currentAnim === 'Walking') {
           nextAction.setEffectiveTimeScale(walkCadence);
         } else if (currentAnim === 'Idle') {
-          /* El reposo es la caminata congelada en su primer cuadro: Quibar queda de pie. */
-          nextAction.setEffectiveTimeScale(0);
+          /* Reposo propio (respira y mueve la cola) o, si falta, la caminata congelada. */
+          nextAction.setEffectiveTimeScale(idleSpeed(nextAction));
         } else {
           nextAction.setEffectiveTimeScale(1.0);
         }
@@ -525,7 +527,7 @@ export default memo(function Avatar({
         const dist = Math.hypot(currentPos.current.x - poi.x, currentPos.current.z - poi.z);
         if (dist < 0.15) {
           userStore.discoverSecret(poi.id);
-          startSpeaking(`¡Oh, he encontrado algo misterioso! Es: ${poi.name}`);
+          startSpeaking(i18n.t('avatar.secret', { name: poi.name }));
           /* No frena el paseo: se detiene a mirar y sigue. */
           if (mode === 'patrol' && actions?.Clapping) {
             setMode('patrol');
@@ -543,13 +545,32 @@ export default memo(function Avatar({
     }
   });
 
+  const greet = (event) => {
+    if (useAvatarStore.getState().mode !== 'patrol') return;
+    event.stopPropagation();
+    const now = performance.now();
+    idleWaitUntil.current = now + GREETING.ms;
+    lookRef.current = {
+      ...GREETING,
+      start: now,
+      end: now + GREETING.ms,
+      heading: currentHeading.current,
+    };
+    pathRef.current = [];
+    plannedTargetRef.current = null;
+    startSpeaking(i18n.t('avatar.hello'));
+    /* startSpeaking lo deja "hablando": vuelve a pasear, el saludo dura lo que la pausa. */
+    setMode('patrol');
+  };
+
   return (
     <group ref={groupRef}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]} scale={modelHeight / 2.2}>
         <ringGeometry args={[0, 0.42, 16]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.35} />
       </mesh>
-      <primitive object={scene} />
+      {/* Tocar a Quibar mientras pasea: se detiene, saluda y se presenta. */}
+      <primitive object={scene} onClick={greet} />
       {/* En el teléfono Quibar se ve chico: una etiqueta con su nombre lo señala. */}
       {marker && (
         <Html position={[0, modelHeight * 1.15, 0]} center zIndexRange={[8, 8]}>

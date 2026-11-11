@@ -16,6 +16,8 @@
       "layerSlug": "history",
       "tourStop": 1,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Central de pasada de Colbún, en operación desde 2014: 316 MW con tres turbinas instaladas en una caverna bajo el cerro. Su presa forma el embalse Angostura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -80,6 +82,8 @@
       "layerSlug": "history",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Puente de la Ruta Q-61 sobre el Biobío, aguas abajo de la presa, en el sector El Piulo. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -101,6 +105,8 @@
       "layerSlug": "history",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "El antiguo puente de la ruta, junto al nuevo; hoy solo peatonal. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -122,6 +128,8 @@
       "layerSlug": "history",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Puente de la Ruta Q-61 que cruza el embalse hacia Quilaco. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -151,6 +159,8 @@
       "layerSlug": "history",
       "tourStop": null,
       "secret": true,
+      "modelKind": null,
+      "icon": null,
       "description": "Localidad rural junto al río Huequecura, al norte del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -172,6 +182,8 @@
       "layerSlug": "ecology",
       "tourStop": 2,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Área natural junto a la central y el embalse, con senderos entre bosque nativo, playas, campings y un mirador. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -193,6 +205,8 @@
       "layerSlug": "ecology",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Colección de árboles junto a la playa de Quilaco, en la ribera sur del embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -222,6 +236,8 @@
       "layerSlug": "ecology",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Cerro con bosque nativo entre el embalse y el brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -251,6 +267,8 @@
       "layerSlug": "ecology",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Embalse de 641 hectáreas y unos 100 millones de m³ formado por la presa Angostura en el río Biobío. Su nivel varía apenas un metro. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -272,6 +290,8 @@
       "layerSlug": "tourism",
       "tourStop": 3,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Sendero que sube a un mirador sobre la presa y el embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -308,6 +328,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Vista a la represa, junto al Biobío al pie de la presa. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -337,6 +359,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Punto de partida de la visita: exposición sobre la central, el territorio y su gente, con esta maqueta. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -366,6 +390,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Punto de información turística del parque. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -387,6 +413,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Playa en la ribera norte del brazo del río Huequecura. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -416,6 +444,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": true,
+      "modelKind": null,
+      "icon": null,
       "description": "Puente peatonal colgante sobre el río Huequecura, donde entra al embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -437,6 +467,8 @@
       "layerSlug": "tourism",
       "tourStop": 4,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Playa pública en la ribera sur del embalse, junto al Arboretum. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }
@@ -458,6 +490,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Camping a orillas del embalse, en el sector Los Notros, con playa, quinchos, muelle y pasarelas accesibles. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -501,6 +535,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Camping y playa en la ribera sur del embalse, con quinchos de paja. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": [
         {
@@ -530,6 +566,8 @@
       "layerSlug": "tourism",
       "tourStop": null,
       "secret": false,
+      "modelKind": null,
+      "icon": null,
       "description": "Camping junto al río Huequecura, en Lo Nieve. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
       "images": []
     }

@@ -33,6 +33,8 @@ import { useAvatarStore } from './store/avatarStore.js';
 import { useUserStore } from './store/userStore.js';
 import { publishMainView } from './store/viewsStore.js';
 import TourSheet from './features/tour/TourSheet.jsx';
+import PassportCard from './components/Passport.jsx';
+import { AnimatePresence } from 'motion/react';
 
 const INTERACTION_EVENTS = ['pointerdown', 'wheel', 'keydown'];
 
@@ -61,6 +63,18 @@ export default function App({ mapConfig = config }) {
   const attract = useViewerStore((state) => state.attract);
   const contours = useViewerStore((state) => state.contours);
   const drained = useViewerStore((state) => state.drained);
+  const passportOpen = useUserStore((state) => state.passportOpen);
+  const closePassport = useCallback(() => useUserStore.getState().setPassportOpen(false), []);
+  /* Toque en un grupo de pines: la cámara se acerca a él y los pines se separan solos. */
+  const openCluster = useCallback((feature) => {
+    const view = mainRef.current?.view();
+    if (!feature || !view) return;
+    mainRef.current.flyTo({
+      ...view,
+      center: feature.geometry.coordinates,
+      range: view.range * 0.45,
+    });
+  }, []);
   const actions = useViewerStore.getState();
 
   const sky = useDaylight().sky.map((color) => `#${color.getHexString()}`);
@@ -247,6 +261,7 @@ export default function App({ mapConfig = config }) {
           selectedIds={selectedPointIds}
           viewId="main"
           onSelectPoint={selectPoint}
+          onOpenCluster={openCluster}
         />
       </DioramaView>
 
@@ -334,8 +349,22 @@ export default function App({ mapConfig = config }) {
       <AvatarNarrator />
       <SkipWalkButton />
       <ConfettiCanvas />
+      <AnimatePresence>
+        {passportOpen && !attract && (
+          <PassportCard
+            url={mapConfig.publicUrl}
+            onClose={closePassport}
+            onGo={(id) => {
+              closePassport();
+              pickPoint(id);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      {attract && <AttractOverlay stopName={attractStop} onExplore={exitAttract} />}
+      {attract && (
+        <AttractOverlay stopName={attractStop} url={mapConfig.publicUrl} onExplore={exitAttract} />
+      )}
       {phase === 'warning' && (
         <InactivityWarning
           secondsLeft={secondsLeft}

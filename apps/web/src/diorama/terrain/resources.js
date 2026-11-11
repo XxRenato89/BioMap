@@ -1,3 +1,4 @@
+import { reportDownload, stageDone } from '../utils/loadProgress.js';
 import {
   DoubleSide,
   DataTexture,
@@ -305,6 +306,20 @@ const treeLod = { focus: { value: new Vector3() }, radius: { value: 0.0001 } };
 
 let loading = null;
 
+/** Como Promise.all, avisando a la pantalla de espera cada vez que llega un archivo. */
+function tracked(tasks) {
+  let done = 0;
+  return Promise.all(
+    tasks.map((task) =>
+      Promise.resolve(task).then((value) => {
+        done += 1;
+        reportDownload(done, tasks.length);
+        return value;
+      }),
+    ),
+  );
+}
+
 /**
  * Carga el relieve y construye la maqueta UNA sola vez. Todas las vistas
  * (la general y las ventanas) comparten las mismas geometrías, texturas y
@@ -328,7 +343,7 @@ export function loadDiorama({ anisotropy }) {
       contextCoverBuffer,
       shoreBuffer,
       water,
-    ] = await Promise.all([
+    ] = await tracked([
       fetch('/diorama/terrain.bin').then((response) => response.arrayBuffer()),
       loadTexture('/diorama/surface.webp'),
       loadTexture('/diorama/normal.webp'),
@@ -355,6 +370,7 @@ export function loadDiorama({ anisotropy }) {
         .catch(() => []),
     ]);
 
+    await stageDone('terrain');
     const heights = new Uint16Array(buffer);
     /* Distancia a la orilla (si falta, todo el agua se ve de anchura media). */
     const shore =
@@ -430,6 +446,7 @@ export function loadDiorama({ anisotropy }) {
     const detailMap = crisp(new DataTexture(bakeDetail(512), 512, 512, RGBAFormat), anisotropy);
     detailMap.wrapS = detailMap.wrapT = RepeatWrapping;
 
+    await stageDone('water');
     const landcover = landcoverBuffer
       ? {
           data: new Uint8Array(landcoverBuffer),
@@ -502,6 +519,7 @@ export function loadDiorama({ anisotropy }) {
       }
     }
 
+    await stageDone('forest');
     const sites = { dams: [], labels: [], roads: [], buildings: [], ...landmarks };
     /* Calzadas sobre el embalse como puentes (el relieve es anterior al agua). */
     sites.roads = bridgeReservoirCrossings(

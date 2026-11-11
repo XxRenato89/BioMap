@@ -50,7 +50,9 @@
     "cta": "Toca para explorar",
     "sub": "Historia, naturaleza y paisajes del territorio del Biobío",
     "eyebrow": "Centro de Visitantes Angostura",
-    "nowVisiting": "Ahora visitando"
+    "nowVisiting": "Ahora visitando",
+    "qrTitle": "BioMap en tu celular",
+    "qrText": "Apunta la cámara al código. Sin instalar nada."
   },
   "attribution": "Imágenes: Sentinel-2 cloudless 2016 de EOX (CC BY 4.0, datos Copernicus) · Relieve: Mapzen Terrain Tiles (SRTM) · Cobertura: ESA WorldCover · Hitos, caminos y agua: © OpenStreetMap",
   "mapLabel": "Maqueta 3D de la Región del Biobío",
@@ -69,10 +71,13 @@
     "next": "Seguir a {{name}}",
     "guide": "Tu guía",
     "mute": "Silenciar la voz",
-    "unmute": "Activar la voz"
+    "unmute": "Activar la voz",
+    "viewPhotos": "Ver fotos"
   },
   "avatar": {
-    "arrived": "¡Llegamos a {{name}}! Aquí tienes su historia, sus fotos y lo que lo hace especial."
+    "arrived": "¡Llegamos a {{name}}! Aquí tienes su historia, sus fotos y lo que lo hace especial.",
+    "hello": "¡Hola! Soy Quibar, tu guía. Toca un lugar del mapa y te llevo corriendo.",
+    "secret": "¡Oh, encontré algo misterioso! Es: {{name}}"
   },
   "loading": {
     "text": "Preparando la maqueta del Biobío…"
@@ -153,5 +158,29 @@
     "start": "Iniciar",
     "resume": "Continuar",
     "close": "Cerrar recorridos"
+  },
+  "load": {
+    "title": "Cargando la maqueta",
+    "terrain": "Descargando el relieve y el satélite…",
+    "water": "Llenando el embalse y trazando caminos…",
+    "forest": "Plantando el bosque nativo…",
+    "ready": "Armando la maqueta 3D…"
+  },
+  "pin": {
+    "secret": "Lugar secreto por descubrir",
+    "more_one": "{{name}} y {{count}} lugar más. Toca para acercar.",
+    "more_other": "{{name}} y {{count}} lugares más. Toca para acercar."
+  },
+  "passport": {
+    "name": "Pasaporte",
+    "count": "{{done}} de {{total}} sellos",
+    "progress": "Recorrido · {{done}} de {{total}}",
+    "title": "Tu pasaporte Angostura",
+    "text": "Cada parada del recorrido te da un sello. Quibar te lleva a la que falta.",
+    "complete": "¡Pasaporte Angostura completo!",
+    "completeText": "Recorriste todas las paradas con Quibar. ¡Gracias por visitar el embalse!",
+    "go": "Ir a {{name}}",
+    "take": "Llévalo contigo",
+    "takeText": "Abre BioMap en tu celular con este código."
   }
 }

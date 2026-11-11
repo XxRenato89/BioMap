@@ -56,7 +56,7 @@ describe('Dock', () => {
     expect(onZoomOut).toHaveBeenCalledTimes(1);
     const progress = screen.getByRole('progressbar', { name: 'Tu recorrido' });
     expect(progress.getAttribute('aria-valuenow')).toBe('1');
-    expect(progress.textContent).toContain('1/4');
+    expect(progress.textContent).toContain('1 de 4');
   });
 
   it('marks the open panel and has no accessibility violations', async () => {

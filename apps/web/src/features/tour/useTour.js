@@ -60,7 +60,11 @@ export function useTour({ points, camera, sheetShift = SHEET_SHIFT }) {
       if (isNewVisit) {
         const completed = useUserStore.getState().tourCompleted();
         triggerConfetti({ grandFinale: completed });
-        if (completed) recordEvent({ type: 'tour_complete' });
+        if (completed) {
+          recordEvent({ type: 'tour_complete' });
+          /* Tras el confeti, el pasaporte con todos sus sellos. */
+          setTimeout(() => useUserStore.getState().setPassportOpen(true), 1800);
+        }
       }
     },
     [camera, sheetShift],

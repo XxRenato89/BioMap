@@ -1,8 +1,10 @@
-import { ArrowRight, Check, Globe, Rotate3d, Smartphone, X } from 'lucide-react';
+import { ArrowRight, Globe, Rotate3d, Smartphone, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Curiosity from '../../components/Curiosity.jsx';
+import Facts from '../../components/Facts.jsx';
+import { StampBadge } from '../../components/Passport.jsx';
 import ImageGallery from '../../components/ImageGallery.jsx';
 import LayerShape from '../../components/LayerShape.jsx';
 import { getPoiIcon } from '../../map/poiIcon.jsx';
@@ -140,12 +142,7 @@ export default function PointSheet({
             {layerName(t, layer)}
           </span>
           <span className="inline-flex items-center gap-2 text-muted">
-            {isVisited && (
-              <span className="inline-flex items-center gap-1 text-forest-light">
-                <Check size={18} strokeWidth={3} aria-hidden="true" />
-                {t('sheet.visited')}
-              </span>
-            )}
+            {isVisited && <StampBadge />}
             {step !== -1 && t('sheet.step', { n: step + 1, total: tour.length })}
           </span>
         </div>
@@ -180,6 +177,7 @@ export default function PointSheet({
 
         {tab === 'story' && (
           <>
+            <Facts name={name} className="text-[length:var(--fs-body)]" />
             <p className="m-0 text-[length:var(--fs-lead)] leading-relaxed">{description}</p>
             <Curiosity name={name} />
           </>

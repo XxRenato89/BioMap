@@ -34,6 +34,8 @@ const IMAGE_TYPES = {
 const id = z.coerce.number().int().positive().max(2_147_483_647);
 const text = (max) => z.string().trim().min(1).max(max);
 
+const kind = z.string().regex(/^[A-Za-z]{1,24}$/);
+
 /**
  * Esquema de un punto. Las coordenadas deben caer dentro de la maqueta.
  *
@@ -48,6 +50,9 @@ function pointSchema([[west, south], [east, north]]) {
     lat: z.number().min(south).max(north),
     tourStop: z.number().int().min(1).max(99).nullable().optional(),
     isSecret: z.boolean().optional(),
+    /* Modelo 3D e icono: el visor conoce los valores; null = deducir del nombre. */
+    modelKind: kind.nullable().optional(),
+    icon: kind.nullable().optional(),
   });
 }
 

@@ -15,6 +15,8 @@
     "layerSlug": "tourism",
     "tourStop": null,
     "secret": false,
+    "modelKind": null,
+    "icon": null,
     "description": "Punto de partida de la visita: exposición sobre la central, el territorio y su gente, con esta maqueta. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {

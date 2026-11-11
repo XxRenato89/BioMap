@@ -5,6 +5,7 @@
  */
 const LIST_SQL = `
   SELECT p.id, p.name, p.layer_id, l.slug AS layer_slug, p.tour_stop, p.is_secret,
+         p.model_kind, p.icon,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat
     FROM points_of_interest p
     JOIN layers l ON l.id = p.layer_id
@@ -19,6 +20,7 @@ const LIST_SQL = `
  */
 const DETAIL_SQL = `
   SELECT p.id, p.name, p.description, p.layer_id, l.slug AS layer_slug, p.tour_stop, p.is_secret,
+         p.model_kind, p.icon,
          ST_X(p.location) AS lng, ST_Y(p.location) AS lat,
          COALESCE(
            (SELECT json_agg(
@@ -54,6 +56,9 @@ export function toFeature(row, extraProperties = {}) {
       layerSlug: row.layer_slug,
       tourStop: row.tour_stop ?? null,
       secret: row.is_secret ?? false,
+      /* Modelo 3D e icono elegidos en el panel; null = el visor los deduce del nombre. */
+      modelKind: row.model_kind ?? null,
+      icon: row.icon ?? null,
       ...extraProperties,
     },
   };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { createPoiModel, modelScale } from '../models/index.js';
 
@@ -48,7 +48,13 @@ function loadScene(kind) {
  * @param {number} [props.rotationY] Giro (rad): el frente del modelo (+z) mira hacia ahí.
  * @param {(event: any) => void} [props.onSelect]
  */
-export function PoiModel({ kind, position, size = 1, rotationY = 0, onSelect }) {
+export const PoiModel = memo(function PoiModel({
+  kind,
+  position,
+  size = 1,
+  rotationY = 0,
+  onSelect,
+}) {
   const procedural = useMemo(() => createPoiModel(kind), [kind]);
   const [real, setReal] = useState(null);
 
@@ -75,6 +81,17 @@ export function PoiModel({ kind, position, size = 1, rotationY = 0, onSelect }) 
       onPointerOver={() => (document.body.style.cursor = 'pointer')}
       onPointerOut={() => (document.body.style.cursor = '')}
     />
+  );
+}, sameModel);
+
+/* La posición llega como arreglo nuevo en cada dibujo: se compara por valor. */
+function sameModel(a, b) {
+  return (
+    a.kind === b.kind &&
+    a.size === b.size &&
+    a.rotationY === b.rotationY &&
+    a.onSelect === b.onSelect &&
+    a.position.every((value, index) => value === b.position[index])
   );
 }
 

@@ -17,7 +17,9 @@
         "layerId": 1,
         "layerSlug": "history",
         "tourStop": 1,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -36,7 +38,9 @@
         "layerId": 1,
         "layerSlug": "history",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -55,7 +59,9 @@
         "layerId": 1,
         "layerSlug": "history",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -74,7 +80,9 @@
         "layerId": 1,
         "layerSlug": "history",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -93,7 +101,9 @@
         "layerId": 1,
         "layerSlug": "history",
         "tourStop": null,
-        "secret": true
+        "secret": true,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -112,7 +122,9 @@
         "layerId": 2,
         "layerSlug": "ecology",
         "tourStop": 2,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -131,7 +143,9 @@
         "layerId": 2,
         "layerSlug": "ecology",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -150,7 +164,9 @@
         "layerId": 2,
         "layerSlug": "ecology",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -169,7 +185,9 @@
         "layerId": 2,
         "layerSlug": "ecology",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -188,7 +206,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": 3,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -207,7 +227,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -226,7 +248,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -245,7 +269,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -264,7 +290,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -283,7 +311,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": true
+        "secret": true,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -302,7 +332,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": 4,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -321,7 +353,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -340,7 +374,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     },
     {
@@ -359,7 +395,9 @@
         "layerId": 3,
         "layerSlug": "tourism",
         "tourStop": null,
-        "secret": false
+        "secret": false,
+        "modelKind": null,
+        "icon": null
       }
     }
   ]

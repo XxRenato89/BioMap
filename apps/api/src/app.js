@@ -66,7 +66,16 @@ export function createApp({
       },
     }),
   );
-  app.use(compression());
+  /*
+   * El relieve de la maqueta (.bin, unos 20 MB) viaja como "octet-stream", que
+   * la compresión omite por defecto: se incluye a mano, porque es lo que más
+   * pesa al abrir el visor en un teléfono.
+   */
+  app.use(
+    compression({
+      filter: (req, res) => req.path.endsWith('.bin') || compression.filter(req, res),
+    }),
+  );
   if (logger) app.use(pinoHttp({ logger }));
   app.use(express.json({ limit: '100kb' }));
 
@@ -109,6 +118,11 @@ export function createApp({
    * ruta que no sea de la API, su index.html.
    */
   if (webDir) {
+    /* Los archivos del build llevan su huella en el nombre: no cambian nunca. */
+    app.use(
+      '/assets',
+      express.static(`${webDir}/assets`, { immutable: true, maxAge: '365d', fallthrough: false }),
+    );
     app.use(express.static(webDir, { index: 'index.html', maxAge: '1h' }));
     app.get(/^\/(?!api\/|media\/).*/, (_req, res) => res.sendFile('index.html', { root: webDir }));
   }

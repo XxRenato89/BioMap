@@ -33,4 +33,3 @@ describe('pickPause', () => {
     expect(pickPause({ Walking: {} }, () => 0.9)).toBeNull();
   });
 });
-

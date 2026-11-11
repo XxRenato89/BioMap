@@ -55,7 +55,9 @@
     "cta": "Tap to explore",
     "sub": "History, nature and landscapes of the Biobío territory",
     "eyebrow": "Angostura Visitor Centre",
-    "nowVisiting": "Now visiting"
+    "nowVisiting": "Now visiting",
+    "qrTitle": "BioMap on your phone",
+    "qrText": "Point your camera at the code. Nothing to install."
   },
   "attribution": "Imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0, Copernicus data) · Relief: Mapzen Terrain Tiles (SRTM) · Land cover: ESA WorldCover · Landmarks, roads and water: © OpenStreetMap",
   "mapLabel": "3D model of the Biobío Region",
@@ -74,10 +76,13 @@
     "next": "Next: {{name}}",
     "guide": "Your guide",
     "mute": "Mute the voice",
-    "unmute": "Turn the voice on"
+    "unmute": "Turn the voice on",
+    "viewPhotos": "See photos"
   },
   "avatar": {
-    "arrived": "We made it to {{name}}! Here is its story, its photos and what makes it special."
+    "arrived": "We made it to {{name}}! Here is its story, its photos and what makes it special.",
+    "hello": "Hi! I'm Quibar, your guide. Tap a place on the map and I'll run there with you.",
+    "secret": "Oh, I found something mysterious! It's: {{name}}"
   },
   "loading": {
     "text": "Preparing the Biobío model…"
@@ -158,5 +163,29 @@
     "start": "Start",
     "resume": "Resume",
     "close": "Close tours"
+  },
+  "load": {
+    "title": "Loading the model",
+    "terrain": "Downloading terrain and satellite imagery…",
+    "water": "Filling the reservoir and drawing roads…",
+    "forest": "Planting the native forest…",
+    "ready": "Building the 3D model…"
+  },
+  "pin": {
+    "secret": "Secret place to discover",
+    "more_one": "{{name}} and {{count}} more place. Tap to zoom in.",
+    "more_other": "{{name}} and {{count}} more places. Tap to zoom in."
+  },
+  "passport": {
+    "name": "Passport",
+    "count": "{{done}} of {{total}} stamps",
+    "progress": "Tour · {{done}} of {{total}}",
+    "title": "Your Angostura passport",
+    "text": "Each stop on the tour gives you a stamp. Quibar takes you to the one you are missing.",
+    "complete": "Angostura passport complete!",
+    "completeText": "You visited every stop with Quibar. Thanks for visiting the reservoir!",
+    "go": "Go to {{name}}",
+    "take": "Take it with you",
+    "takeText": "Open BioMap on your phone with this code."
   }
 }

@@ -204,3 +204,30 @@
   backdrop-filter: none !important;
   border: 3px solid #000000 !important;
 }
+
+/* Carrera de Quibar en la pantalla de espera: recorre la tira de 12 cuadros. */
+@keyframes quibar-run {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* El pin elegido late dos veces y se queda quieto (sin animación continua: cuesta cuadros en 4K). */
+@keyframes pin-pulse {
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(255, 255, 255, 0.65),
+      0 0 0 26px rgba(141, 198, 63, 0),
+      0 8px 18px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Quibar cruza la pantalla de reposo de izquierda a derecha y vuelve a entrar. */
+@keyframes quibar-cross {
+  from {
+    transform: translateX(-220px);
+  }
+  to {
+    transform: translateX(100vw);
+  }
+}

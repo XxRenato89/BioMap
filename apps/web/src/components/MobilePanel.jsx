@@ -1,7 +1,7 @@
 import { Camera, Link2, QrCode, Wifi, X } from 'lucide-react';
-import QRCode from 'qrcode';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQrSvg } from '../hooks/useQr.js';
 
 /* Se cierra solo si nadie lo usa (ms). */
 const AUTO_CLOSE_MS = 60_000;
@@ -15,7 +15,6 @@ const AUTO_CLOSE_MS = 60_000;
  */
 export default function MobilePanel({ url, wifi, selectedPoint = null, onClose }) {
   const { t } = useTranslation();
-  const [qrSvg, setQrSvg] = useState('');
 
   const baseUrl = url || window.location.origin;
   /* Sin VITE_PUBLIC_URL, el kiosco se abre en localhost: un teléfono no llega ahí. */
@@ -27,19 +26,7 @@ export default function MobilePanel({ url, wifi, selectedPoint = null, onClose }
     [baseUrl, pointId],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    QRCode.toString(activeUrl, {
-      type: 'svg',
-      margin: 0,
-      color: { dark: '#14334d', light: '#00000000' },
-    })
-      .then((markup) => !cancelled && setQrSvg(markup))
-      .catch(() => !cancelled && setQrSvg(''));
-    return () => {
-      cancelled = true;
-    };
-  }, [activeUrl]);
+  const qrSvg = useQrSvg(activeUrl);
 
   /* Escape lo cierra, y se cierra solo si nadie lo usa. */
   useEffect(() => {

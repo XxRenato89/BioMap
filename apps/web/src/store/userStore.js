@@ -69,6 +69,9 @@ export const useUserStore = create((set, get) => ({
   visitedPoints: [],
   activeTourId: 'general',
   discoveredSecrets: {}, // { [poiId]: timestamp }
+  /** Pasaporte de sellos a la vista (se abre solo al completar el recorrido). */
+  passportOpen: false,
+  setPassportOpen: (passportOpen) => set({ passportOpen }),
 
   setActiveTour: (tourId) =>
     set({ activeTourId: tourId, tour: stopsFor(tourId, get().features), visitedPoints: [] }),
@@ -125,6 +128,7 @@ export const useUserStore = create((set, get) => ({
   resetProgress: () =>
     set({
       visitedPoints: [],
+      passportOpen: false,
       discoveredSecrets: {},
       activeTourId: 'general',
       tour: stopsFor('general', get().features),

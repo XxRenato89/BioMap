@@ -32,11 +32,18 @@ const KINDS = [
   [/parque|bosque|reserva/i, Trees, 'park'],
 ];
 const LAYER_ICON = { history: Landmark, ecology: Trees, tourism: MapPin };
+/* Iconos por clave: la que trae el punto en sus datos (`icon`, editable en el panel). */
+const BY_KEY = { ...Object.fromEntries(KINDS.map(([, Icon, key]) => [key, Icon])), ...LAYER_ICON };
 
 /**
- * Icono del tipo de lugar (por nombre) o, si no calza ninguno, el de su capa.
+ * Icono del lugar: el de sus datos (`iconKey`), si no el de su tipo según el
+ * nombre y, si no calza ninguno, el de su capa.
  */
-export function getPoiIcon(layer, name = '', size = 22) {
-  const Icon = KINDS.find(([re]) => re.test(name))?.[1] ?? LAYER_ICON[layer?.slug] ?? MapPin;
+export function getPoiIcon(layer, name = '', size = 22, iconKey = null) {
+  const Icon =
+    BY_KEY[iconKey] ??
+    KINDS.find(([re]) => re.test(name))?.[1] ??
+    LAYER_ICON[layer?.slug] ??
+    MapPin;
   return <Icon size={size} strokeWidth={2.4} aria-hidden="true" />;
 }

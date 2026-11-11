@@ -229,6 +229,8 @@ function Water({ geometry, material }) {
  * @param {{ shadows: boolean, size: { width: number, depth: number } }} props
  */
 function ShowcaseLights({ shadows, size, water }) {
+  /* Mapa de sombras a 4096 px solo en el nivel alto: a 2048 ocupa la cuarta parte de memoria. */
+  const shadowMap = useRenderStore((state) => (state.tier === 'high' ? 4096 : 2048));
   const half = Math.max(size.width, size.depth) * 0.62;
   /* El sol y el cielo siguen la hora del kiosco (ver daylight.js). */
   const light = useDaylight();
@@ -248,7 +250,7 @@ function ShowcaseLights({ shadows, size, water }) {
         intensity={light.sunIntensity}
         color={light.sunColor}
         castShadow={shadows}
-        shadow-mapSize={[4096, 4096]}
+        shadow-mapSize={[shadowMap, shadowMap]}
         shadow-bias={-0.0002}
         shadow-normalBias={0.002}
         shadow-radius={4}

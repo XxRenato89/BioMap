@@ -1,8 +1,10 @@
-import { Flag, Home, Languages, Minus, Plus, Route, Search } from 'lucide-react';
+import { Home, Languages, Minus, Plus, Search } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Compass from '../components/Compass.jsx';
 import ConfettiCanvas from '../components/ConfettiCanvas.jsx';
+import PassportCard, { StampRow } from '../components/Passport.jsx';
 import SkipWalkButton from '../components/SkipWalkButton.jsx';
 import StatusPill from '../components/StatusPill.jsx';
 import { config } from '../config.js';
@@ -55,6 +57,15 @@ export default function MobileApp() {
   const mainRef = useRef(null);
   const viewerRef = useRef(null);
   const [panel, setPanel] = useState(null);
+  const passportOpen = useUserStore((state) => state.passportOpen);
+  const setPassportOpen = useUserStore((state) => state.setPassportOpen);
+  /* Proporción de la pantalla: cambia al girar el teléfono y con ella el encuadre de inicio. */
+  const [aspect, setAspect] = useState(() => window.innerWidth / window.innerHeight);
+  useEffect(() => {
+    const onResize = () => setAspect(window.innerWidth / window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const { selectPoint, arrive, closePoint } = useTour({
     points,
@@ -80,7 +91,7 @@ export default function MobileApp() {
         ? fitView(
             onMap.map((f) => f.geometry.coordinates),
             {
-              aspect: window.innerWidth / window.innerHeight,
+              aspect,
               fov: FOV,
               base: PHONE_HOME,
               headings: HEADINGS,
@@ -88,8 +99,25 @@ export default function MobileApp() {
             },
           )
         : PHONE_HOME,
-    [onMap],
+    [onMap, aspect],
   );
+  /* Al girar el teléfono, la vista general se vuelve a encuadrar (si no hay una ficha abierta). */
+  const lastAspect = useRef(aspect);
+  useEffect(() => {
+    if (lastAspect.current === aspect) return;
+    lastAspect.current = aspect;
+    if (useViewerStore.getState().selectedPointIds.length === 0) mainRef.current?.resetView();
+  }, [aspect]);
+  /* Toque en un grupo de pines: la cámara se acerca y los pines se separan solos. */
+  const openCluster = (feature) => {
+    const view = mainRef.current?.view();
+    if (!feature || !view) return;
+    mainRef.current.flyTo({
+      ...view,
+      center: feature.geometry.coordinates,
+      range: view.range * 0.45,
+    });
+  };
   /* Los lugares llegan después de la maqueta: la primera vez, la cámara va al nuevo inicio. */
   const fitted = useRef(false);
   useEffect(() => {
@@ -170,6 +198,7 @@ export default function MobileApp() {
           selectedIds={selectedPointIds}
           viewId="main"
           onSelectPoint={selectPoint}
+          onOpenCluster={openCluster}
           pinScale={PIN_SCALE}
         />
       </DioramaView>
@@ -218,18 +247,12 @@ export default function MobileApp() {
               {tour.length > 0 && (
                 <button
                   type="button"
-                  className="flex h-14 min-w-0 flex-1 items-center gap-3 rounded-[22px] border-0 bg-forest-light px-4 text-left text-white disabled:opacity-90"
-                  disabled={!pending}
-                  onClick={() => pending && pick(pending.properties.id)}
+                  className="flex h-14 min-w-0 flex-1 items-center gap-2 rounded-[22px] border-0 bg-forest px-4 text-left text-white"
+                  onClick={() => (pending ? pick(pending.properties.id) : setPassportOpen(true))}
                 >
-                  {pending ? (
-                    <Route size={24} aria-hidden="true" className="flex-none" />
-                  ) : (
-                    <Flag size={24} aria-hidden="true" className="flex-none" />
-                  )}
-                  <span className="min-w-0">
+                  <span className="min-w-0 flex-1">
                     <span className="block text-xs font-bold uppercase tracking-wide opacity-85">
-                      {t('tour.progress')} ·{' '}
+                      {t('passport.name')} ·{' '}
                       <span className="tabular-nums">
                         {done}/{tour.length}
                       </span>
@@ -238,6 +261,7 @@ export default function MobileApp() {
                       {pending ? t('m.next', { name: pending.properties.name }) : t('m.tourDone')}
                     </span>
                   </span>
+                  <StampRow size={26} />
                 </button>
               )}
               <button
@@ -296,6 +320,17 @@ export default function MobileApp() {
       <AvatarNarrator />
       <SkipWalkButton />
       <ConfettiCanvas />
+      <AnimatePresence>
+        {passportOpen && (
+          <PassportCard
+            onClose={() => setPassportOpen(false)}
+            onGo={(id) => {
+              setPassportOpen(false);
+              pick(id);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

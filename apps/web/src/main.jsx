@@ -34,6 +34,15 @@ const Viewer = lazy(() =>
 );
 
 /*
+ * En el teléfono, un service worker guarda el visor y sus datos para seguir
+ * usándolo fuera del Wi‑Fi del kiosco. El navegador solo lo permite por https
+ * (o localhost): por http simplemente no se registra. El kiosco no lo usa: su
+ * servidor es local y una copia guardada podría dejarlo con una versión vieja.
+ */
+if (isPhone && !isAdmin && import.meta.env.PROD && 'serviceWorker' in navigator)
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+/*
  * Kiosco táctil: mantener el dedo presionado no abre el menú del navegador.
  */
 if (!isPhone && !isAdmin) window.addEventListener('contextmenu', (event) => event.preventDefault());

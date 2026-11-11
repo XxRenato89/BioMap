@@ -4,10 +4,10 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box3, MathUtils, Quaternion, Vector3 } from 'three';
+import { Box3, LoopOnce, MathUtils, Quaternion, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useAvatarStore } from '../../store/avatarStore.js';
-import { useCharacterModel } from '../../diorama/utils/characterModel.js';
+import { idleSpeed, useCharacterModel } from '../../diorama/utils/characterModel.js';
 import { ErrorBoundary } from '../../components/ErrorBoundary.jsx';
 
 /* Duración del gesto hacia la ficha al cambiar de foto o pestaña (s). */
@@ -58,16 +58,30 @@ export function Mascot({ gestureKey, facing = 0.35 }) {
   }, [scene]);
   const gestureAt = useRef(-Infinity);
 
-  /* De pie (primer cuadro de la caminata congelado): el saludo lo pone el brazo, abajo. */
+  /* Saluda una vez al aparecer y queda en reposo (sin clip de saludo, lo pone el brazo, abajo). */
   useEffect(() => {
-    const stand = actions?.Wave ?? actions?.Idle;
-    if (!stand) return undefined;
-    stand
-      .reset()
-      .setEffectiveTimeScale(actions?.Wave ? 1 : 0)
-      .fadeIn(0.3)
-      .play();
-    return () => stand.fadeOut(0.3);
+    const idle = actions?.Idle;
+    const wave = actions?.Wave;
+    if (!idle) return undefined;
+    const rest = () => idle.reset().setEffectiveTimeScale(idleSpeed(idle)).fadeIn(0.3).play();
+    if (!wave) {
+      rest();
+      return () => idle.fadeOut(0.3);
+    }
+    const mixer = wave.getMixer();
+    const onFinished = ({ action }) => {
+      if (action !== wave) return;
+      rest();
+      wave.fadeOut(0.3);
+    };
+    wave.reset().setLoop(LoopOnce, 1).fadeIn(0.3).play();
+    wave.clampWhenFinished = true;
+    mixer.addEventListener('finished', onFinished);
+    return () => {
+      mixer.removeEventListener('finished', onFinished);
+      wave.fadeOut(0.3);
+      idle.fadeOut(0.3);
+    };
   }, [actions]);
 
   /*

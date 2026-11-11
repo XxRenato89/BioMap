@@ -1,5 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quaternion, Vector3 } from 'three';
 import { publishAnchors } from '../../store/anchorStore.js';
 import { useClearingStore } from '../../store/clearingStore.js';
@@ -30,7 +31,7 @@ import { waterTest } from '../utils/pathfinder.js';
 /* Modelos que van al borde del barranco más cercano, mirando al agua. */
 const EDGE_KINDS = new Set(['forestTrail', 'meshDeck']);
 /* Modelos que van en la orilla, con la playa tocando el agua. */
-const SHORE_KINDS = new Set(['camping']);
+const SHORE_KINDS = new Set(['camping', 'beach']);
 /* Separación mínima entre dos miradores al borde (km). */
 const EDGE_SPACING_KM = 0.04;
 
@@ -78,6 +79,7 @@ const projected = new Vector3();
  * @param {number[]} [props.selectedIds]
  * @param {string} props.viewId
  * @param {(id: number, screen: { x: number, y: number }) => void} props.onSelectPoint
+ * @param {(feature: object) => void} [props.onOpenCluster] Toque en un grupo de pines: acerca la vista.
  * @param {number} [props.pinScale] Tamaño de los pines (1 en el kiosco; menos en el teléfono).
  */
 export function PoiMarkers({
@@ -87,8 +89,10 @@ export function PoiMarkers({
   selectedIds = [],
   viewId,
   onSelectPoint,
+  onOpenCluster,
   pinScale = 1,
 }) {
+  const { t } = useTranslation();
   const { projection, heightAt, surfaceAt, dams, waterPolygons } = useDiorama();
   const inWater = useMemo(() => waterTest(waterPolygons ?? []), [waterPolygons]);
   const getPoiState = useUserStore((state) => state.getPoiState);
@@ -103,10 +107,13 @@ export function PoiMarkers({
 
   /* Modelo de cada punto: las presas ya están levantadas a escala real desde OpenStreetMap. */
   const kindOf = (feature) => {
-    if (TERRAIN_ONLY.test(feature.properties.name)) return null;
+    const explicit = feature.properties.modelKind;
+    /* Sin modelo elegido en sus datos, estos lugares ya están dibujados en el relieve. */
+    if (!explicit && TERRAIN_ONLY.test(feature.properties.name)) return null;
     const kind = modelKindFor(
       feature.properties.name,
       layerById.get(feature.properties.layerId)?.slug,
+      explicit,
     );
     return kind === 'dam' && dams.length > 0 ? null : kind;
   };
@@ -188,6 +195,9 @@ export function PoiMarkers({
       );
       if (edge) spots.set(feature.properties.id, { ...edge, scale: 1, edge: true });
     }
+    /* Rumbo de cada modelo, calculado una vez (son decenas de pruebas de polígono por modelo). */
+    for (const spot of spots.values())
+      spot.angle ??= facingWater(spot.x, spot.z, inWater, projection);
     return spots;
     // kindOf solo depende de layerById y dams.
   }, [points, layerById, dams, projection, heightAt, inWater]);
@@ -203,6 +213,31 @@ export function PoiMarkers({
     // kindOf solo depende de layerById y dams, ya incluidos en spots.
   }, [spots, points]);
   const registry = useRef(new Map()).current;
+  /*
+   * Un manejador por lugar que no cambia entre dibujos (así pines y modelos no
+   * se redibujan sin motivo); lo que hace se lee al momento del toque.
+   */
+  const onTap = useRef(null);
+  onTap.current = (id, event) => {
+    const native = event.nativeEvent;
+    const fromScene = Boolean(event.intersections);
+    if (fromScene && native.target.closest?.('[data-view]')?.dataset.view !== viewId) return;
+    event.stopPropagation();
+    /* Pin que agrupa varios lugares: acerca la vista para que se separen. */
+    const grouped = !fromScene && event.currentTarget?.dataset?.count;
+    if (grouped && onOpenCluster) {
+      onOpenCluster(points.features.find((feature) => feature.properties.id === id));
+      return;
+    }
+    /* Parada del recorrido aún bloqueada: no se abre. */
+    if (getPoiState(id) === 'bloqueado') return;
+    onSelectPoint(id, { x: native.clientX, y: native.clientY });
+  };
+  const handlers = useRef(new Map()).current;
+  const handlerFor = (id) => {
+    if (!handlers.has(id)) handlers.set(id, (event) => onTap.current(id, event));
+    return handlers.get(id);
+  };
   const lastUpdate = useRef(-Infinity);
   const lastView = useRef({
     position: new Vector3(Infinity, 0, 0),
@@ -257,7 +292,11 @@ export function PoiMarkers({
           if (element.dataset.occluded !== String(occluded))
             element.dataset.occluded = String(occluded);
 
-          const labelWidth = (entry.name.length * CHAR_WIDTH + LABEL_PADDING) * pinScale;
+          /* Ancho real de la placa (medido cuando se ve); si está oculta, estimado por letras. */
+          const measured = entry.label?.getBoundingClientRect().width;
+          if (measured > 0) entry.labelWidth = measured;
+          const labelWidth =
+            entry.labelWidth ?? (entry.name.length * CHAR_WIDTH + LABEL_PADDING) * pinScale;
           const dot = DOT * pinScale;
           /* Mandan el elegido y las paradas del recorrido; después, el orden de llegada. */
           const tourRank = tour.includes(Number(id)) ? 1_000 : 0;
@@ -310,7 +349,9 @@ export function PoiMarkers({
           element.dataset.label ??= element.getAttribute('aria-label') ?? '';
           element.setAttribute(
             'aria-label',
-            count ? `${element.dataset.label} y ${count - 1} lugares más` : element.dataset.label,
+            count
+              ? t('pin.more', { name: element.dataset.label, count: count - 1 })
+              : element.dataset.label,
           );
         }
         if (element.dataset.compact !== compact) element.dataset.compact = compact;
@@ -338,15 +379,7 @@ export function PoiMarkers({
       const kind = kindOf(feature);
       const spot = spots.get(id);
 
-      const onSelect = (event) => {
-        const native = event.nativeEvent;
-        const fromScene = Boolean(event.intersections);
-        if (fromScene && native.target.closest?.('[data-view]')?.dataset.view !== viewId) return;
-        event.stopPropagation();
-        /* Parada del recorrido aún bloqueada: no se abre. */
-        if (getPoiState(id) === 'bloqueado') return;
-        onSelectPoint(id, { x: native.clientX, y: native.clientY });
-      };
+      const onSelect = handlerFor(id);
 
       const isSecret =
         Boolean(feature.properties?.secret) && !useUserStore.getState().isSecretDiscovered(id);
@@ -358,7 +391,7 @@ export function PoiMarkers({
               kind={kind}
               position={[spot.x, spot.y - (spot.edge || spot.span ? 0 : 0.002), spot.z]}
               size={spot.scale}
-              rotationY={spot.angle ?? facingWater(spot.x, spot.z, inWater, projection)}
+              rotationY={spot.angle}
               onSelect={onSelect}
             />
           )}
@@ -367,6 +400,7 @@ export function PoiMarkers({
             layer={layerById.get(layerId)}
             id={id}
             name={feature.properties.name}
+            icon={feature.properties.icon}
             registry={registry}
             selected={selected.has(id)}
             onSelect={onSelect}

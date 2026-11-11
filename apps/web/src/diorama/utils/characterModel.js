@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useAnimations, useGLTF } from '@react-three/drei';
 
-export const QUIBAR_MODEL_PATH = '/models/quibar.glb?v=tpose_baseline';
+export const QUIBAR_MODEL_PATH = '/models/quibar.glb?v=cola_liviano';
 export const ANIMATIONS_DIR = '/animations';
 export const ANIMATIONS_MANIFEST = '/animations/manifest.json';
 
-export const STANDARD_ANIM_NAMES = ['walk', 'run'];
+export const STANDARD_ANIM_NAMES = ['walk', 'run', 'idle', 'look', 'wave', 'clapping', 'sit'];
 
 /**
  * Mapeo de alias para estandarizar nombres de animaciones.
@@ -115,16 +115,27 @@ export function normalizeAnimationClips(clips = []) {
     if (walkClip) {
       addClip(walkClip, 'idle');
       addClip(walkClip, 'Idle');
+      /* Reposo de emergencia: la caminata detenida en su primer cuadro (ver idleSpeed). */
+      for (const clip of result)
+        if (clip.name.toLowerCase() === 'idle') clip.userData = { frozen: true };
     }
   }
 
   return result;
 }
 
+/**
+ * Velocidad del reposo: 1 si hay un clip propio (idle.glb), 0 si es la
+ * caminata congelada que lo reemplaza.
+ */
+export function idleSpeed(action) {
+  return action?.getClip().userData?.frozen ? 0 : 1;
+}
+
 // Preload standard model
 useGLTF.preload(QUIBAR_MODEL_PATH);
 
-export const ANIMATION_VERSION = 'v_wander_pauses_v4';
+export const ANIMATION_VERSION = 'v_blender_pausas_v1';
 
 /**
  * Hook para cargar el modelo 3D con animaciones estandarizadas.
@@ -144,7 +155,7 @@ export function useCharacterModel(groupRef) {
       let filesToTry = STANDARD_ANIM_NAMES.map((name) => ({ name, file: `${name}.glb` }));
 
       try {
-        const res = await fetch(`${ANIMATIONS_MANIFEST}?v=${ANIMATION_VERSION}&t=${Date.now()}`);
+        const res = await fetch(`${ANIMATIONS_MANIFEST}?v=${ANIMATION_VERSION}`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.animations)) {
@@ -161,7 +172,8 @@ export function useCharacterModel(groupRef) {
 
       for (const item of filesToTry) {
         if (cancelled) break;
-        const url = `${ANIMATIONS_DIR}/${item.file}?v=${ANIMATION_VERSION}&t=${Date.now()}`;
+        /* Sin sello de tiempo: el navegador guarda los clips; ANIMATION_VERSION los renueva. */
+        const url = `${ANIMATIONS_DIR}/${item.file}?v=${ANIMATION_VERSION}`;
         try {
           const gltf = await gltfLoader.loadAsync(url);
           if (gltf.animations && gltf.animations.length > 0) {

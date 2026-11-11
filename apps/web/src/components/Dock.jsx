@@ -1,6 +1,7 @@
-import { Clock, Home, Minus, MoreHorizontal, Plus, Route, Smartphone } from 'lucide-react';
+import { Clock, Home, Minus, MoreHorizontal, Plus, Smartphone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore.js';
+import { StampRow } from './Passport.jsx';
 
 /* Botón de la barra: icono y texto, de 68 px de alto para dedos grandes. */
 const BUTTON =
@@ -97,17 +98,17 @@ export default function Dock({ panel, epochLabel, onHome, onPanel, onZoomIn, onZ
             aria-label={t('tour.progress')}
             aria-pressed={panel === 'tour'}
             onClick={() => onPanel('tour')}
-            title="Ver y seleccionar recorridos temáticos"
           >
-            <Route size={28} aria-hidden="true" />
             <span>
               <span className="block text-[length:var(--fs-small)] font-extrabold leading-tight">
-                {t('dock.tour')}
+                {t('passport.name')}
               </span>
               <span className="block text-[length:calc(var(--fs-small)*0.85)] font-normal opacity-80 leading-tight tabular-nums">
-                {done}/{tour.length}
+                {t('passport.count', { done, total: tour.length })}
               </span>
             </span>
+            {/* Un sello por parada: se llena al visitarla. */}
+            <StampRow />
           </button>
         )}
         <button

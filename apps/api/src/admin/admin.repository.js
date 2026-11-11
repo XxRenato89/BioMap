@@ -37,6 +37,7 @@ export function createAdminRepository(db) {
 
   const POINT_SQL = `
     SELECT p.id, p.name, p.description, p.layer_id, p.tour_stop, p.is_secret,
+           p.model_kind, p.icon,
            p.deleted_at, p.updated_at, ST_X(p.location) AS lng, ST_Y(p.location) AS lat,
            COALESCE(
              (SELECT json_agg(json_build_object(
@@ -56,6 +57,8 @@ export function createAdminRepository(db) {
       layerId: row.layer_id,
       tourStop: row.tour_stop,
       isSecret: row.is_secret,
+      modelKind: row.model_kind,
+      icon: row.icon,
       lng: row.lng,
       lat: row.lat,
       deletedAt: row.deleted_at,
@@ -127,8 +130,9 @@ export function createAdminRepository(db) {
     async createPoint(point, userId) {
       const { rows } = await db.query(
         `INSERT INTO points_of_interest
-           (layer_id, name, description, location, tour_stop, is_secret, created_by, updated_by)
-         VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6, $7, $8, $8)
+           (layer_id, name, description, location, tour_stop, is_secret, created_by, updated_by,
+            model_kind, icon)
+         VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6, $7, $8, $8, $9, $10)
          RETURNING id`,
         [
           point.layerId,
@@ -139,6 +143,8 @@ export function createAdminRepository(db) {
           point.tourStop ?? null,
           point.isSecret ?? false,
           userId,
+          point.modelKind ?? null,
+          point.icon ?? null,
         ],
       );
       return rows[0].id;
@@ -152,6 +158,8 @@ export function createAdminRepository(db) {
         layerId: 'layer_id',
         tourStop: 'tour_stop',
         isSecret: 'is_secret',
+        modelKind: 'model_kind',
+        icon: 'icon',
       };
       const sets = [];
       const values = [id, userId];

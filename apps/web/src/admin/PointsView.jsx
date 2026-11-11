@@ -11,8 +11,52 @@ const EMPTY = {
   lat: '',
   tourStop: '',
   isSecret: false,
+  modelKind: '',
+  icon: '',
 };
 const [[WEST, SOUTH], [EAST, NORTH]] = config.maxBounds;
+
+/*
+ * Modelos e iconos que el visor sabe dibujar (ver diorama/models/registry.js y
+ * map/poiIcon.jsx). Van escritos aquí para que el panel no cargue el motor 3D.
+ */
+const MODEL_OPTIONS = [
+  ['none', 'Sin modelo (solo pin)'],
+  ['beach', 'Playa'],
+  ['camping', 'Camping con playa y muelle'],
+  ['campsite', 'Camping de interior'],
+  ['lookout', 'Mirador'],
+  ['meshDeck', 'Mirador de malla'],
+  ['forestTrail', 'Sendero de bosque con mirador'],
+  ['trailhead', 'Inicio de sendero'],
+  ['info', 'Informaciones turísticas'],
+  ['visitors', 'Centro de visitantes'],
+  ['arboretum', 'Arboreto'],
+  ['sanctuary', 'Santuario en el cerro'],
+  ['powerhouse', 'Casa de máquinas'],
+  ['dam', 'Presa'],
+  ['bridge', 'Puente colgante'],
+  ['ruka', 'Ruka'],
+  ['wetland', 'Humedal'],
+  ['araucaria', 'Araucarias'],
+  ['lenga', 'Lengas'],
+];
+const ICON_OPTIONS = [
+  ['beach', 'Playa'],
+  ['camping', 'Camping'],
+  ['lookout', 'Mirador'],
+  ['trail', 'Sendero'],
+  ['park', 'Parque o bosque'],
+  ['arboretum', 'Arboreto'],
+  ['hill', 'Cerro'],
+  ['water', 'Agua'],
+  ['power', 'Central o presa'],
+  ['bridge', 'Puente'],
+  ['info', 'Información'],
+  ['history', 'Historia'],
+  ['ecology', 'Naturaleza'],
+  ['tourism', 'Turismo'],
+];
 
 /** Posición (%) de una coordenada sobre la foto de la maqueta (norte arriba). */
 const toPercent = (lng, lat) => ({
@@ -60,6 +104,8 @@ export default function PointsView({ onAuthError }) {
             lat: String(point.lat),
             tourStop: point.tourStop ? String(point.tourStop) : '',
             isSecret: point.isSecret,
+            modelKind: point.modelKind ?? '',
+            icon: point.icon ?? '',
           }
         : { ...EMPTY, layerId: String(layers[0]?.id ?? '') },
     );
@@ -104,6 +150,8 @@ export default function PointsView({ onAuthError }) {
       lat: Number(form.lat),
       tourStop: form.tourStop ? Number(form.tourStop) : null,
       isSecret: form.isSecret,
+      modelKind: form.modelKind || null,
+      icon: form.icon || null,
     };
     const saved = await run(
       () =>
@@ -281,6 +329,28 @@ export default function PointsView({ onAuthError }) {
                 onChange={set('lat')}
                 required
               />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Modelo 3D en la maqueta" hint="Automático: se elige por el nombre">
+              <select className={inputClass} value={form.modelKind} onChange={set('modelKind')}>
+                <option value="">Automático</option>
+                {MODEL_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Icono del pin" hint="Automático: se elige por el nombre">
+              <select className={inputClass} value={form.icon} onChange={set('icon')}>
+                <option value="">Automático</option>
+                {ICON_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </Field>
           </div>
           <label className="flex items-center gap-2 text-sm">

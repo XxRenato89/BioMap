@@ -4,7 +4,7 @@ import { makeClipInPlace, normalizeAnimationClips, STANDARD_ANIM_NAMES } from '.
 
 describe('characterModel utils', () => {
   it('exposes standard animation names', () => {
-    expect(STANDARD_ANIM_NAMES).toEqual(['walk', 'run']);
+    expect(STANDARD_ANIM_NAMES).toEqual(['walk', 'run', 'idle', 'look', 'wave', 'clapping', 'sit']);
   });
 
   it('normalizes clips with canonical and alias names', () => {

@@ -56,3 +56,38 @@ export function curiosityFor(name, lang) {
   const found = CURIOSITIES.find(({ match }) => match.test(name));
   return found ? { text: found[lang] ?? found.es, source: found.source } : null;
 }
+
+/*
+ * Cifras clave de algunos lugares, para verlas de un vistazo en la ficha.
+ * Solo las que tienen fuente en docs/referencias.md.
+ */
+const FACTS = [
+  {
+    match: /central|hidroel[eé]ctrica/i,
+    facts: [
+      { value: '316 MW', es: 'de potencia', en: 'of capacity' },
+      { value: '3', es: 'turbinas', en: 'turbines' },
+      { value: '59 m', es: 'alto de la caverna', en: 'cavern height' },
+    ],
+  },
+  {
+    match: /embalse/i,
+    facts: [
+      { value: '641 ha', es: 'de superficie', en: 'of surface' },
+      { value: '~100', es: 'millones de m³ de agua', en: 'million m³ of water' },
+      { value: '~1 m', es: 'varía su nivel', en: 'level variation' },
+    ],
+  },
+];
+
+/**
+ * Cifras clave de un lugar en el idioma pedido; lista vacía si no tiene.
+ *
+ * @param {string} name Nombre del punto.
+ * @param {'es' | 'en'} lang
+ * @returns {Array<{ value: string, label: string }>}
+ */
+export function factsFor(name, lang) {
+  const found = FACTS.find(({ match }) => match.test(name));
+  return (found?.facts ?? []).map((fact) => ({ value: fact.value, label: fact[lang] ?? fact.es }));
+}

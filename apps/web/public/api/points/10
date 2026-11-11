@@ -15,6 +15,8 @@
     "layerSlug": "tourism",
     "tourStop": 3,
     "secret": false,
+    "modelKind": null,
+    "icon": null,
     "description": "Sendero que sube a un mirador sobre la presa y el embalse. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": [
       {

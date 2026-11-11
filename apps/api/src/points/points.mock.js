@@ -16,6 +16,8 @@ export function createPointsMockRepository() {
     layer_slug: point.layerSlug,
     tour_stop: point.tourStop ?? null,
     is_secret: point.secret ?? false,
+    model_kind: point.modelKind ?? null,
+    icon: point.icon ?? null,
     lng: point.lng,
     lat: point.lat,
     images: SAMPLE_IMAGES.filter((image) => image.pointName === point.name)

@@ -1,52 +1,12 @@
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
-import {
-  Binoculars,
-  Bridge,
-  Check,
-  Footprints,
-  HelpCircle,
-  Info,
-  Landmark,
-  Lock,
-  MapPin,
-  Mountain,
-  Tent,
-  TreeDeciduous,
-  Trees,
-  Umbrella,
-  Waves,
-  Zap,
-} from 'lucide-react';
+import { Check, HelpCircle, Lock } from 'lucide-react';
+import { memo, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Color, CylinderGeometry, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
+import { getPoiIcon } from '../../map/poiIcon.jsx';
 
-/*
- * Tipo de lugar según su nombre: el primero que calce. Cada uno con su icono
- * y su rótulo corto, para que el pin diga qué es el lugar sin leer la ficha.
- */
-const KINDS = [
-  [/puente/i, Bridge, 'bridge'],
-  [/playa|balneario/i, Umbrella, 'beach'],
-  [/camping|acampar/i, Tent, 'camping'],
-  [/mirador|vista/i, Binoculars, 'lookout'],
-  [/central|hidroel[eé]ctrica|presa/i, Zap, 'power'],
-  [/informaci|visitante/i, Info, 'info'],
-  [/arboreto/i, TreeDeciduous, 'arboretum'],
-  [/sendero/i, Footprints, 'trail'],
-  [/cerro|volc[aá]n/i, Mountain, 'hill'],
-  [/embalse|lago|laguna|r[ií]o/i, Waves, 'water'],
-  [/parque|bosque|reserva/i, Trees, 'park'],
-];
-const LAYER_ICON = { history: Landmark, ecology: Trees, tourism: MapPin };
-
-/**
- * Icono del tipo de lugar (por nombre) o, si no calza ninguno, el de su capa.
- */
-export function getPoiIcon(layer, name = '', size = 22) {
-  const Icon = KINDS.find(([re]) => re.test(name))?.[1] ?? LAYER_ICON[layer?.slug] ?? MapPin;
-  return <Icon size={size} strokeWidth={2.4} aria-hidden="true" />;
-}
+export { getPoiIcon };
 
 /* Poste de 1 de alto, de los que 0,25 quedan bajo el suelo: así su pie es
  * siempre donde corta el relieve que se ve, sea cual sea el nivel de detalle. */
@@ -62,13 +22,15 @@ const STEM_MATERIAL = new MeshStandardMaterial({ color: new Color('#d4d4d4'), ro
  * Un punto de interés: un poste gris claro que sale del suelo y,
  * en su punta, un marcador con el icono del lugar y una placa con su nombre.
  * Poste y marcador miden siempre lo mismo en pantalla y el pie no se mueve al
- * acercarse.
+ * acercarse. Neutro (sin color de capa): el color solo avisa un estado: verde
+ * visitado, azul un grupo de lugares, ámbar un lugar secreto.
  */
-export function PoiPin({
+export const PoiPin = memo(function PoiPin({
   id,
   position,
   layer,
   name,
+  icon = null,
   selected,
   onSelect,
   registry,
@@ -77,6 +39,7 @@ export function PoiPin({
   isSecret = false,
   scale = 1,
 }) {
+  const { t } = useTranslation();
   const group = useRef(null);
   const button = useRef(null);
   const anchor = useMemo(() => new Vector3(...position), [position]);
@@ -104,7 +67,15 @@ export function PoiPin({
 
   const register = (element) => {
     button.current = element;
-    if (element) registry.set(id, { element, anchor, base, name, selected });
+    if (element)
+      registry.set(id, {
+        element,
+        anchor,
+        base,
+        name,
+        selected,
+        label: element.querySelector('.poi-pin__label'),
+      });
     else registry.delete(id);
   };
 
@@ -121,29 +92,25 @@ export function PoiPin({
           className="poi-pin group absolute left-0 top-0 flex items-center -translate-x-[21px] -translate-y-[52px] data-[side=left]:flex-row-reverse data-[side=left]:-translate-x-[calc(100%-21px)] border-0 bg-transparent p-0 cursor-pointer pointer-events-auto select-none transition-[opacity,filter] duration-300 data-[occluded=true]:opacity-40 data-[occluded=true]:grayscale data-[hidden=true]:!opacity-0 data-[hidden=true]:!pointer-events-none aria-disabled:cursor-default data-[count]:cursor-pointer"
           data-selected={selected || undefined}
           data-state={state}
+          data-secret={isSecret || undefined}
           data-name={name}
           /* En el teléfono, pin y placa más chicos (zoom escala también su desplazamiento). */
           style={scale === 1 ? undefined : { zoom: scale }}
           onClick={onSelect}
           aria-disabled={locked || undefined}
-          aria-label={isSecret ? 'Lugar secreto por descubrir' : stop ? `${stop}. ${name}` : name}
+          aria-label={isSecret ? t('pin.secret') : stop ? `${stop}. ${name}` : name}
         >
           {/* Marcador: círculo blanco con punta hacia el poste y el icono gris del lugar. */}
-          <span className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:border-neutral-800 group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.6),0_8px_18px_rgba(0,0,0,0.5)] group-data-[count]:scale-125 group-data-[count]:bg-forest group-data-[count]:border-white group-data-[count]:[&>svg]:hidden group-data-[state=bloqueado]:opacity-70 group-data-[count]:!opacity-100">
+          <span className="relative z-10 flex-none flex items-center justify-center w-[42px] h-[42px] rounded-full bg-white text-neutral-600 border-[3px] border-white shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-[50%_calc(100%+10px)] group-hover:scale-105 group-data-[state=visitado]:shadow-[0_0_0_3px_var(--color-ok),0_4px_10px_rgba(0,0,0,0.35)] group-data-[secret]:border-dashed group-data-[secret]:border-warning group-data-[selected=true]:scale-115 group-data-[selected=true]:bg-forest group-data-[selected=true]:border-forest group-data-[selected=true]:text-white group-data-[selected=true]:shadow-[0_0_0_6px_rgba(255,255,255,0.65),0_0_0_14px_rgba(141,198,63,0.45),0_8px_18px_rgba(0,0,0,0.5)] motion-safe:group-data-[selected=true]:animate-[pin-pulse_0.9s_ease-out_2] group-data-[count]:scale-125 group-data-[count]:bg-forest-light group-data-[count]:border-white group-data-[count]:[&>svg]:hidden group-data-[state=bloqueado]:opacity-70 group-data-[count]:!opacity-100">
             {isSecret ? (
-              <HelpCircle
-                size={22}
-                strokeWidth={2.6}
-                aria-hidden="true"
-                className="text-neutral-400"
-              />
+              <HelpCircle size={22} strokeWidth={2.6} aria-hidden="true" className="text-warning" />
             ) : locked ? (
               <Lock size={20} strokeWidth={2.6} aria-hidden="true" />
             ) : (
-              getPoiIcon(layer, name, 20)
+              getPoiIcon(layer, name, 20, icon)
             )}
             <span
-              className="absolute left-1/2 top-full -mt-px -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-white group-data-[selected=true]:border-t-neutral-800 !opacity-100"
+              className="absolute left-1/2 top-full -mt-px -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-white group-data-[selected=true]:border-t-forest !opacity-100"
               aria-hidden="true"
             />
             {/* Número de lugares cuando el pin agrupa varios (lo escribe PoiMarkers). */}
@@ -153,7 +120,7 @@ export function PoiPin({
             />
             {stop > 0 && !isSecret && (
               <span
-                className="absolute group-data-[count]:hidden -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-neutral-800 text-white text-[13px] font-extrabold ring-2 ring-white"
+                className="absolute group-data-[count]:hidden -top-2 -left-2 flex items-center justify-center w-6 h-6 rounded-full bg-forest text-white text-[13px] font-extrabold ring-2 ring-white"
                 aria-hidden="true"
               >
                 {stop}
@@ -161,7 +128,7 @@ export function PoiPin({
             )}
             {(state === 'visitado' || locked) && !isSecret && (
               <span
-                className={`absolute group-data-[count]:hidden -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-white ${locked ? 'bg-neutral-400' : 'bg-neutral-600'}`}
+                className={`absolute group-data-[count]:hidden -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-white ring-2 ring-white ${locked ? 'bg-neutral-400' : 'bg-ochre-deep'}`}
                 aria-hidden="true"
               >
                 {locked ? (
@@ -173,13 +140,23 @@ export function PoiPin({
             )}
           </span>
           {/* Placa con el nombre, unida al marcador. */}
-          <span className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full group-data-[side=left]:ml-0 group-data-[side=left]:-mr-4 group-data-[side=left]:pl-4 group-data-[side=left]:pr-6 group-data-[side=left]:rounded-r-none group-data-[side=left]:rounded-l-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-neutral-800 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden">
+          <span className="poi-pin__label -ml-4 pl-6 pr-4 h-8 flex items-center rounded-r-full group-data-[side=left]:ml-0 group-data-[side=left]:-mr-4 group-data-[side=left]:pl-4 group-data-[side=left]:pr-6 group-data-[side=left]:rounded-r-none group-data-[side=left]:rounded-l-full bg-white text-neutral-700 font-bold text-[length:var(--fs-small)] whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.35)] pointer-events-none transition-colors group-data-[selected=true]:bg-forest group-data-[selected=true]:pl-8 group-data-[selected=true]:text-white group-data-[state=bloqueado]:text-neutral-400 group-data-[compact=true]:hidden">
             {isSecret ? '?' : name}
           </span>
         </button>
       </Html>
     </group>
   );
+}, samePin);
+
+/* La posición llega como arreglo nuevo en cada dibujo: se compara por valor. */
+function samePin(a, b) {
+  for (const key of Object.keys(b)) {
+    if (key === 'position') {
+      if (a.position.some((value, index) => value !== b.position[index])) return false;
+    } else if (a[key] !== b[key]) return false;
+  }
+  return true;
 }
 
 export default PoiPin;

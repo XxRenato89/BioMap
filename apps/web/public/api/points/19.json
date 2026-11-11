@@ -15,6 +15,8 @@
     "layerSlug": "tourism",
     "tourStop": null,
     "secret": false,
+    "modelKind": null,
+    "icon": null,
     "description": "Camping junto al río Huequecura, en Lo Nieve. Texto de ejemplo: el contenido está por validar con el Centro de Visitantes.",
     "images": []
   }

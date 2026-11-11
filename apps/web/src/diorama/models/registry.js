@@ -10,6 +10,8 @@ import { buildInfo } from './info.js';
 import { buildArboretum } from './arboretum.js';
 import { buildPowerhouse } from './powerhouse.js';
 import { buildTrailhead } from './trailhead.js';
+import { buildBeach, buildCampsite } from './beach.js';
+import { mergeByMaterial } from './merge.js';
 import {
   buildForestTrail,
   buildMeshDeck,
@@ -45,6 +47,8 @@ export const METERS_PER_UNIT = {
   arboretum: 6 * MODEL_SCALE_MULTIPLIER,
   powerhouse: 4 * MODEL_SCALE_MULTIPLIER,
   trailhead: 3 * MODEL_SCALE_MULTIPLIER,
+  beach: 5 * MODEL_SCALE_MULTIPLIER,
+  campsite: 4.5 * MODEL_SCALE_MULTIPLIER,
 };
 
 /**
@@ -74,6 +78,8 @@ export const BUILDERS = {
   arboretum: buildArboretum,
   powerhouse: buildPowerhouse,
   trailhead: buildTrailhead,
+  beach: buildBeach,
+  campsite: buildCampsite,
 };
 
 /*
@@ -85,13 +91,9 @@ export const KEYWORDS = [
   [/parque angostura/i, 'forestTrail'],
   [/mirador central angostura/i, 'meshDeck'],
   [/calvario|san sebasti[aá]n/i, 'sanctuary'],
-  /* Playas: solo pin, sin modelo. */
-  [/playa|balneario/i, null],
-  /*
-   * Solo pin, sin modelo: el de Los Notros (playa y muelle) no calza con estos
-   * campings y todavía no tienen uno propio.
-   */
-  [/trompelhueno|patagua/i, null],
+  [/playa|balneario/i, 'beach'],
+  /* Campings de interior: el de Los Notros (playa y muelle) no calza con ellos. */
+  [/trompelhueno|patagua/i, 'campsite'],
   [/camping|camp|acampar/i, 'camping'],
   [/mirador|vista/i, 'lookout'],
   [/central|hidroel[eé]ctrica/i, 'powerhouse'],
@@ -114,13 +116,18 @@ export const KEYWORDS = [
 export const LAYER_DEFAULT = {};
 
 /**
- * Elige el modelo de un punto según su nombre y capa.
+ * Elige el modelo de un punto: el que indican sus datos (`modelKind`, editable
+ * en el panel de administración; `none` = sin modelo) o, si no trae uno
+ * válido, el que calce con su nombre.
  *
  * @param {string} name
  * @param {string} [layerSlug]
+ * @param {string | null} [explicit]
  * @returns {keyof typeof BUILDERS | null}
  */
-export function modelKindFor(name, layerSlug) {
+export function modelKindFor(name, layerSlug, explicit) {
+  if (explicit === 'none') return null;
+  if (explicit && BUILDERS[explicit]) return explicit;
   for (const [re, kind] of KEYWORDS) {
     if (re.test(name)) return kind;
   }
@@ -137,7 +144,7 @@ const cache = new Map();
  */
 export function createPoiModel(kind) {
   if (!BUILDERS[kind]) return null;
-  if (!cache.has(kind)) cache.set(kind, BUILDERS[kind]());
+  if (!cache.has(kind)) cache.set(kind, mergeByMaterial(BUILDERS[kind]()));
   return cache.get(kind).clone(true);
 }
 

@@ -22,4 +22,6 @@ export { buildInfo } from './info.js';
 export { buildArboretum } from './arboretum.js';
 export { buildPowerhouse } from './powerhouse.js';
 export { buildTrailhead } from './trailhead.js';
+export { buildBeach, buildCampsite } from './beach.js';
+export { mergeByMaterial } from './merge.js';
 export { mat, part, box, cyl, cone, prism, seeded } from './materials.js';
