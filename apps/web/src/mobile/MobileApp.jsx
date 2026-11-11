@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Compass from '../components/Compass.jsx';
 import ConfettiCanvas from '../components/ConfettiCanvas.jsx';
 import PassportCard, { StampRow } from '../components/Passport.jsx';
+import Postcard from '../components/Postcard.jsx';
 import SkipWalkButton from '../components/SkipWalkButton.jsx';
 import StatusPill from '../components/StatusPill.jsx';
 import { config } from '../config.js';
@@ -14,6 +15,7 @@ import DioramaView from '../diorama/components/DioramaView.jsx';
 import { PoiMarkers } from '../diorama/components/PoiMarkers.jsx';
 import { fitView, isInside } from '../diorama/utils/cameraMath.js';
 import AvatarNarrator from '../features/avatar/AvatarNarrator.jsx';
+import { parseStamps } from '../features/passport/postcard.js';
 import { useTour } from '../features/tour/useTour.js';
 import { useLayersQuery, usePointsQuery } from '../hooks/useApi.js';
 import { useDaylight } from '../hooks/useDaylight.js';
@@ -60,6 +62,14 @@ export default function MobileApp() {
   const [panel, setPanel] = useState(null);
   const passportOpen = useUserStore((state) => state.passportOpen);
   const setPassportOpen = useUserStore((state) => state.setPassportOpen);
+  const [postcardOpen, setPostcardOpen] = useState(false);
+  /* Código QR del kiosco con `?sellos=1,6`: el teléfono parte con esos sellos ya ganados. */
+  const carried = useRef(false);
+  useEffect(() => {
+    if (carried.current || tour.length === 0) return;
+    carried.current = true;
+    parseStamps(window.location.search, tour).forEach(useUserStore.getState().visitPoint);
+  }, [tour]);
   /* Proporción de la pantalla: cambia al girar el teléfono y con ella el encuadre de inicio. */
   const [aspect, setAspect] = useState(() => window.innerWidth / window.innerHeight);
   useEffect(() => {
@@ -353,8 +363,13 @@ export default function MobileApp() {
               setPassportOpen(false);
               pick(id);
             }}
+            onPostcard={() => {
+              setPassportOpen(false);
+              setPostcardOpen(true);
+            }}
           />
         )}
+        {postcardOpen && <Postcard onClose={() => setPostcardOpen(false)} />}
       </AnimatePresence>
     </main>
   );

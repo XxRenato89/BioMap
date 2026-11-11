@@ -181,6 +181,12 @@
     "completeText": "Recorriste todas las paradas con Quibar. ¡Gracias por visitar el embalse!",
     "go": "Ir a {{name}}",
     "take": "Llévalo contigo",
-    "takeText": "Abre BioMap en tu celular con este código."
+    "takeText": "Abre BioMap en tu celular con este código: lleva tus sellos y descarga tu postal.",
+    "postcard": "Ver mi postal",
+    "postcardTitle": "¡Tu postal de Angostura!",
+    "postcardHint": "Es tuya: muévela con el dedo y guárdala de recuerdo.",
+    "postcardAlt": "Postal con Quibar y tus {{done}} sellos del recorrido",
+    "download": "Descargar",
+    "share": "Compartir"
   }
 }

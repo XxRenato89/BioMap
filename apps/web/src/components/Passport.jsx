@@ -1,7 +1,8 @@
-import { ArrowRight, Check, X } from 'lucide-react';
+import { ArrowRight, Check, Image, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import quibarRun from '../assets/quibar-run.webp';
+import { stampsUrl } from '../features/passport/postcard.js';
 import { useQrSvg } from '../hooks/useQr.js';
 import { getPoiIcon } from '../map/poiIcon.jsx';
 import { useUserStore } from '../store/userStore.js';
@@ -38,8 +39,13 @@ export function useStamps() {
 export function Stamp({ feature, earned, index = 0, className = '' }) {
   const [ink, tilt] = INKS[index % INKS.length];
   const name = feature?.properties.name ?? '';
+  /* El sello ganado cae timbrando, uno tras otro, y rebota al tocarlo (la inclinación va aparte, en `rotate`). */
   return (
-    <span
+    <motion.span
+      initial={earned ? { scale: 2.6, opacity: 0 } : false}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 16, delay: 0.25 + index * 0.18 }}
+      whileTap={{ scale: 0.86 }}
       className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-full p-[8%] text-center font-extrabold uppercase leading-tight tracking-wide ${
         earned
           ? `border-4 border-double ${ink} ${tilt}`
@@ -50,7 +56,7 @@ export function Stamp({ feature, earned, index = 0, className = '' }) {
         {getPoiIcon(null, name, 24, feature?.properties.icon)}
       </span>
       <span className="line-clamp-2 text-[0.8em]">{name}</span>
-    </span>
+    </motion.span>
   );
 }
 
@@ -105,17 +111,24 @@ export function StampRow({ size = 38 }) {
 /**
  * Pasaporte del recorrido: los sellos de cada parada. Se abre solo al
  * completar el recorrido (celebración) y a pedido para ver qué falta. En el
- * kiosco suma el código QR para seguir en el teléfono.
+ * kiosco suma el código QR para seguir en el teléfono con los sellos ya
+ * ganados; en el teléfono, el botón de la postal de recuerdo.
  *
- * @param {{ url?: string, onClose: () => void, onGo?: (id: number) => void }} props
+ * @param {{ url?: string, onClose: () => void, onGo?: (id: number) => void,
+ *   onPostcard?: () => void }} props
  */
-export default function PassportCard({ url, onClose, onGo }) {
+export default function PassportCard({ url, onClose, onGo, onPostcard }) {
   const { t } = useTranslation();
   const stamps = useStamps();
   const done = stamps.filter((stamp) => stamp.earned).length;
   const complete = stamps.length > 0 && done === stamps.length;
   const pending = stamps.find((stamp) => !stamp.earned);
-  const qr = useQrSvg(url || window.location.origin);
+  const qr = useQrSvg(
+    stampsUrl(
+      url || window.location.origin,
+      stamps.filter((stamp) => stamp.earned).map((stamp) => stamp.id),
+    ),
+  );
 
   return (
     <motion.div
@@ -170,6 +183,16 @@ export default function PassportCard({ url, onClose, onGo }) {
                 {t('passport.go', { name: pending.feature.properties.name })}
               </span>
               <ArrowRight size={22} aria-hidden="true" className="flex-none" />
+            </button>
+          )}
+          {onPostcard && done > 0 && (
+            <button
+              type="button"
+              className="mt-3 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl border-0 bg-ochre px-5 text-[length:var(--fs-body)] font-bold text-forest-dark cursor-pointer md:w-auto"
+              onClick={onPostcard}
+            >
+              <Image size={22} aria-hidden="true" className="flex-none" />
+              {t('passport.postcard')}
             </button>
           )}
         </div>

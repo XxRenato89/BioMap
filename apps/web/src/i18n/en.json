@@ -186,6 +186,12 @@
     "completeText": "You visited every stop with Quibar. Thanks for visiting the reservoir!",
     "go": "Go to {{name}}",
     "take": "Take it with you",
-    "takeText": "Open BioMap on your phone with this code."
+    "takeText": "Open BioMap on your phone with this code: it brings your stamps, and you can download your postcard.",
+    "postcard": "See my postcard",
+    "postcardTitle": "Your Angostura postcard!",
+    "postcardHint": "It is yours: move it with your finger and keep it as a souvenir.",
+    "postcardAlt": "Postcard with Quibar and your {{done}} tour stamps",
+    "download": "Download",
+    "share": "Share"
   }
 }
