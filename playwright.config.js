@@ -34,6 +34,9 @@ export default defineConfig({
       env: {
         API_PROXY_TARGET: `http://localhost:${API_PORT}`,
         VITE_ATTRACT_DELAY_S: '0',
+        /* Con WebGL por software un paso tarda más que el reposo (45 s) y el kiosco cerraba la ficha a mitad de la prueba. */
+        VITE_REST_S: '900',
+        VITE_IDLE_TIMEOUT_S: '1800',
         /* Sin dirección pública, el panel del QR avisa que falta configurarla. */
         VITE_PUBLIC_URL: 'http://biomap.test',
       },
