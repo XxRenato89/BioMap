@@ -351,3 +351,28 @@ class MinHeap {
     return top.value;
   }
 }
+
+/**
+ * Redondea las esquinas de una ruta (corte de esquinas de Chaikin) para que
+ * quien la sigue tome las curvas sin quiebres. Conserva el primer y el último punto.
+ *
+ * @param {number[][]} path [lng, lat].
+ * @param {number} [rounds]
+ * @returns {number[][]}
+ */
+export function smoothPath(path, rounds = 2) {
+  let points = path;
+  for (let r = 0; r < rounds && points.length > 2; r += 1) {
+    const next = [points[0]];
+    for (let i = 0; i < points.length - 1; i += 1) {
+      const [a, b] = [points[i], points[i + 1]];
+      next.push(
+        [a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25],
+        [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75],
+      );
+    }
+    next.push(points.at(-1));
+    points = next;
+  }
+  return points;
+}

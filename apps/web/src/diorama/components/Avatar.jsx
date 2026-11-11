@@ -7,7 +7,7 @@ import { useAvatarStore } from '../../store/avatarStore.js';
 import { useViewerStore } from '../../store/viewerStore.js';
 import i18n from '../../i18n/index.js';
 import { useDiorama } from './DioramaScene.jsx';
-import { Pathfinder } from '../utils/pathfinder.js';
+import { Pathfinder, smoothPath } from '../utils/pathfinder.js';
 import { idleSpeed, useCharacterModel } from '../utils/characterModel.js';
 import { useUserStore } from '../../store/userStore.js';
 import { WILDLIFE_SPOTS } from './Wildlife.jsx';
@@ -34,7 +34,8 @@ export const AVATAR_CONFIG = {
  * (entonces la mascota aparece en el destino en vez de cruzar volando).
  */
 function createPath(startCoord, endCoord, pathfinder) {
-  return pathfinder?.findPath(startCoord, endCoord) ?? null;
+  const path = pathfinder?.findPath(startCoord, endCoord);
+  return path ? smoothPath(path) : null;
 }
 
 /*
@@ -381,6 +382,8 @@ export default memo(function Avatar({
 
     if (isMoving) {
       let moveBudget = speed * dt;
+      /* Rumbo del último tramo recorrido este cuadro: el cuerpo gira hacia él con suavidad. */
+      let travelHeading = null;
 
       while (moveBudget > 0 && pathIndex.current < pathRef.current.length) {
         const targetCoordLngLat = pathRef.current[pathIndex.current];
@@ -395,6 +398,7 @@ export default memo(function Avatar({
           continue;
         }
 
+        travelHeading = Math.atan2(dx, dz);
         if (distToTarget <= moveBudget) {
           currentPos.current.x = x;
           currentPos.current.z = z;
@@ -405,14 +409,15 @@ export default memo(function Avatar({
           currentPos.current.x += dx * ratio;
           currentPos.current.z += dz * ratio;
           moveBudget = 0;
-
-          // Rotación suave hacia el rumbo de avance
-          const targetHeading = Math.atan2(dx, dz);
-          let diff = targetHeading - currentHeading.current;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          currentHeading.current += diff * Math.min(dt * 14, 1);
         }
+      }
+
+      if (travelHeading !== null) {
+        let diff = travelHeading - currentHeading.current;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        /* Giro suave e independiente de los cuadros por segundo (antes casi saltaba en cada esquina). */
+        currentHeading.current += diff * (1 - Math.exp(-dt * 6));
       }
 
       currentPos.current.y = heightAt(currentPos.current.x, currentPos.current.z) + roadOffset;

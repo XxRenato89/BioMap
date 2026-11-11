@@ -252,7 +252,7 @@ export function waterMaterial(shore, zone) {
     side: DoubleSide,
     depthWrite: true,
     polygonOffset: true,
-    polygonOffsetFactor: -4,
+    polygonOffsetFactor: -1,
     polygonOffsetUnits: -4,
   });
   const time = { value: 0 };

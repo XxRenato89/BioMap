@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Pathfinder, waterTest } from './pathfinder.js';
+import { Pathfinder, smoothPath, waterTest } from './pathfinder.js';
 
 /*
  * Un río de norte a sur entre lng -71.8005 y -71.7995 (~90 m de ancho), con
@@ -137,5 +137,20 @@ describe('Pathfinder with a destination on the water', () => {
     expect(path).not.toBeNull();
     const last = path.at(-1);
     expect(last[0]).toBeLessThan(-71.8005);
+  });
+});
+
+describe('smoothPath', () => {
+  it('keeps the ends and rounds the corner', () => {
+    const path = [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+    ];
+    const out = smoothPath(path);
+    expect(out[0]).toEqual([0, 0]);
+    expect(out.at(-1)).toEqual([1, 1]);
+    expect(out.length).toBeGreaterThan(path.length);
+    expect(out).not.toContainEqual([1, 0]);
   });
 });
